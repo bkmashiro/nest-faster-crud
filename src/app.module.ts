@@ -13,6 +13,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TrackerModule } from './modules/tracker/tracker.module';
 import { SioModule } from './modules/sio/sio.module';
+import { DeviceModule } from './modules/device/device.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { SioModule } from './modules/sio/sio.module';
     MongooseModule.forRoot('mongodb://localhost:27017/'),
     TrackerModule,
     SioModule,
+    DeviceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

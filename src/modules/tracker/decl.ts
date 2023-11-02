@@ -1,4 +1,6 @@
-interface ITrackerData {}
+export type DeviceID = string;
+
+interface ITrackerData { }
 
 enum TrackerStatus {
   Online,
@@ -12,7 +14,7 @@ interface ITracker {
   description: string;
   status: TrackerStatus;
   dataProvider: ITrackerDataProvider;
-  onDataUpdated(cb: (data: ITrackerData) => void): void
+  onDataUpdated(cb: (data: ITrackerData) => void): void;
   onOnline(cb: () => void): void;
   onOffline(cb: () => void): void;
 }
@@ -60,7 +62,7 @@ interface TrackerHubProvider extends ITrackerDataProvider {
   getTrackerIds(): string[];
   getTracker(id: string): ITracker;
 
-  onTrackerAdded(cb: (tracker: ITracker) => void): void;
+  onTrackerAdded(cb: (tracker: ITracker) => void): void
   onTrackerRemoved(cb: (tracker: ITracker) => void): void;
   onTrackerEvent(event: string, cb: (tracker: ITracker) => void): void;
 
