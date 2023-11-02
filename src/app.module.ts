@@ -11,6 +11,8 @@ import { UsermetaModule } from './modules/usermeta/usermeta.module';
 import { BullModule } from '@nestjs/bull';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
+import { TrackerModule } from './modules/tracker/tracker.module';
+import { SioModule } from './modules/sio/sio.module';
 
 @Module({
   imports: [
@@ -59,6 +61,8 @@ import { MongooseModule } from '@nestjs/mongoose';
     }),
     EventEmitterModule.forRoot(),
     MongooseModule.forRoot('mongodb://localhost:27017/'),
+    TrackerModule,
+    SioModule,
   ],
   controllers: [AppController],
   providers: [AppService],
