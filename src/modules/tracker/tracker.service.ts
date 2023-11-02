@@ -1,22 +1,42 @@
 import { Injectable } from '@nestjs/common';
 import { CreateTrackerDto } from './dto/create-tracker.dto';
 import { UpdateTrackerDto } from './dto/update-tracker.dto';
-import { fromEvent, audit, interval, Subject, auditTime } from 'rxjs';
+import { fromEvent, audit, interval, Subject, auditTime, groupBy, mergeMap, combineLatest, timer, map, bufferTime, filter } from 'rxjs';
 import { Repository } from 'typeorm';
 import { Tracker } from './entities/tracker.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RedisService } from '../db/redis/redis.service';
 import { DeviceID } from './decl';
+import { SioService } from '../sio/sio.service';
+
+export const GeoUpdateObject: Subject<any> = new Subject<any>()
 
 @Injectable()
 export class TrackerService {
   constructor(
     @InjectRepository(Tracker)
     private readonly trackerRepository: Repository<Tracker>,
-    private readonly redisService: RedisService
+    private readonly redisService: RedisService,
+    private readonly sioService: SioService,
   ) {
-    this.auditSubject.pipe(auditTime(5000)).subscribe((auditData) => {
+    // audit the location update
+    // only pick last request in 5000ms from every sender accordingly
+    GeoUpdateObject.pipe(
+      groupBy((auditData) => auditData.deviceId),
+      mergeMap((grouped) => grouped.pipe(auditTime(5000)))
+    ).subscribe((auditData) => {
       this.saveToDb(auditData.id);
+    });
+
+    const timerObservable = timer(1000);
+
+    combineLatest([GeoUpdateObject, timerObservable]).pipe(
+      map(([data, _]) => data), 
+      bufferTime(5000),
+      filter((bufferedData) => bufferedData.length > 0) 
+    ).subscribe((compressedData) => {
+      console.log('Compressed Data:', compressedData);
+      this.sioService.broadcastToGroup('geo', 'geo-update', compressedData);
     });
   }
 
@@ -46,17 +66,16 @@ export class TrackerService {
 
   async saveToDb(id: DeviceID) {
     const deviceGeo = JSON.parse(await this.redisService.get(this.getTrackerRedisName(id)))
+    //TODO Validate the location
     // save to db
     this.trackerRepository.update(id, { location: deviceGeo });
   }
+
   /**
    * Update the location of a tracker
    * @param id 
    * @param location 
    */
-
-  private auditSubject: Subject<any> = new Subject<any>();
-
   updateLocation(id: DeviceID, location: object) {
     this.redisService.set(this.getTrackerRedisName(id), JSON.stringify(location));
 
@@ -66,6 +85,9 @@ export class TrackerService {
       timestamp: new Date(),
     };
 
-    this.auditSubject.next(auditData);
+    GeoUpdateObject.next(auditData);
+
+    // broadcast to all users in the same group
+    // this.sioService.broadcastToGroup('geo', 'geo-update', auditData)
   }
 }
