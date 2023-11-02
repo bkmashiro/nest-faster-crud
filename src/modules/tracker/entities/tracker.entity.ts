@@ -1,8 +1,10 @@
-export class Tracker {
+import { BaseEntity, Column, Entity, Geometry, PrimaryGeneratedColumn } from "typeorm";
 
-  location: object;
+@Entity()
+export class Tracker extends BaseEntity {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  public updateLocation(location: object) {
-    this.location = location;
-  }
+  @Column('geometry', { nullable: false, spatialFeatureType: 'Point', srid: 4326 })
+  location: Geometry;
 }

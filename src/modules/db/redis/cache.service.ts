@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { RedisService } from './redis.service'
 import { createHash } from 'crypto'
 
+export const REDIS_PREFIX = 'dt:'
 @Injectable()
 export class CacheService {
     constructor(private readonly redisService: RedisService) {}
@@ -10,15 +11,14 @@ export class CacheService {
         return createHash('sha1').update(fn.toString()).digest('base64')
     }
 
-
-    async set<T>(prefix:string = 'cache:', fn: () => PromiseLike<T>, ttl: number, symbol?: string) {
+    async set<T>(prefix:string = REDIS_PREFIX, fn: () => PromiseLike<T>, ttl: number, symbol?: string) {
         const s = prefix + (symbol || CacheService.functionHash(fn))
         const data = await fn()
         await this.redisService.do(e => e.setex(s, ttl, JSON.stringify(data)))
         return data
     }
 
-    async get<T>(prefix:string = 'cache:', symbol?: string) {
+    async get<T>(prefix:string = REDIS_PREFIX, symbol?: string) {
         const s = prefix + symbol
         const cache = await this.redisService.do(e => e.get(s))
         if (cache === null || cache === undefined) return null
@@ -30,7 +30,7 @@ export class CacheService {
      * Destroy Cache
      * @param symbol manually assigned redis key
      */
-    async destroyCache(prefix:string = 'cache:',symbol: string) {
+    async destroyCache(prefix:string = REDIS_PREFIX,symbol: string) {
         const s = prefix + symbol
         return this.redisService.do(e => e.del(s))
     }
@@ -42,7 +42,7 @@ export class CacheService {
      * @param symbol manually assigned redis key
      */
     async forceReset(fn: () => PromiseLike<unknown>, ttl: number, symbol?: string) {
-        const s = 'cache:' + (symbol || CacheService.functionHash(fn))
+        const s = REDIS_PREFIX + (symbol || CacheService.functionHash(fn))
         const data = await fn()
         await this.redisService.do(e => e.setex(s, ttl, JSON.stringify(data)))
         return data
@@ -57,7 +57,7 @@ export class CacheService {
      */
     async getOrSet<T>(fn: () => PromiseLike<T>, ttl: number, symbol?: string, forceRefresh?: boolean): Promise<T> {
         if (forceRefresh) return this.forceReset(fn, ttl, symbol) as Promise<T>
-        const s = 'cache:' + (symbol || CacheService.functionHash(fn))
+        const s = REDIS_PREFIX + (symbol || CacheService.functionHash(fn))
         let cache: string | null | T = (await this.redisService.do(e => e.get(s))) as string | null
         if (cache === null || cache === undefined) {
             cache = await fn()

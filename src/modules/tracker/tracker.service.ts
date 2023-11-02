@@ -59,7 +59,7 @@ export class TrackerService {
 
   updateLocation(id: DeviceID, location: object) {
     this.redisService.set(this.getTrackerRedisName(id), JSON.stringify(location));
-    
+
     const auditData = {
       deviceId: id,
       location,
