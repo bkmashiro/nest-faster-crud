@@ -7,7 +7,10 @@ import { Server } from 'socket.io';
 const logger = new Logger('SIoGateway');
 @WebSocketGateway()
 export class SioGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
-  constructor(private readonly sioService: SioService) { }
+  constructor(
+    private readonly sioService: SioService,
+  ) { }
+
   async handleConnection(socket: any, ...args: any[]) {
     try {
       const user = await this.sioService.getUserFromSocket(socket);
