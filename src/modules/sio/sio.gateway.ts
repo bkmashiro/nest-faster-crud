@@ -1,6 +1,6 @@
 import { WebSocketGateway, SubscribeMessage, MessageBody, OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit } from '@nestjs/websockets';
 import { SioService } from './sio.service';
-import { PushDataDto } from './dto/push-data.dto';
+import { PushDataDto } from '../tracker/dto/push-data.dto';
 import { Logger } from '@nestjs/common';
 import { Server } from 'socket.io';
 
@@ -27,7 +27,7 @@ export class SioGateway implements OnGatewayConnection, OnGatewayDisconnect, OnG
   }
 
   handleDisconnect(client: any) {
-    throw new Error('Method not implemented.');
+    this.sioService.removeSocket(client.user.id);
   }
 
   afterInit(server: Server) {

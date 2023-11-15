@@ -1,5 +1,5 @@
 import { DeviceID } from "src/modules/tracker/decl";
-import { GatewayID } from "../decl";
+import { GatewayID } from "../../sio/decl";
 
 export enum DataFlag {
   NORMAL = 1<<0,

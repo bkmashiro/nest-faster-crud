@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { RedisService } from '../db/redis/redis.service';
 import { DeviceID } from './decl';
 import { SioService } from '../sio/sio.service';
+import { PushDataDto } from './dto/push-data.dto';
 
 export const GeoUpdateObject: Subject<any> = new Subject<any>()
 
@@ -90,4 +91,30 @@ export class TrackerService {
     // broadcast to all users in the same group
     // this.sioService.broadcastToGroup('geo', 'geo-update', auditData)
   }
+
+  handlers: SioDataEventHandler[] = []
+
+  registerHandler(handler: SioDataEventHandler) {
+    this.handlers.push(handler)
+  }
+
+  handleDataPush(evt: PushDataDto) {
+    for (const handler of this.handlers) {
+      if (handler.match(evt)) {
+        const ret = handler.handle(evt)
+        if (ret.done) {
+          return
+        }
+      }
+    }
+  }
+}
+
+type SioDataEventResult = {
+  done: boolean,
+}
+
+type SioDataEventHandler = {
+  match: (evt: any) => boolean,
+  handle: (evt: any) => SioDataEventResult,
 }
