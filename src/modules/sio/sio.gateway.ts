@@ -4,6 +4,7 @@ import { PushDataDto } from '../tracker/dto/push-data.dto';
 import { Logger } from '@nestjs/common';
 import { Server } from 'socket.io';
 import { TrackerService } from '../tracker/tracker.service';
+import { PushHandler } from './handlers/pushDataHandler';
 
 const logger = new Logger('SIoGateway');
 @WebSocketGateway()
@@ -11,6 +12,7 @@ export class SioGateway implements OnGatewayConnection, OnGatewayDisconnect, OnG
   constructor(
     private readonly sioService: SioService,
     private readonly trackerService: TrackerService,
+    private readonly pushHandler: PushHandler,
   ) { }
 
   async handleConnection(socket: any, ...args: any[]) {
@@ -37,11 +39,9 @@ export class SioGateway implements OnGatewayConnection, OnGatewayDisconnect, OnG
   }
 
   @SubscribeMessage('push-data')
-  handlePush(@MessageBody() data: PushDataDto): string {
-    
-    if (data.flag & 1) {
-      this.trackerService.updateLocation(data.device, data.content)
-    }
+  handlePush(@MessageBody() pushDataDto: PushDataDto): string {
+
+    this.pushHandler.push(pushDataDto)
     // store to storage service
 
     // forward to upper controller (if any)

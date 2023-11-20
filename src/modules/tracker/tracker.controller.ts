@@ -2,10 +2,15 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { TrackerService } from './tracker.service';
 import { CreateTrackerDto } from './dto/create-tracker.dto';
 import { UpdateTrackerDto } from './dto/update-tracker.dto';
+import { PushDataDto } from './dto/push-data.dto';
+import { PushHandler } from '../sio/handlers/pushDataHandler';
 
 @Controller('tracker')
 export class TrackerController {
-  constructor(private readonly trackerService: TrackerService) {}
+  constructor(
+    private readonly trackerService: TrackerService,
+    private readonly pushHandler: PushHandler
+  ) { }
 
   @Post()
   create(@Body() createTrackerDto: CreateTrackerDto) {
@@ -30,5 +35,10 @@ export class TrackerController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.trackerService.remove(+id);
+  }
+
+  @Post("push")
+  push(@Body() pushDataDto: PushDataDto) {
+    this.pushHandler.push(pushDataDto)
   }
 }
