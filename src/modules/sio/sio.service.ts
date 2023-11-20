@@ -13,7 +13,6 @@ export class SioService {
   constructor(
     private readonly authService: AuthService,
     private readonly sessions: SessionManager,
-    private readonly trackerService: TrackerService,
   ) { }
 
   getJwtTokenFromSocket(socket: Socket) {
