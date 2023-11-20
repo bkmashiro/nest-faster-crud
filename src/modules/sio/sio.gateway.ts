@@ -11,7 +11,6 @@ const logger = new Logger('SIoGateway');
 export class SioGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
   constructor(
     private readonly sioService: SioService,
-    private readonly trackerService: TrackerService,
     private readonly pushHandler: PushHandler,
   ) { }
 

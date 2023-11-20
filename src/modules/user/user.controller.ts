@@ -29,14 +29,6 @@ export class UserController {
     return 'hello';
   }
 
-  @Roles(ROLES.USER)
-  @Post('friends')
-  async findFriends(@User() user: UserType) {
-    // console.log('user');
-    //TODO change this to onlt ids to reduce payload
-    return await user.friends
-  }
-
   @Get('testuser')
   async testUser() {
     return await this.userService.testUser();

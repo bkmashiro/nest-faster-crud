@@ -2,9 +2,6 @@ import { BaseEntity, BeforeInsert, Column, CreateDateColumn, DeleteDateColumn, E
 import * as bcrypt from 'bcryptjs';
 import { Exclude } from 'class-transformer';
 import { Attr } from "../../auth/entities/attr.entity";
-import { ChatGroup } from "src/modules/chatgroup/entities/chatgroup.entity";
-import { Media } from "src/modules/media/entities/media.entity";
-import { Chatsess } from "src/modules/chatsess/entities/chatsess.entity";
 
 
 @Entity('user')
@@ -70,31 +67,6 @@ export class User extends BaseEntity {
   updated_at: Date;
   @DeleteDateColumn()
   deleted_at: Date;
-
-  @ManyToMany(() => ChatGroup, chatgroup => chatgroup.members, { onDelete: 'CASCADE' })
-  joinedChatGroups: Promise<ChatGroup[]>;
-
-  @ManyToMany(() => User, user => user.friends, { onDelete: 'CASCADE' })
-  @JoinTable()
-  friends: Promise<User[]>;
-
-  /**
-   * this is the public key of the user, used for e2e encryption
-   * if a user want to send a e2e message to an offline user,
-   * he should encrypt the message with this public key
-   */
-  @Column('text', { nullable: true })
-  public_key: Promise<string>;
-
-  @OneToMany(() => Media, media => media.createdBy, { onDelete: 'CASCADE' })
-  medias: Promise<Media[]>
-
-  @ManyToMany(() => Media, media => media.visibleTo, { onDelete: 'CASCADE' })
-  @JoinTable()
-  accessTokens: Promise<Media[]>
-
-  @ManyToMany(() => Chatsess, chatsess => chatsess.members, { onDelete: 'CASCADE' })
-  chatSessions: Promise<Chatsess[]>
 
   @BeforeInsert()
   async encryptPwd() {

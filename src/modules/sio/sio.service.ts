@@ -29,17 +29,6 @@ export class SioService {
     if (oldSocket) {
       oldSocket.disconnect()
     }
-    // connect this socket to rooms that this user joined
-    // Note: this won't cause duplicated join, socket.io will handle this
-    // even a user went offline and online again, this won't cause duplicated join, and he's auto reconnected to all rooms
-    const user = socket.user
-    if (user) {
-      const groups = await user.joinedChatGroups
-      for (const group of groups) {
-        socket.join(`group:${group.id}`)
-        console.log(`user ${user.id} joined group ${group.id}`)
-      }
-    }
     this.sessions.set(id, socket)
     socket.join(DEFAULT_ROOM) // join default room
   }
