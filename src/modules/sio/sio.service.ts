@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { TrackerService } from '../tracker/tracker.service';
 import { AuthService } from '../auth/auth.service';
 import { Server, Socket } from 'socket.io';
 import { SessionManager } from './sessions';
 import { DEFAULT_ROOM } from './tokens';
-import { PushDataDto } from '../tracker/dto/push-data.dto';
+
 
 @Injectable()
 export class SioService {

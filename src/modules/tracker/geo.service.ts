@@ -18,6 +18,8 @@ import { PushDataDto } from './dto/push-data.dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { GeoData } from './entities/push-geo.dto'
+import { SioService } from '../sio/sio.service'
+import { ROOM_GEO } from '../sio/ROOM_GEO'
 
 export const GeoUpdateObject: Subject<PushDataDto<GeoData>> = new Subject<
   PushDataDto<GeoData>
@@ -28,8 +30,16 @@ export class GeoService {
   constructor(
     private readonly redisService: RedisService,
     @InjectRepository(Tracker)
-    private readonly trackerRepository: Repository<Tracker> // private readonly sioService: SioService
+    private readonly trackerRepository: Repository<Tracker>, // private readonly sioService: SioService
+    private readonly sioService : SioService
   ) {
+
+    GeoUpdateObject.subscribe((data) => {
+      // set in redis
+      this.redisService.set(getTrackerRedisName(data.device), JSON.stringify(data))
+    })
+
+
     // audit the location update
     // only pick last request in 5000ms from every sender accordingly
     GeoUpdateObject.pipe(
@@ -37,7 +47,7 @@ export class GeoService {
       mergeMap((grouped) => grouped.pipe(auditTime(5000)))
     ).subscribe((auditData) => {
       console.log('Audit Data flushed ')
-      // this.flushCacheToDb(auditData.device)
+      this.flushCacheToDb(auditData.device)
     })
 
     const timerObservable = timer(1000)
@@ -50,16 +60,27 @@ export class GeoService {
       )
       .subscribe((compressedData) => {
         console.log('#Compressed Data:', compressedData.length)
-        // this.sioService.broadcastToGroup('geo', 'geo-update', compressedData)
+        this.sioService.broadcastToGroup(ROOM_GEO, 'geo-update', compressedData)
       })
   }
 
   async flushCacheToDb(id: DeviceID) {
     const deviceGeo = JSON.parse(
       await this.redisService.get(getTrackerRedisName(id))
-    )
+    ) as GeoData
+
+    console.log('flushing cache to db', deviceGeo)
+
     // TODO Validate the location
     // save to db
-    this.trackerRepository.update(id, { location: deviceGeo })
+    this.trackerRepository.upsert({
+      id: id,
+      location: {
+        type: 'Point',
+        coordinates: [deviceGeo.longitude, deviceGeo.latitude],
+      },
+    }, {
+      conflictPaths: ['id'],
+    })
   }
 }

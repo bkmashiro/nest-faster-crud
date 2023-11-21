@@ -1,8 +1,8 @@
-import { BaseEntity, Column, Entity, Geometry, PrimaryGeneratedColumn } from "typeorm";
+import { BaseEntity, Column, Entity, Geometry, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Tracker extends BaseEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn()
   id: string;
 
   @Column('geometry', { nullable: false, spatialFeatureType: 'Point', srid: 4326 })

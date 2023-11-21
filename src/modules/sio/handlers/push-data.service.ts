@@ -7,7 +7,7 @@ export class PushDataService {
   push(pushDataDto: PushDataDto) {
     // if is geo update
     if (true) {
-      GeoUpdateObject.next(pushDataDto)
+      GeoUpdateObject.next(pushDataDto as any)
     }
   }
 }
