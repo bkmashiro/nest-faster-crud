@@ -7,7 +7,7 @@ import { AllExceptionsFilter } from './utils/AllExceptionFilter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('dt-api');
   app.enableCors();
 
   // const config = new DocumentBuilder()

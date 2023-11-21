@@ -3,13 +3,13 @@ import { TrackerService } from './tracker.service';
 import { CreateTrackerDto } from './dto/create-tracker.dto';
 import { UpdateTrackerDto } from './dto/update-tracker.dto';
 import { PushDataDto } from './dto/push-data.dto';
-import { PushHandler } from '../sio/handlers/pushDataHandler';
+import { PushDataService } from '../sio/handlers/push-data.service';
 
 @Controller('tracker')
 export class TrackerController {
   constructor(
     private readonly trackerService: TrackerService,
-    private readonly pushHandler: PushHandler
+    private readonly pushHandler: PushDataService
   ) { }
 
   @Post()

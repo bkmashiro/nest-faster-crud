@@ -67,7 +67,8 @@
     "socket.io-client": "^4.7.2",
     "swagger-ui-express": "^4.6.3",
     "typeorm": "^0.3.17",
-    "ws": "^8.13.0"
+    "ws": "^8.13.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.5.0",

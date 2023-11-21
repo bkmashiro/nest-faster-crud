@@ -19,17 +19,19 @@ import { Tracker } from './entities/tracker.entity'
 import { getTrackerRedisName } from './tracker.service'
 import { PushDataDto } from './dto/push-data.dto'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm';
+import { Repository } from 'typeorm'
+import { GeoData } from './entities/push-geo.dto'
 
-export const GeoUpdateObject: Subject<PushDataDto> = new Subject<PushDataDto>()
+export const GeoUpdateObject: Subject<PushDataDto<GeoData>> = new Subject<
+  PushDataDto<GeoData>
+>()
 
 @Injectable()
 export class GeoService {
   constructor(
     private readonly redisService: RedisService,
     @InjectRepository(Tracker)
-    private readonly trackerRepository: Repository<Tracker>,
-    // private readonly sioService: SioService
+    private readonly trackerRepository: Repository<Tracker> // private readonly sioService: SioService
   ) {
     // audit the location update
     // only pick last request in 5000ms from every sender accordingly
@@ -37,7 +39,7 @@ export class GeoService {
       groupBy((auditData) => auditData.device),
       mergeMap((grouped) => grouped.pipe(auditTime(5000)))
     ).subscribe((auditData) => {
-      console.log('Audit Data flushed:', auditData)
+      console.log('Audit Data flushed ')
       // this.flushCacheToDb(auditData.device)
     })
 
@@ -48,8 +50,9 @@ export class GeoService {
         map(([data, _]) => data),
         bufferTime(5000),
         filter((bufferedData) => bufferedData.length > 0)
-      ).subscribe((compressedData) => {
-        console.log('Compressed Data brocasted:', compressedData)
+      )
+      .subscribe((compressedData) => {
+        console.log('#Compressed Data:', compressedData.length)
         // this.sioService.broadcastToGroup('geo', 'geo-update', compressedData)
       })
   }

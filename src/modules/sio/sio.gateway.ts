@@ -3,14 +3,14 @@ import { SioService } from './sio.service';
 import { PushDataDto } from '../tracker/dto/push-data.dto';
 import { Logger } from '@nestjs/common';
 import { Server } from 'socket.io';
-import { PushHandler } from './handlers/pushDataHandler';
+import { PushDataService } from './handlers/push-data.service';
 
 const logger = new Logger('SIoGateway');
 @WebSocketGateway()
 export class SioGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
   constructor(
     private readonly sioService: SioService,
-    private readonly pushHandler: PushHandler,
+    private readonly pushHandler: PushDataService,
   ) { }
 
   async handleConnection(socket: any, ...args: any[]) {
