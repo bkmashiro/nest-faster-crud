@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateTrackerDto } from './dto/create-tracker.dto';
 import { UpdateTrackerDto } from './dto/update-tracker.dto';
-import { fromEvent, audit, interval, Subject, auditTime, groupBy, mergeMap, combineLatest, timer, map, bufferTime, filter } from 'rxjs';
+import { fromEvent, audit, interval, auditTime, groupBy, mergeMap, combineLatest, timer, map, bufferTime, filter } from 'rxjs';
 import { Repository } from 'typeorm';
 import { Tracker } from './entities/tracker.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,8 +9,7 @@ import { RedisService } from '../db/redis/redis.service';
 import { DeviceID } from './decl';
 import { SioService } from '../sio/sio.service';
 import { PushDataDto } from './dto/push-data.dto';
-
-export const GeoUpdateObject: Subject<any> = new Subject<any>()
+import { GeoUpdateObject } from './GeoUpdateObject';
 
 @Injectable()
 export class TrackerService {

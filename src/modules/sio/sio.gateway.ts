@@ -3,7 +3,6 @@ import { SioService } from './sio.service';
 import { PushDataDto } from '../tracker/dto/push-data.dto';
 import { Logger } from '@nestjs/common';
 import { Server } from 'socket.io';
-import { TrackerService } from '../tracker/tracker.service';
 import { PushHandler } from './handlers/pushDataHandler';
 
 const logger = new Logger('SIoGateway');
@@ -39,7 +38,6 @@ export class SioGateway implements OnGatewayConnection, OnGatewayDisconnect, OnG
 
   @SubscribeMessage('push-data')
   handlePush(@MessageBody() pushDataDto: PushDataDto): string {
-
     this.pushHandler.push(pushDataDto)
     // store to storage service
 
