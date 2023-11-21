@@ -1,14 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { CreateTrackerDto } from './dto/create-tracker.dto'
 import { UpdateTrackerDto } from './dto/update-tracker.dto'
-import { Repository } from 'typeorm'
-import { Tracker } from './entities/tracker.entity'
-import { InjectRepository } from '@nestjs/typeorm'
-import { RedisService } from '../db/redis/redis.service'
 import { DeviceID } from './decl'
-import { SioService } from '../sio/sio.service'
-import { PushDataDto } from './dto/push-data.dto'
-import { GeoUpdateObject } from './geo.service'
 
 @Injectable()
 export class TrackerService {
