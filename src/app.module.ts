@@ -23,7 +23,7 @@ import { DeviceModule } from './modules/device/device.module';
       imports: [ConfigModule],
       useFactory: async (config: ConfigService) => {
         return {
-          type: 'mysql',
+          type: 'postgres',
           host: config.get('DB_HOST'),
           port: config.get('DB_PORT'),
           database: config.get('DB_DATABASE'),
