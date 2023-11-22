@@ -17,7 +17,7 @@ import { getTrackerRedisName } from './tracker.service'
 import { PushDataDto } from './dto/push-data.dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
-import { GeoData } from './entities/push-geo.dto'
+import { GeoData, GeoDataScheme } from './entities/push-geo.dto'
 import { SioService } from '../sio/sio.service'
 import { ROOM_GEO } from '../sio/ROOM_GEO'
 
@@ -31,14 +31,19 @@ export class GeoService {
     private readonly redisService: RedisService,
     @InjectRepository(Tracker)
     private readonly trackerRepository: Repository<Tracker>, // private readonly sioService: SioService
-    private readonly sioService : SioService
+    private readonly sioService: SioService
   ) {
+    const timerObservable = timer(1000)
 
-    GeoUpdateObject.subscribe((data) => {
-      // set in redis
-      this.redisService.set(getTrackerRedisName(data.device), JSON.stringify(data))
+    GeoUpdateObject.pipe(
+      groupBy((auditData) => auditData.device),
+      mergeMap((grouped) => grouped.pipe(auditTime(5000)))
+    ).subscribe((auditData) => {
+      this.redisService.set(
+        getTrackerRedisName(auditData.device),
+        JSON.stringify(auditData)
+      )
     })
-
 
     // audit the location update
     // only pick last request in 5000ms from every sender accordingly
@@ -46,11 +51,9 @@ export class GeoService {
       groupBy((auditData) => auditData.device),
       mergeMap((grouped) => grouped.pipe(auditTime(5000)))
     ).subscribe((auditData) => {
-      console.log('Audit Data flushed ')
+      console.log('Audit Data flushed')
       this.flushCacheToDb(auditData.device)
     })
-
-    const timerObservable = timer(1000)
 
     combineLatest([GeoUpdateObject, timerObservable])
       .pipe(
@@ -65,22 +68,25 @@ export class GeoService {
   }
 
   async flushCacheToDb(id: DeviceID) {
-    const deviceGeo = JSON.parse(
-      await this.redisService.get(getTrackerRedisName(id))
-    ) as GeoData
-
+    const deviceGeo = GeoDataScheme.parse(
+      JSON.parse(
+        await this.redisService.get(getTrackerRedisName(id))
+      ) as GeoData
+    )
     console.log('flushing cache to db', deviceGeo)
 
-    // TODO Validate the location
     // save to db
-    this.trackerRepository.upsert({
-      id: id,
-      location: {
-        type: 'Point',
-        coordinates: [deviceGeo.longitude, deviceGeo.latitude],
+    this.trackerRepository.upsert(
+      {
+        id: id,
+        location: {
+          type: 'Point',
+          coordinates: [deviceGeo.longitude, deviceGeo.latitude],
+        },
       },
-    }, {
-      conflictPaths: ['id'],
-    })
+      {
+        conflictPaths: ['id'],
+      }
+    )
   }
 }
