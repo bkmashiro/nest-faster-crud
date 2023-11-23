@@ -1,86 +1,74 @@
 import 'reflect-metadata'
 
-// 定义一个接口来表示字段的元数据
 interface FieldMetadata {
-  name: string;
-  type: string;
+  name: string
+  type: string
 }
 
+export function Field({
+  name,
+  type,
+}: { name?: string; type?: string } = {}): PropertyDecorator {
+  return function (target: any, key: string) {
+    const _type_constructor = Reflect.getMetadata('design:type', target, key)
+    const _value = target[key]
+    const _name = key
+    // const _key = Symbol(key);
 
-function classDecorator<T extends { new(...args: any[]): {} }>(constructor: T) {
-  console.log()
-}
-
-function classDecorator2<T extends { new(...args: any[]): {} }>(li: keyof T) {
-  return classDecorator
-}
-
-interface ClassType<T> {
-  new (...args: any[]): T;
-}
-
-function classType<T>(target: ClassType<T>) {
-  // 这里可以添加一些额外的逻辑
-  return target;
-}
-
-function classType2<T extends {new(...args:any[]):{}}>(ignore: string[]) {
-  // 这里可以添加一些额外的逻辑
-  return function classType<T>(target) {
-    return target;
+    name = name || _name
+    type = type || _type_constructor.name
+    const existingMetadata = Reflect.getMetadata('fields', target) || {}
+    const options = {
+      name,
+      type,
+    }
+    Reflect.defineMetadata(
+      'fields',
+      Object.assign(existingMetadata, { [name]: options }),
+      target
+    )
   }
 }
 
-
-type PropertyType<T, K extends keyof T, D> = K extends keyof T ? T[K] : D;
-
-// 定义一个装饰器工厂函数，用于创建类装饰器
-function CollectFields<T>(ignores: any[] = []): ClassDecorator {
-  return function (target: any) {
-    // 获取所有属性的装饰器元数据
-    const properties = Reflect.getMetadataKeys(target.prototype);
-
-    // 存储字段元数据的数组
-    const fields: FieldMetadata[] = [];
-
-    // 遍历每个属性，收集字段信息
+export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>() {
+  return function classDecorator(target: T) {
+    const properties = Reflect.getMetadataKeys(target.prototype)
+    const fields: FieldMetadata[] = []
+    const li = Reflect.getMetadata('ignore', target.prototype) || []
+    // console.log(li)
     for (const property of properties) {
-      const metadata = Reflect.getMetadata(property, target.prototype);
-      if (metadata && metadata.name && metadata.type) {
-        fields.push({
-          name: metadata.name,
-          type: metadata.type,
-        });
+      if (!li.includes(property)) {
+        const metadata = Reflect.getMetadata(property, target.prototype)
+        if (metadata && metadata.name && metadata.type) {
+          fields.push({
+            name: metadata.name,
+            type: metadata.type,
+          })
+        }
       }
     }
 
-    // 将字段信息存储在静态变量中
-    target.fields = fields;
-  };
+    Object.defineProperty(target, 'fields', {
+      value: fields,
+    })
+
+    // console.log(`process done`, Reflect.getMetadata('fields', target.prototype))
+  }
 }
 
-// 定义一个属性装饰器，用于为属性添加元数据
-function Field(name: string, type: string): PropertyDecorator {
-  return function (target: any, key: string) {
-    // 将元数据添加到属性上
-    Reflect.defineMetadata(key, { name, type }, target);
-  };
+function IgnoreField<T extends { new (...args: any[]): InstanceType<T> }>(
+  li: (keyof InstanceType<T>)[]
+) {
+  return (target) => Reflect.defineMetadata('ignore', li, target)
 }
 
-// 使用装饰器和元数据
-// @CollectFields(['i'])
-@classType2(['id'])
-class User {
-  @Field('id', 'uuid')
-  public id: string;
+// 控制器装饰器工厂函数，用于生成动态控制器
+function DynamicController(route: string, entity: { [key: string]: any }) {
+  class DynamicControllerClass {}
 
-  @Field('username', 'string')
-  public username: string;
-
-  @Field('email', 'string')
-  public email: string;
+  return DynamicControllerClass
 }
 
-// 访问生成的字段信息
-// @ts-ignore
-console.log(User.fields);
+export type FieldOptions = {}
+
+

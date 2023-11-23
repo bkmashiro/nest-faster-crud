@@ -7,9 +7,9 @@ import { AllExceptionsFilter } from './utils/AllExceptionFilter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('/dt-api');
   app.enableCors();
-
+ 
   // const config = new DocumentBuilder()
   //   .setTitle('Xlxu系统管理后台')
   //   .setDescription('管理后台接口文档')

@@ -8,6 +8,6 @@ import { AuthModule } from '../auth/auth.module';
 @Module({
   imports: [AuthModule],
   providers: [SioGateway, SioService, SessionManager, PushHandler],
-  exports: [SioService],
+  exports: [SioService, PushHandler],
 })
 export class SioModule {}
