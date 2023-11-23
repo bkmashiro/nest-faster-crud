@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 import {
   BEFORE_ACTION_TOKEN,
+  BeforeActionTokenType,
   FCRUD_NAME_TOKEN,
   FIELD_TOKEN,
   GEN_CRUD_METHOD_TOKEN,
@@ -50,7 +51,9 @@ export type CURDOptions = {
   methods: CRUDMethods[]
 }
 
-export function CRUD<T extends ClassType>(options: Partial<CURDOptions> = {}) {
+export function CRUD<T extends ClassType<T>>(
+  options: Partial<CURDOptions> = {}
+) {
   return function classDecorator(target: T) {
     const properties = getProtoMetaKeys(target)
     const fields: FieldMetadata[] = []
@@ -72,54 +75,59 @@ export function CRUD<T extends ClassType>(options: Partial<CURDOptions> = {}) {
   }
 }
 
-export type BeforeActionOptions<T> = {
+export type BeforeActionOptions<T extends {}> = {
   requires: (keyof T)[]
+  denies: (keyof T)[]
   expect: (data: T) => boolean | ((data: T) => boolean)[]
   transform: (data: T) => T
+  onSuccess: (data: T) => any
+  onFailure: (data: T) => any
 }
 
-export type ClassType = { new (...args: any[]): {} }
-type PartialBeforeActionOptions<T extends ClassType> = Partial<
+export type ClassType<T extends abstract new (...args: any) => any> = {
+  new (...args: any[]): InstanceType<T>
+}
+type PartialBeforeActionOptions<T extends ClassType<T>> = Partial<
   BeforeActionOptions<InstanceType<T>>
 >
 
-export function BeforeAction<T extends ClassType>(
-  action: CRUDMethods,
-  options: PartialBeforeActionOptions<T> = {}
-) {
+export function BeforeAction<
+  T extends { new (...args: any[]): InstanceType<T> }
+>(action: CRUDMethods, options: PartialBeforeActionOptions<T> = {}) {
   return function classDecorator(target: T) {
-    mergeProtoMeta(target, BEFORE_ACTION_TOKEN, { [action]: options })
+    const token: BeforeActionTokenType = `before-action-${action}`
+    setProtoMeta(target, token, options)
   }
 }
 
-export function Create<T extends ClassType>(
+export function Create<T extends ClassType<T>>(
   options: PartialBeforeActionOptions<T> = {}
 ) {
-  return BeforeAction('create', options)
+  return BeforeAction<T>('create', options)
 }
 
-export function Read<T extends ClassType>(
+export function Read<T extends ClassType<T>>(
   options: PartialBeforeActionOptions<T> = {}
 ) {
-  return BeforeAction('read', options)
+  return BeforeAction<T>('read', options)
 }
 
-export function Update<T extends ClassType>(
+export function Update<T extends ClassType<T>>(
   options: PartialBeforeActionOptions<T> = {}
 ) {
-  return BeforeAction('update', options)
+  return BeforeAction<T>('update', options)
 }
 
-export function Delete<T extends ClassType>(
+export function Delete<T extends ClassType<T>>(
   options: PartialBeforeActionOptions<T> = {}
 ) {
-  return BeforeAction('delete', options)
+  return BeforeAction<T>('delete', options)
 }
 
-export function IgnoreField<T extends ClassType>(
-  li: (keyof InstanceType<T>)[]
-) {
-  return (target: T) => setProtoMeta(target, IGNORE_FIEIDS_TOKEN, li)
+export function IgnoreField<
+  T extends { new (...args: any[]): InstanceType<T> }
+>(li: (keyof InstanceType<T>)[]) {
+  return (target: T) => Reflect.defineMetadata(IGNORE_FIEIDS_TOKEN, li, target)
 }
 
 export type FieldOptions = {}

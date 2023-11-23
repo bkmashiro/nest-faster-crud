@@ -5,3 +5,5 @@ export const IGNORE_FIEIDS_TOKEN = 'ignore-fields'
 export type HttpMethods = 'get' | 'post' | 'put' | 'delete' | 'patch'
 export type CRUDMethods = 'create' | 'read' | 'update' | 'delete'
 export const BEFORE_ACTION_TOKEN = 'before-action'
+export type BeforeActionTokenType = `before-action-${CRUDMethods}`
+export const defaultCrudMethod = ['create', 'read', 'update', 'delete']
