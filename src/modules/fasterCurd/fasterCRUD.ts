@@ -7,7 +7,7 @@ import {
   ClassType,
   PartialBeforeActionOptions,
 } from './decorators'
-import { BeforeActionTokenType, CRUDMethods } from './fcrud-tokens'
+import { BeforeActionTokenType, CRUDMethods, HttpMethods } from './fcrud-tokens'
 import { FCRUD_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './fcrud-tokens'
 import { getProtoMeta } from './reflect.utils'
 import { deconstrcuOrNull } from 'src/utils/objectTools'
@@ -21,6 +21,7 @@ export const logger = new Logger('FasterCRUDService')
 @Injectable()
 export class FasterCrudService {
   prefix = ``
+  default_method: HttpMethods = 'post'
 
   constructor(private adapterHost: HttpAdapterHost) {
     this.app.use(express.json())
@@ -59,8 +60,8 @@ export class FasterCrudService {
       ) as PartialBeforeActionOptions<T>
       const decoratedMethod = this.configureMethod(decoration_config, method)
 
-      const route = decoration_config.route ?? `/${action}`
-      router.setRoute('post', route, async function (req, res) {
+      const route = fixRoute(decoration_config.route ?? `/${action}`)
+      router.setRoute(this.default_method, route, async function (req, res) {
         await perform_task(req, decoratedMethod, res)
       })
     }
@@ -273,5 +274,13 @@ export async function perform_task(
         message: e.message,
       })
       .end()
+  }
+}
+
+function fixRoute(route: string) {
+  if (route.startsWith('/')) {
+    return route
+  } else {
+    return `/${route}`
   }
 }
