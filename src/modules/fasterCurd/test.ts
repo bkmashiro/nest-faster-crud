@@ -56,11 +56,12 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>() {
   }
 }
 
-function IgnoreField<T extends { new (...args: any[]): InstanceType<T> }>(
+export function IgnoreField<T extends { new (...args: any[]): InstanceType<T> }>(
   li: (keyof InstanceType<T>)[]
 ) {
-  return (target) => Reflect.defineMetadata('ignore', li, target)
+  return (target: T) => Reflect.defineMetadata('ignore', li, target)
 }
+
 
 // 控制器装饰器工厂函数，用于生成动态控制器
 function DynamicController(route: string, entity: { [key: string]: any }) {
@@ -71,4 +72,13 @@ function DynamicController(route: string, entity: { [key: string]: any }) {
 
 export type FieldOptions = {}
 
+@IgnoreField(['id'])
+class TTT {
+  id: number;
 
+  @Field()
+  public username: string;
+
+  @Field()
+  public email: string;
+}
