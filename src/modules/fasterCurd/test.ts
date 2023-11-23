@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { FCRUD_NAME_TOKEN, FIELD_TOKEN as FIELDS_TOKEN, IGNORE_FIEIDS_TOKEN } from './fcrud-tokens'
+import { FCRUD_NAME_TOKEN, FIELD_TOKEN as FIELDS_TOKEN, GEN_CRUD_METHOD_TOKEN, IGNORE_FIEIDS_TOKEN } from './fcrud-tokens'
 import { getProtoMeta, getProtoMetaKeys, setProtoMeta } from './reflect.utils'
 
 interface FieldMetadata {
@@ -48,6 +48,7 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
     const fields: FieldMetadata[] = []
     const li = getProtoMeta(target, IGNORE_FIEIDS_TOKEN) || {}
     setProtoMeta(target, FCRUD_NAME_TOKEN, options.name)
+    setProtoMeta(target, GEN_CRUD_METHOD_TOKEN, options.methods)
 
     for (const property of properties) {
       if (!li.hasOwnProperty(property)) {

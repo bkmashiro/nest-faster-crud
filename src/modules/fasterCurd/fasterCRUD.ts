@@ -16,8 +16,11 @@ import {
 } from './fcrud-tokens'
 import { getProtoMeta } from './reflect.utils'
 
+const defaultCrudMethod = ['create', 'read', 'update', 'delete']
 @Injectable()
 export class FasterCrudService {
+  prefix = `fcrud-`
+
   constructor(private adapterHost: HttpAdapterHost) {
     this.app.use(express.json())
     logger.debug(
@@ -53,7 +56,7 @@ export class FasterCrudService {
     const actions: CRUDMethods[] = getProtoMeta(
       entity,
       GEN_CRUD_METHOD_TOKEN
-    ) ?? ['create', 'read', 'update', 'delete']
+    ) ?? defaultCrudMethod
     for (const action of actions) {
       const method = provider[action].bind(provider) // have to bind to provider, otherwise this will be undefined
       router.addHandler('post', `/${action}`, async function (req, res) {
@@ -61,7 +64,7 @@ export class FasterCrudService {
       })
     }
 
-    this.addRouter(`/fcrud-${fcrudName.toLowerCase()}`, router.build())
+    this.addRouter(`/${this.prefix}${fcrudName.toLowerCase()}`, router.build())
   }
 
   get app(): Express {
