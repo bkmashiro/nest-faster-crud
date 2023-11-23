@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common'
 import { HttpAdapterHost } from '@nestjs/core'
 import { Express } from 'express'
 import express = require('express')
-import { BeforeActionOptions } from './decorators'
+import {
+  BeforeActionOptions,
+  ClassType,
+  PartialBeforeActionOptions,
+} from './decorators'
 import { BeforeActionTokenType, CRUDMethods } from './fcrud-tokens'
 import { FCRUD_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './fcrud-tokens'
 import { getProtoMeta } from './reflect.utils'
@@ -38,10 +42,7 @@ export class FasterCrudService {
     this.app.use(route, router)
   }
 
-  generateCRUD<T extends { new (...args: any[]): {} }>(
-    entity: T,
-    provider: CRUDProvider<T>
-  ) {
+  generateCRUD<T extends ClassType<T>>(entity: T, provider: CRUDProvider<T>) {
     const fcrudName = getProtoMeta(entity, FCRUD_NAME_TOKEN) ?? entity.name
     const router = new FasterCrudRouterBuilder()
 
@@ -52,7 +53,10 @@ export class FasterCrudService {
     for (const action of actions) {
       const method = provider[action].bind(provider) // have to bind to provider, otherwise this will be undefined
       const action_token: BeforeActionTokenType = `before-action-${action}`
-      const decoration_config = getProtoMeta(entity, action_token)
+      const decoration_config = getProtoMeta(
+        entity,
+        action_token
+      ) as PartialBeforeActionOptions<T>
       const decoratedMethod = this.configureMethod(decoration_config, method)
 
       router.setRoute('post', `/${action}`, async function (req, res) {
@@ -63,8 +67,8 @@ export class FasterCrudService {
     this.addRouter(`/${this.prefix}${fcrudName.toLowerCase()}`, router.build())
   }
 
-  configureMethod<T>(
-    options: BeforeActionOptions<T>,
+  configureMethod<T extends ClassType<T>>(
+    options: PartialBeforeActionOptions<T>,
     method: (data: any) => Promise<any>
   ) {
     if (!options) {
@@ -98,15 +102,14 @@ export class FasterCrudService {
         for (const checker of checkers) {
           checker(data)
         }
+        const transformed = transform_data(data)
+
+        const ret = await method(transformed)
+
+        return transform_return(ret)
       } catch (e) {
         throw new Error(e.message)
       }
-
-      const transformed = transform_data(data)
-
-      const ret = await method(transformed)
-
-      return transform_return(ret)
     }
   }
 

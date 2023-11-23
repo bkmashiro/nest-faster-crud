@@ -79,6 +79,7 @@ export type BeforeActionOptions<T extends {}> = {
   requires: (keyof T)[]
   denies: (keyof T)[]
   exactly: (keyof T)[]
+  route: string // override route
   expect: (data: T) => boolean | ((data: T) => boolean)[]
   transform: (data: T) => T
   transformReturn: (data: T) => any
@@ -91,7 +92,7 @@ export type BeforeActionOptions<T extends {}> = {
 export type ClassType<T extends abstract new (...args: any) => any> = {
   new (...args: any[]): InstanceType<T>
 }
-type PartialBeforeActionOptions<T extends ClassType<T>> = Partial<
+export type PartialBeforeActionOptions<T extends ClassType<T>> = Partial<
   BeforeActionOptions<InstanceType<T>>
 >
 

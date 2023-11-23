@@ -7,3 +7,5 @@ export type CRUDMethods = 'create' | 'read' | 'update' | 'delete'
 export const BEFORE_ACTION_TOKEN = 'before-action'
 export type BeforeActionTokenType = `before-action-${CRUDMethods}`
 export const defaultCrudMethod = ['create', 'read', 'update', 'delete']
+export const routeOverrideToken = 'route-override'
+export type RouteOverrideTokenType = `route-override-${CRUDMethods}`
