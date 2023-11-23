@@ -1,4 +1,6 @@
 import 'reflect-metadata'
+import { FCRUD_NAME_TOKEN, FIELD_TOKEN as FIELDS_TOKEN, IGNORE_FIEIDS_TOKEN } from './fcrud-tokens'
+import { getProtoMeta, getProtoMetaKeys, setProtoMeta } from './reflect.utils'
 
 interface FieldMetadata {
   name: string
@@ -17,28 +19,39 @@ export function Field({
 
     name = name || _name
     type = type || _type_constructor.name
-    const existingMetadata = Reflect.getMetadata('fields', target) || {}
+    const existingMetadata = Reflect.getMetadata(IGNORE_FIEIDS_TOKEN, target) || {}
     const options = {
       name,
       type,
     }
     Reflect.defineMetadata(
-      'fields',
+      IGNORE_FIEIDS_TOKEN,
       Object.assign(existingMetadata, { [name]: options }),
       target
     )
   }
 }
 
-export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>() {
+export type HttpMethods = 'get' | 'post' | 'put' | 'delete' | 'patch'
+export type CRUDMethods = 'create' | 'read' | 'update' | 'delete'
+
+export type CURDOptions = {
+  name: string
+  methods: CRUDMethods[]
+}
+
+export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
+  options: Partial<CURDOptions> = {}
+) {
   return function classDecorator(target: T) {
-    const properties = Reflect.getMetadataKeys(target.prototype)
+    const properties = getProtoMetaKeys(target)
     const fields: FieldMetadata[] = []
-    const li = Reflect.getMetadata('ignore', target.prototype) || []
-    // console.log(li)
+    const li = getProtoMeta(target, IGNORE_FIEIDS_TOKEN) || {}
+    setProtoMeta(target, FCRUD_NAME_TOKEN, options.name)
+
     for (const property of properties) {
-      if (!li.includes(property)) {
-        const metadata = Reflect.getMetadata(property, target.prototype)
+      if (!li.hasOwnProperty(property)) {
+        const metadata = getProtoMeta(target, property)
         if (metadata && metadata.name && metadata.type) {
           fields.push({
             name: metadata.name,
@@ -47,19 +60,13 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>() {
         }
       }
     }
-
-    Object.defineProperty(target, 'fields', {
-      value: fields,
-    })
-
-    // console.log(`process done`, Reflect.getMetadata('fields', target.prototype))
   }
 }
 
-export function IgnoreField<T extends { new (...args: any[]): InstanceType<T> }>(
-  li: (keyof InstanceType<T>)[]
-) {
-  return (target: T) => Reflect.defineMetadata('ignore', li, target)
+export function IgnoreField<
+  T extends { new (...args: any[]): InstanceType<T> }
+>(li: (keyof InstanceType<T>)[]) {
+  return (target: T) => setProtoMeta(target, IGNORE_FIEIDS_TOKEN, li)
 }
 
 export type FieldOptions = {}

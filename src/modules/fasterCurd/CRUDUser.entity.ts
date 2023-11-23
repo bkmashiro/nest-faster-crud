@@ -2,7 +2,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { CRUD, Field, IgnoreField } from './test';
 
 
-@CRUD()
+@CRUD({ name: 'User' })
 @Entity()
 @IgnoreField(['id'])
 export class CRUDUser {
@@ -11,9 +11,9 @@ export class CRUDUser {
 
   @Column()
   @Field()
-  public username: string;
+  username: string;
 
   @Column()
   @Field()
-  public email: string;
+  email: string;
 }

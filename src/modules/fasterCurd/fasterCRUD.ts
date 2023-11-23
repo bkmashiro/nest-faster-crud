@@ -1,14 +1,20 @@
 import { Injectable } from '@nestjs/common'
 import { HttpAdapterHost } from '@nestjs/core'
-import express, { Express } from 'express'
+import { Express } from 'express'
 import {
   logger,
   CRUDProvider,
   FasterCrudRouterBuilder,
   perform_task,
 } from './fasterCrudApp'
-import { FieldOptions } from './test'
-import { FCRUD_NAME_TOKEN, FIELD_TOKEN } from './fcrud-tokens'
+import express = require('express')
+import { CRUDMethods, FieldOptions } from './test'
+import {
+  FCRUD_NAME_TOKEN,
+  FIELD_TOKEN,
+  GEN_CRUD_METHOD_TOKEN,
+} from './fcrud-tokens'
+import { getProtoMeta } from './reflect.utils'
 
 @Injectable()
 export class FasterCrudService {
@@ -42,10 +48,12 @@ export class FasterCrudService {
 
     const fcrudName: string =
       Reflect.getMetadata(FCRUD_NAME_TOKEN, entity.prototype) ?? entity.name
-
     const router = new FasterCrudRouterBuilder()
 
-    const actions = ['create', 'read', 'update', 'delete']
+    const actions: CRUDMethods[] = getProtoMeta(
+      entity,
+      GEN_CRUD_METHOD_TOKEN
+    ) ?? ['create', 'read', 'update', 'delete']
     for (const action of actions) {
       const method = provider[action].bind(provider) // have to bind to provider, otherwise this will be undefined
       router.addHandler('post', `/${action}`, async function (req, res) {
@@ -53,7 +61,7 @@ export class FasterCrudService {
       })
     }
 
-    this.addRouter(`/fcrud-${fcrudName}`, router.build())
+    this.addRouter(`/fcrud-${fcrudName.toLowerCase()}`, router.build())
   }
 
   get app(): Express {
