@@ -76,6 +76,43 @@ export class FasterCrudService {
     if (!options) {
       return method
     }
+
+    const {
+      check_requirements,
+      check_denies,
+      check_exactly,
+      check_expect,
+      transform_data,
+      transform_return,
+    } = this.parseOptions(options)
+
+    const checkers = [
+      check_requirements,
+      check_denies,
+      check_exactly,
+      check_expect,
+    ]
+
+    return async (data: any) => {
+      try {
+        for (const checker of checkers) {
+          checker(data)
+        }
+        
+        const transformed = transform_data(data)
+
+        const ret = await method(transformed)
+
+        return transform_return(ret)
+      } catch (e) {
+        throw new Error(e.message)
+      }
+    }
+  }
+
+  private parseOptions<T extends ClassType<T>>(
+    options: Partial<BeforeActionOptions<InstanceType<T>>>
+  ) {
     const {
       requires,
       denies,
@@ -91,27 +128,13 @@ export class FasterCrudService {
     const check_expect = this.except_checker(expect)
     const transform_data = this.transform_processor(transform)
     const transform_return = this.transform_return_processor(transformReturn)
-
-    const checkers = [
+    return {
       check_requirements,
       check_denies,
       check_exactly,
       check_expect,
-    ]
-
-    return async (data: any) => {
-      try {
-        for (const checker of checkers) {
-          checker(data)
-        }
-        const transformed = transform_data(data)
-
-        const ret = await method(transformed)
-
-        return transform_return(ret)
-      } catch (e) {
-        throw new Error(e.message)
-      }
+      transform_data,
+      transform_return,
     }
   }
 
