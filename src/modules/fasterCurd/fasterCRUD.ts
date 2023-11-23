@@ -50,16 +50,12 @@ export class FasterCrudService {
       getProtoMeta(entity, GEN_CRUD_METHOD_TOKEN) ?? defaultCrudMethod
 
     for (const action of actions) {
-      const method = provider[action].bind(
-        provider
-      ) as CRUDProvider<T>[keyof CRUDProvider<T>] // have to bind to provider, otherwise this will be undefined
+      const method = provider[action].bind(provider) // have to bind to provider, otherwise this will be undefined
       const action_token: BeforeActionTokenType = `before-action-${action}`
-      const decoratedMethod = this.decorateMethod(
-        getProtoMeta(entity, action_token),
-        method
-      )
+      const decoration_config = getProtoMeta(entity, action_token)
+      const decoratedMethod = this.configureMethod(decoration_config, method)
 
-      router.addHandler('post', `/${action}`, async function (req, res) {
+      router.setRoute('post', `/${action}`, async function (req, res) {
         await perform_task(req, decoratedMethod, res)
       })
     }
@@ -67,7 +63,7 @@ export class FasterCrudService {
     this.addRouter(`/${this.prefix}${fcrudName.toLowerCase()}`, router.build())
   }
 
-  decorateMethod<T>(
+  configureMethod<T>(
     options: BeforeActionOptions<T>,
     method: (data: any) => Promise<any>
   ) {
@@ -75,18 +71,32 @@ export class FasterCrudService {
       return method
     }
     const { requires, expect, transform } = deconstrcuOrNull(options)
-    let check_requirements = (data: any) => true
-    if (requires && Array.isArray(requires) && requires.length > 0) {
-      check_requirements = (data: any) => {
-        for (const field of requires) {
-          if (!data.hasOwnProperty(field)) {
-            return false
-          }
-        }
-        return true
-      }
-    }
+    const check_requirements = this.req_checker(requires)
+    const check_expect = this.except_checker(expect)
+    const transform_data = this.transform_processor<T>(transform)
 
+    return async (data: any) => {
+      if (!check_requirements(data)) {
+        throw new Error(`Missing required fields: ${requires.join(', ')}`)
+      }
+
+      if (!check_expect(data)) {
+        throw new Error(`Expectation failed`)
+      }
+
+      return await method(transform_data(data))
+    }
+  }
+
+  private transform_processor<T>(transform: (data: T) => T) {
+    let transform_data = (data: any) => data
+    if (transform) {
+      transform_data = transform
+    }
+    return transform_data
+  }
+
+  private except_checker<T>(expect: (data: T) => boolean | ((data: T) => boolean)[]) {
     let check_expect = (data: any) => true
     if (expect) {
       if (isArrayOfFunctions(expect)) {
@@ -102,23 +112,22 @@ export class FasterCrudService {
         check_expect = expect as (data: any) => boolean
       }
     }
+    return check_expect
+  }
 
-    let transform_data = (data: any) => data
-    if (transform) {
-      transform_data = transform
-    }
-
-    return async (data: any) => {
-      if (!check_requirements(data)) {
-        throw new Error(`Missing required fields: ${requires.join(', ')}`)
+  private req_checker<T>(requires: (keyof T)[]) {
+    let check_requirements = (data: any) => true
+    if (requires && Array.isArray(requires) && requires.length > 0) {
+      check_requirements = (data: any) => {
+        for (const field of requires) {
+          if (!data.hasOwnProperty(field)) {
+            return false
+          }
+        }
+        return true
       }
-
-      if (!check_expect(data)) {
-        throw new Error(`Expectation failed`)
-      }
-
-      return await method(transform_data(data))
     }
+    return check_requirements
   }
 
   get app(): Express {
@@ -161,7 +170,7 @@ export class FasterCrudRouterBuilder {
   router: Router = express.Router()
 
   constructor() {}
-  addHandler(
+  setRoute(
     method: 'get' | 'post' | 'put' | 'delete' | 'patch',
     path: string,
     handler: express.RequestHandler
