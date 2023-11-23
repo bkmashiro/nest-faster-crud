@@ -62,23 +62,4 @@ export function IgnoreField<T extends { new (...args: any[]): InstanceType<T> }>
   return (target: T) => Reflect.defineMetadata('ignore', li, target)
 }
 
-
-// 控制器装饰器工厂函数，用于生成动态控制器
-function DynamicController(route: string, entity: { [key: string]: any }) {
-  class DynamicControllerClass {}
-
-  return DynamicControllerClass
-}
-
 export type FieldOptions = {}
-
-@IgnoreField(['id'])
-class TTT {
-  id: number;
-
-  @Field()
-  public username: string;
-
-  @Field()
-  public email: string;
-}
