@@ -1,5 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { Create, IgnoreField, CRUD, Field } from './decorators';
+import { Create, CRUD, Field } from './decorators';
 
 @Entity()
 @Create({
@@ -10,8 +10,9 @@ import { Create, IgnoreField, CRUD, Field } from './decorators';
     return data;
   },
   route: 'create-user',
+  checkType: true,
 })
-@CRUD({ name: 'User', methods: ['create', 'read'] })
+@CRUD()
 export class CRUDUser {
   @PrimaryGeneratedColumn()
   id: number;

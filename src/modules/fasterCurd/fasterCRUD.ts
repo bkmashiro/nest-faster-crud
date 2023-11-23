@@ -5,17 +5,18 @@ import express = require('express')
 import {
   BeforeActionOptions,
   ClassType,
+  ConfigCtx,
   PartialBeforeActionOptions,
 } from './decorators'
-import { BeforeActionTokenType, CRUDMethods, HttpMethods } from './fcrud-tokens'
-import { FCRUD_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './fcrud-tokens'
+import { BeforeActionTokenType, CRUDMethods, FIELDS_TOKEN, HttpMethods } from './fcrud-tokens'
+import { ENTITY_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './fcrud-tokens'
 import { getProtoMeta } from './reflect.utils'
 import { deconstrcuOrNull } from 'src/utils/objectTools'
 import { Logger } from '@nestjs/common'
 import { Router } from 'express'
 import { Repository } from 'typeorm'
 import { defaultCrudMethod } from './fcrud-tokens'
-
+import { z } from "zod";
 export const logger = new Logger('FasterCRUDService')
 
 @Injectable()
@@ -44,9 +45,10 @@ export class FasterCrudService {
   }
 
   generateCRUD<T extends ClassType<T>>(entity: T, provider: CRUDProvider<T>) {
-    const fcrudName = getProtoMeta(entity, FCRUD_NAME_TOKEN) ?? entity.name
+    const fcrudName = getProtoMeta(entity, ENTITY_NAME_TOKEN) ?? entity.name
     const router = new FasterCrudRouterBuilder()
-
+    const fields = getProtoMeta(entity, FIELDS_TOKEN) ?? {}
+    console.log(`fields`, fields)
     // create all CRUD routes
     const actions: CRUDMethods[] =
       getProtoMeta(entity, GEN_CRUD_METHOD_TOKEN) ?? defaultCrudMethod
@@ -58,7 +60,10 @@ export class FasterCrudService {
         entity,
         action_token
       ) as PartialBeforeActionOptions<T>
-      const decoratedMethod = this.configureMethod(decoration_config, method)
+      const decoratedMethod = this.configureMethod({
+        options: decoration_config,
+        target: entity,
+      }, method)
 
       const route = fixRoute(decoration_config?.route ?? `/${action}`)
       router.setRoute(this.default_method, route, async function (req, res) {
@@ -70,7 +75,7 @@ export class FasterCrudService {
   }
 
   configureMethod<T extends ClassType<T>>(
-    options: PartialBeforeActionOptions<T>,
+    {options, target}: ConfigCtx<T>,
     method: (data: any) => Promise<any>
   ) {
     if (!options) {
@@ -81,12 +86,13 @@ export class FasterCrudService {
       check_requirements,
       check_denies,
       check_exactly,
+      check_type,
       check_expect,
       transform_data,
       transform_return,
     } = this.parseOptions(options)
 
-    const checkers = [
+    const univariate_checkers = [
       check_requirements,
       check_denies,
       check_exactly,
@@ -95,9 +101,13 @@ export class FasterCrudService {
 
     return async (data: any) => {
       try {
-        for (const checker of checkers) {
+        //univariate check
+        for (const checker of univariate_checkers) {
           checker(data)
         }
+
+        //type check
+        check_type(data, target)
 
         const transformed = transform_data(data)
 
@@ -121,6 +131,7 @@ export class FasterCrudService {
       transform,
       onSuccess,
       transformReturn,
+      checkType,
     } = deconstrcuOrNull(options)
     const check_requirements = this.requrie_checker(requires)
     const check_denies = this.deny_checker(denies)
@@ -128,6 +139,7 @@ export class FasterCrudService {
     const check_expect = this.except_checker(expect)
     const transform_data = this.transform_processor(transform)
     const transform_return = this.transform_return_processor(transformReturn)
+    const check_type = this.type_checker(checkType, z.object({}))
     return {
       check_requirements,
       check_denies,
@@ -135,6 +147,7 @@ export class FasterCrudService {
       check_expect,
       transform_data,
       transform_return,
+      check_type
     }
   }
 
@@ -220,6 +233,18 @@ export class FasterCrudService {
           if (!exactly.includes(field)) {
             throw new Error(`Unexpected field ${String(field)}`)
           }
+        }
+      }
+    }
+    return check_requirements
+  }
+
+  private type_checker<T>(checkType: boolean, schema: z.ZodObject<any, any>) {
+    let check_requirements = (data: T, target: any) => void 0
+    if (checkType) {
+      check_requirements = (data: T) => {
+        if (schema.safeParse(data).success === false) {
+          throw new Error(`Type check failed`)
         }
       }
     }

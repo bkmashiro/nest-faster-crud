@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import {
   BEFORE_ACTION_TOKEN,
   BeforeActionTokenType,
-  FCRUD_NAME_TOKEN,
+  ENTITY_NAME_TOKEN,
   FIELDS_TOKEN,
   GEN_CRUD_METHOD_TOKEN,
   IGNORE_FIEIDS_TOKEN,
@@ -32,12 +32,12 @@ export function Field({
 
     name = name || _name
     type = type || _type_constructor.name
-    const existingMetadata =
-      Reflect.getMetadata(FIELDS_TOKEN, target) || {}
+    const existingMetadata = Reflect.getMetadata(FIELDS_TOKEN, target) || {} //FIXME: set to wrong target
     const options = {
       name,
       type,
     }
+    console.log(`options`, options)
     Reflect.defineMetadata(
       FIELDS_TOKEN,
       Object.assign(existingMetadata, { [name]: options }),
@@ -46,42 +46,112 @@ export function Field({
   }
 }
 
+// export function Field({
+//   name,
+//   type,
+// }: { name?: string; type?: string } = {}): PropertyDecorator {
+//   return function (target: any, key: string) {
+//     const _type_constructor = Reflect.getMetadata('design:type', target, key)
+//     const _value = target[key]
+//     const _name = key
+//     // const _key = Symbol(key);
+
+//     name = name || _name
+//     type = type || _type_constructor.name
+//     const existingMetadata = Reflect.getMetadata('fields', target) || {}
+//     const options = {
+//       name,
+//       type,
+//     }
+//     Reflect.defineMetadata(
+//       'fields',
+//       Object.assign(existingMetadata, { [name]: options }),
+//       target
+//     )
+//   }
+// }
+
 export type CURDOptions = {
   name: string
   methods: CRUDMethods[]
 }
 
-export function CRUD<T extends ClassType<T>>(
+// export function CRUD<T extends ClassType<T>>(
+//   options: Partial<CURDOptions> = {}
+// ) {
+//   return function classDecorator(target: T) {
+//     const properties = Reflect.getMetadataKeys(target.prototype)
+//     let fields: { [key: string]: FieldMetadata } = {}
+//     const li = getProtoMeta(target, IGNORE_FIEIDS_TOKEN) || {}
+//     setProtoMeta(target, ENTITY_NAME_TOKEN, options.name)
+//     setProtoMeta(target, GEN_CRUD_METHOD_TOKEN, options.methods)
+
+//     for (const property of properties) {
+//       if (!li.hasOwnProperty(property)) {
+//         const metadata = Reflect.getMetadata(property, target.prototype)
+//         if (metadata && metadata.name && metadata.type) {
+//           console.log(`metadata`, metadata)
+//           fields = Object.assign(fields, {
+//             [metadata.name]: {
+//               name: metadata.name,
+//               type: metadata.type,
+//             },
+//           })
+//         }
+//       }
+//     }
+//     console.log(`fields`, fields)
+//     setProtoMeta(target, FIELDS_TOKEN, fields)
+
+//     Object.defineProperty(target, 'fields', {
+//       value: fields,
+//     })
+
+//     console.log(`process done`, Reflect.getMetadata('fields', target.prototype))
+//   }
+// }
+
+export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
   options: Partial<CURDOptions> = {}
 ) {
   return function classDecorator(target: T) {
-    const properties = getProtoMetaKeys(target)
-    const fields: FieldMetadata[] = []
-    const li = getProtoMeta(target, IGNORE_FIEIDS_TOKEN) || {}
-    setProtoMeta(target, FCRUD_NAME_TOKEN, options.name)
+    const properties = Reflect.getMetadataKeys(target.prototype)
+    const fields: {[key:string]:FieldMetadata}  = {}
+    const li = Reflect.getMetadata('ignore', target.prototype) || []
+    setProtoMeta(target, ENTITY_NAME_TOKEN, options.name)
     setProtoMeta(target, GEN_CRUD_METHOD_TOKEN, options.methods)
-
+    // console.log(li)
     for (const property of properties) {
-      if (!li.hasOwnProperty(property)) {
-        const metadata = getProtoMeta(target, property)
+      if (!li.includes(property)) {
+        const metadata = Reflect.getMetadata(property, target.prototype)
         if (metadata && metadata.name && metadata.type) {
-          fields.push({
+          fields[metadata.name] = {
             name: metadata.name,
             type: metadata.type,
-          })
+          }
         }
       }
     }
+    
+    // setProtoMeta(target, FIELDS_TOKEN, fields) //FIXME why this line mess things up 
 
-    setProtoMeta(target, FIELDS_TOKEN, fields)
+    Object.defineProperty(target, 'fields', {
+      value: fields,
+    })
+
+    // console.log(`process done`, Reflect.getMetadata('fields', target.prototype))
   }
 }
 
 export type BeforeActionOptions<T extends {}> = {
+  checkType: boolean
   requires: (keyof T)[]
   denies: (keyof T)[]
   exactly: (keyof T)[]
-  route: string // override route
+  /**
+   * override route
+   */
+  route: string
   expect: (data: T) => boolean | ((data: T) => boolean)[]
   transform: (data: T) => T
   transformReturn: (data: T) => any
@@ -94,9 +164,15 @@ export type BeforeActionOptions<T extends {}> = {
 export type ClassType<T extends abstract new (...args: any) => any> = {
   new (...args: any[]): InstanceType<T>
 }
+
 export type PartialBeforeActionOptions<T extends ClassType<T>> = Partial<
   BeforeActionOptions<InstanceType<T>>
 >
+
+export type ConfigCtx<T extends ClassType<T>> = {
+  options: PartialBeforeActionOptions<T>
+  target: T
+}
 
 export function BeforeAction<
   T extends { new (...args: any[]): InstanceType<T> }
