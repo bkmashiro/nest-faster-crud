@@ -70,61 +70,129 @@ export class FasterCrudService {
     if (!options) {
       return method
     }
-    const { requires, expect, transform } = deconstrcuOrNull(options)
-    const check_requirements = this.req_checker(requires)
+    const {
+      requires,
+      denies,
+      exactly,
+      expect,
+      transform,
+      onSuccess,
+      transformReturn,
+    } = deconstrcuOrNull(options)
+    const check_requirements = this.requrie_checker(requires)
+    const check_denies = this.deny_checker(denies)
+    const check_exactly = this.exactly_checker(exactly)
     const check_expect = this.except_checker(expect)
-    const transform_data = this.transform_processor<T>(transform)
+    const transform_data = this.transform_processor(transform)
+    const transform_return = this.transform_return_processor(transformReturn)
+
+    const checkers = [
+      check_requirements,
+      check_denies,
+      check_exactly,
+      check_expect,
+    ]
 
     return async (data: any) => {
-      if (!check_requirements(data)) {
-        throw new Error(`Missing required fields: ${requires.join(', ')}`)
+      try {
+        for (const checker of checkers) {
+          checker(data)
+        }
+      } catch (e) {
+        throw new Error(e.message)
       }
 
-      if (!check_expect(data)) {
-        throw new Error(`Expectation failed`)
-      }
+      const transformed = transform_data(data)
 
-      return await method(transform_data(data))
+      const ret = await method(transformed)
+
+      return transform_return(ret)
     }
   }
 
-  private transform_processor<T>(transform: (data: T) => T) {
+  private transform_return_processor<T>(transform: (data: T) => any) {
     let transform_data = (data: any) => data
     if (transform) {
+      //TODO add check for function
       transform_data = transform
     }
     return transform_data
   }
 
-  private except_checker<T>(expect: (data: T) => boolean | ((data: T) => boolean)[]) {
-    let check_expect = (data: any) => true
+  private transform_processor<T>(transform: (data: T) => T) {
+    let transform_data = (data: any) => data
+    if (transform) {
+      //TODO add check for function
+      transform_data = transform
+    }
+    return transform_data
+  }
+
+  private except_checker<T>(
+    expect: (data: T) => boolean | ((data: T) => boolean)[]
+  ) {
+    let check_expect = (data: T) => void 0
     if (expect) {
       if (isArrayOfFunctions(expect)) {
-        check_expect = (data: any) => {
+        check_expect = (data: T) => {
           for (const func of expect) {
             if (!func(data)) {
-              return false
+              throw new Error(`Expectation failed`)
             }
           }
-          return true
         }
       } else if (typeof expect === 'function') {
+        //TODO check if this is correct
         check_expect = expect as (data: any) => boolean
+      } else {
+        throw new Error(`Expect must be a function or array of functions`)
       }
     }
     return check_expect
   }
 
-  private req_checker<T>(requires: (keyof T)[]) {
-    let check_requirements = (data: any) => true
+  private requrie_checker<T>(requires: (keyof T)[]) {
+    let check_requirements = (data: T) => void 0
     if (requires && Array.isArray(requires) && requires.length > 0) {
-      check_requirements = (data: any) => {
+      check_requirements = (data: T) => {
         for (const field of requires) {
           if (!data.hasOwnProperty(field)) {
-            return false
+            throw new Error(`Missing field ${String(field)}`)
           }
         }
-        return true
+      }
+    }
+    return check_requirements
+  }
+
+  private deny_checker<T>(denies: (keyof T)[]) {
+    let check_requirements = (data: T) => void 0
+    if (denies && Array.isArray(denies) && denies.length > 0) {
+      check_requirements = (data: T) => {
+        for (const field of denies) {
+          if (data.hasOwnProperty(field)) {
+            throw new Error(`Denied field ${String(field)}`)
+          }
+        }
+      }
+    }
+    return check_requirements
+  }
+
+  private exactly_checker<T>(exactly: (keyof T)[]) {
+    let check_requirements = (data: T) => void 0
+    if (exactly && Array.isArray(exactly) && exactly.length > 0) {
+      check_requirements = (data: T) => {
+        for (const field of exactly) {
+          if (!data.hasOwnProperty(field)) {
+            throw new Error(`Missing field ${String(field)}`)
+          }
+        }
+        for (const field in data) {
+          if (!exactly.includes(field)) {
+            throw new Error(`Unexpected field ${String(field)}`)
+          }
+        }
       }
     }
     return check_requirements

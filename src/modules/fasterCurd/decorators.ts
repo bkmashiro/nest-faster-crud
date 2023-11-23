@@ -78,10 +78,14 @@ export function CRUD<T extends ClassType<T>>(
 export type BeforeActionOptions<T extends {}> = {
   requires: (keyof T)[]
   denies: (keyof T)[]
+  exactly: (keyof T)[]
   expect: (data: T) => boolean | ((data: T) => boolean)[]
   transform: (data: T) => T
+  transformReturn: (data: T) => any
   onSuccess: (data: T) => any
-  onFailure: (data: T) => any
+  onCheckFailure: (data: T) => any
+  onTransformFailure: (data: T) => any
+  onExecFailure: (data: T) => any
 }
 
 export type ClassType<T extends abstract new (...args: any) => any> = {
