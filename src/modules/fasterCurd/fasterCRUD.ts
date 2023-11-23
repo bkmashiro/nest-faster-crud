@@ -8,7 +8,8 @@ import {
   perform_task,
 } from './fasterCrudApp'
 import express = require('express')
-import { CRUDMethods, FieldOptions } from './test'
+import { FieldOptions } from './test'
+import { CRUDMethods } from './fcrud-tokens'
 import {
   FCRUD_NAME_TOKEN,
   FIELD_TOKEN,
@@ -53,6 +54,7 @@ export class FasterCrudService {
       Reflect.getMetadata(FCRUD_NAME_TOKEN, entity.prototype) ?? entity.name
     const router = new FasterCrudRouterBuilder()
 
+    // create all CRUD routes
     const actions: CRUDMethods[] = getProtoMeta(
       entity,
       GEN_CRUD_METHOD_TOKEN
