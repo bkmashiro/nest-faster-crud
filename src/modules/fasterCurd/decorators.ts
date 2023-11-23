@@ -3,7 +3,7 @@ import {
   BEFORE_ACTION_TOKEN,
   BeforeActionTokenType,
   FCRUD_NAME_TOKEN,
-  FIELD_TOKEN,
+  FIELDS_TOKEN,
   GEN_CRUD_METHOD_TOKEN,
   IGNORE_FIEIDS_TOKEN,
 } from './fcrud-tokens'
@@ -33,13 +33,13 @@ export function Field({
     name = name || _name
     type = type || _type_constructor.name
     const existingMetadata =
-      Reflect.getMetadata(IGNORE_FIEIDS_TOKEN, target) || {}
+      Reflect.getMetadata(FIELDS_TOKEN, target) || {}
     const options = {
       name,
       type,
     }
     Reflect.defineMetadata(
-      IGNORE_FIEIDS_TOKEN,
+      FIELDS_TOKEN,
       Object.assign(existingMetadata, { [name]: options }),
       target
     )
@@ -72,6 +72,8 @@ export function CRUD<T extends ClassType<T>>(
         }
       }
     }
+
+    setProtoMeta(target, FIELDS_TOKEN, fields)
   }
 }
 

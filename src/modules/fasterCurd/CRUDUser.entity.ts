@@ -11,7 +11,6 @@ import { Create, IgnoreField, CRUD, Field } from './decorators';
   },
   route: 'create-user',
 })
-@IgnoreField(['id']) //TODO deprecate this
 @CRUD({ name: 'User', methods: ['create', 'read'] })
 export class CRUDUser {
   @PrimaryGeneratedColumn()
