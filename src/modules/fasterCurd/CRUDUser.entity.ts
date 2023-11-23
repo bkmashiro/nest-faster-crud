@@ -8,9 +8,10 @@ import { Create, IgnoreField, CRUD, Field } from './decorators';
   transform: (data) => {
     data.username = data.username.toUpperCase();
     return data;
-  }
+  },
+  route: 'create-user',
 })
-@IgnoreField(['id'])
+@IgnoreField(['id']) //TODO deprecate this
 @CRUD({ name: 'User', methods: ['create', 'read'] })
 export class CRUDUser {
   @PrimaryGeneratedColumn()

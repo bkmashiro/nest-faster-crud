@@ -60,7 +60,7 @@ export class FasterCrudService {
       ) as PartialBeforeActionOptions<T>
       const decoratedMethod = this.configureMethod(decoration_config, method)
 
-      const route = fixRoute(decoration_config.route ?? `/${action}`)
+      const route = fixRoute(decoration_config?.route ?? `/${action}`)
       router.setRoute(this.default_method, route, async function (req, res) {
         await perform_task(req, decoratedMethod, res)
       })
@@ -98,7 +98,7 @@ export class FasterCrudService {
         for (const checker of checkers) {
           checker(data)
         }
-        
+
         const transformed = transform_data(data)
 
         const ret = await method(transformed)
