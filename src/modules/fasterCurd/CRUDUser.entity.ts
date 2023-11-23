@@ -1,10 +1,10 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { CRUD, Field } from './test';
+import { CRUD, Field, IgnoreField } from './test';
 
-// @IgnoreField(['id'])
 
 @CRUD()
 @Entity()
+@IgnoreField(['id'])
 export class CRUDUser {
   @PrimaryGeneratedColumn()
   id: number;
