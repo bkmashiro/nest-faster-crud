@@ -20,7 +20,7 @@ export const logger = new Logger('FasterCRUDService')
 
 @Injectable()
 export class FasterCrudService {
-  prefix = `fcrud-`
+  prefix = ``
 
   constructor(private adapterHost: HttpAdapterHost) {
     this.app.use(express.json())
