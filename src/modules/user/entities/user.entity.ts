@@ -48,7 +48,7 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   country: string;
 
-  @Column('simple-enum', { enum: ['admin', 'user', 'visitor'] })
+  @Column('simple-enum', { enum: ['admin', 'user', 'visitor'], default: 'user' })
   role: string;
 
   @OneToOne(() => Attr, { cascade: true, onDelete: 'CASCADE' })

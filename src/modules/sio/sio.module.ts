@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { SioService } from './sio.service';
 import { SioGateway } from './sio.gateway';
 import { SessionManager } from './sessions';
-import { PushHandler } from './handlers/pushDataHandler';
+import { PushDataService } from './handlers/push-data.service';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
