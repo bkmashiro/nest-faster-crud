@@ -176,6 +176,8 @@ export class FasterCrudService {
   ) {
     let check_expect = (data: T) => void 0
     if (expect) {
+      console.log('has expect')
+
       if (isArrayOfFunctions(expect)) {
         check_expect = (data: T) => {
           for (const func of expect) {
@@ -186,7 +188,11 @@ export class FasterCrudService {
         }
       } else if (typeof expect === 'function') {
         //TODO check if this is correct
-        check_expect = expect as (data: any) => boolean
+        check_expect = (data: T) => {
+          if (!expect(data)) {
+            throw new Error(`Expectation failed`)
+          }
+        }
       } else {
         throw new Error(`Expect must be a function or array of functions`)
       }
@@ -252,7 +258,7 @@ export class FasterCrudService {
             if (validator(val)) {
               // all good
             } else {
-              throw new Error(`type assertion for cheched type ${f.type} (named ${key})`)
+              throw new Error(`assertion failed for asserted key ${key}`)
             }
           } else {
             if (!f.noCheck) {

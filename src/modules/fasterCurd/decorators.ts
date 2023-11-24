@@ -15,37 +15,36 @@ import {
 } from './reflect.utils'
 import { CRUDMethods } from './fcrud-tokens'
 
-export type FieldOptions<T = any> = {
+export type FieldOptions = {
   name: string
-  type: string | T
-  validator?: (x: T) => boolean
+  type: string
+  validator?: (x: any) => boolean
   noCheck?: boolean
 }
 
-export  type FieldOptionsObject = {
+export type FieldOptionsObject = {
   [key: string]: FieldOptions
 }
 
-export function Field({
-  name,
-  type,
-}: { name?: string; type?: string } = {}): PropertyDecorator {
+export function Field(opt: Partial<FieldOptions> = {}): PropertyDecorator {
   return function (target: any, key: string) {
+    let {
+      name,
+      type,
+    } = opt
     const _type_constructor = Reflect.getMetadata('design:type', target, key)
-    const _value = target[key]
     const _name = key
     // const _key = Symbol(key);
 
     name = name || _name
     type = type || _type_constructor.name
-    const options = {
-      name,
-      type,
-    }
+    const newOption = Object.assign(opt, {
+      name, type
+    })
     const existingMetadata = Reflect.getMetadata(FIELDS_TOKEN, target) || {}
     Reflect.defineMetadata(
       FIELDS_TOKEN,
-      Object.assign(existingMetadata, { [name]: options }),
+      Object.assign(existingMetadata, { [name]: newOption }),
       target
     )
   }

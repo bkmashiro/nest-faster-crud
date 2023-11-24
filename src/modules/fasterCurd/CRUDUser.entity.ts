@@ -12,7 +12,7 @@ import { Create, CRUD, Field } from './decorators';
   route: 'create-user',
   checkType: true,
 })
-@CRUD({ name: 'user', methods:['create', 'read']})
+@CRUD({ name: 'user', methods: ['create', 'read'] })
 export class CRUDUser {
   @PrimaryGeneratedColumn()
   id: number;
@@ -22,6 +22,7 @@ export class CRUDUser {
   username: string;
 
   @Column()
-  @Field()
+  @Field({ validator: x => /^\S+@\S+\.\S+$/.test(String(x)) })
   email: string;
 }
+
