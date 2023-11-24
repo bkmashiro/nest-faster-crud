@@ -129,13 +129,13 @@ export class FasterCrudService {
     ]
 
     return async (data: {
-      data: any,
+      data: any
       pagination?: {
-        currentPage: number,
+        currentPage: number
         pageSize: number
-      },
+      }
       sort?: {
-        prop: string,
+        prop: string
         order: 'ascending' | 'descending'
       }
     }) => {
@@ -186,7 +186,7 @@ export class FasterCrudService {
     const transform_return = this.transform_return_processor(transformReturn)
     const check_type = this.type_checker(checkType, fields)
     const check_pagination = this.pagination_checker(options?.pagination)
-    const pagination_transformer = this.pagination_transformer(options?.pagination)
+    const pagination_transformer = this.pagination_transformer(options)
     return {
       shape_checker,
       check_requirements,
@@ -214,9 +214,9 @@ export class FasterCrudService {
    *      order: 'ascending' | 'descending'
    *    }
    * }
-   * 
-   * @param rawInput 
-   * @returns 
+   *
+   * @param rawInput
+   * @returns
    */
   private shape_checker<T>(rawInput: boolean) {
     let check_shape = (data: T) => data as any
@@ -273,13 +273,15 @@ export class FasterCrudService {
     return check_pagination
   }
 
-  private pagination_transformer<T>(
-    pagination: BeforeActionOptions<T>['pagination']
-  ) {
+  private pagination_transformer({ pagination, rawInput }: PartialBeforeActionOptions<any>) {
+    if (rawInput) {
+      return (data: any) => data
+    }
+
     let transform_pagination = (data: {
       data: any
       pagination?: {
-        currentPage: number,
+        currentPage: number
         pageSize: number
       }
     }) => {
@@ -292,7 +294,7 @@ export class FasterCrudService {
       transform_pagination = (data: {
         data: any
         pagination?: {
-          currentPage: number,
+          currentPage: number
           pageSize: number
         }
       }) => {
