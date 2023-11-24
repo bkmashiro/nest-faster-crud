@@ -1,5 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { Create, CRUD, Field, Read } from './decorators';
+import { FC } from './fastcrud-gen/fastcrud.decorator';
 
 @Entity()
 @Create({
@@ -14,9 +15,15 @@ import { Create, CRUD, Field, Read } from './decorators';
   transformReturn: () => "666"
 })
 
-@CRUD({name: 'user-management'})
+@CRUD({ name: 'user-management' })
 export class CRUDUser {
   @PrimaryGeneratedColumn()
+  @FC({
+    title: "ID",
+    type: "number",
+    column: { width: 50 },
+    form: { show: false }
+  })
   id: number;
 
   @Column()

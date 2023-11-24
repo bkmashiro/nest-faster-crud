@@ -59,23 +59,24 @@ export function CRUD<T extends { new(...args: any[]): InstanceType<T> }>(
   options: Partial<CURDOptions> = {}
 ) {
   return function classDecorator(target: T) {
-    const properties = Reflect.getMetadataKeys(target.prototype)
+    const properties = FIELDS_TOKEN
+    console.log(`props`, properties)
     const fields: { [key: string]: FieldOptions } = {}
     const li = Reflect.getMetadata('ignore', target.prototype) || []
     setProtoMeta(target, ENTITY_NAME_TOKEN, options.name)
     setProtoMeta(target, GEN_CRUD_METHOD_TOKEN, options.methods)
     // console.log(li)
-    for (const property of properties) {
-      if (!li.includes(property)) {
-        const metadata = Reflect.getMetadata(property, target.prototype)
-        if (metadata && metadata.name && metadata.type) {
-          fields[metadata.name] = {
-            name: metadata.name,
-            type: metadata.type,
-          }
-        }
-      }
-    }
+    // for (const property of properties) {
+    //   if (!li.includes(property)) {
+    //     const metadata = Reflect.getMetadata(property, target.prototype)
+    //     if (metadata && metadata.name && metadata.type) {
+    //       fields[metadata.name] = {
+    //         name: metadata.name,
+    //         type: metadata.type,
+    //       }
+    //     }
+    //   }
+    // }
   }
 }
 

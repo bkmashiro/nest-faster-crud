@@ -10,7 +10,7 @@ import {
   FieldOptionsObject,
   PartialBeforeActionOptions,
 } from './decorators'
-import { BeforeActionTokenType, CRUDMethods, FIELDS_TOKEN, HttpMethods } from './fcrud-tokens'
+import { BeforeActionTokenType, CRUDMethods, FCRUD_GEN_CFG_TOKEN, FIELDS_TOKEN, HttpMethods } from './fcrud-tokens'
 import { ENTITY_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './fcrud-tokens'
 import { getProtoMeta } from './reflect.utils'
 import { deconstrcuOrNull } from 'src/utils/objectTools'
@@ -49,7 +49,9 @@ export class FasterCrudService {
     const fcrudName = getProtoMeta(entity, ENTITY_NAME_TOKEN) ?? entity.name
     const router = new FasterCrudRouterBuilder()
     const fields = getProtoMeta(entity, FIELDS_TOKEN) ?? {}
-    // console.log(`fields`, fields)
+    const docs = getProtoMeta(entity, FCRUD_GEN_CFG_TOKEN) ?? {}
+    console.log(`fields`, fields)
+    console.log(`docs`, docs)
     // create all CRUD routes
     const actions: CRUDMethods[] =
       getProtoMeta(entity, GEN_CRUD_METHOD_TOKEN) ?? defaultCrudMethod
