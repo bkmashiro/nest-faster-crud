@@ -7,7 +7,7 @@ import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [AuthModule],
-  providers: [SioGateway, SioService, SessionManager, PushHandler],
-  exports: [SioService, PushHandler],
+  providers: [SioGateway, SioService, SessionManager, PushDataService],
+  exports: [SioService, PushDataService],
 })
 export class SioModule {}

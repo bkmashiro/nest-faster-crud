@@ -7,3 +7,4 @@ export type CRUDMethods = 'create' | 'read' | 'update' | 'delete'
 export const BEFORE_ACTION_TOKEN = 'before-action'
 export type BeforeActionTokenType = `before-action-${CRUDMethods}`
 export const defaultCrudMethod = ['create', 'read', 'update', 'delete']
+export const FCRUD_GEN_CFG_TOKEN = 'fast-crud-config-gen'

@@ -1,30 +1,51 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { Create, CRUD, Field, Read } from './decorators';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+import { Create, CRUD, Field, FieldFC, Read } from './decorators'
+import { FC } from './fastcrud-gen/fastcrud.decorator'
 
 @Entity()
 @Create({
-  requires: ['username'],
-  denies: ['id'],
-  transform: x => { x.username = x.username.toUpperCase(); return x },
-  expect: [(x: CRUDUser) => x.username.length > 3] as ((data: CRUDUser) => boolean)[],
-  route: "create-user"
+  requires: ['name', 'type'],
+  expect: (x) => x.name.length > 3,
 })
-
 @Read({
-  transformReturn: () => "666"
+  pagination: {
+    max: 5,
+  },
 })
-
-@CRUD({name: 'user-management'})
+@CRUD()
 export class CRUDUser {
   @PrimaryGeneratedColumn()
-  id: number;
+  @FC({
+    title: 'ID',
+    type: 'number',
+    column: { width: 50 },
+    form: { show: false },
+  })
+  id: number
 
   @Column()
   @Field()
-  username: string;
+  @FC({
+    title: '姓名',
+    type: 'text',
+    search: { show: true },
+    column: {
+      resizable: true,
+      width: 200,
+    },
+  })
+  name: string
 
   @Column()
-  @Field()
-  email: string;
+  @FC({
+    title: "类型",
+    type: "dict-select",
+    dict: {
+      data: [
+        { value: 1, label: "开始" },
+        { value: 0, label: "停止" }
+      ]
+    }
+  })
+  type: number
 }
-

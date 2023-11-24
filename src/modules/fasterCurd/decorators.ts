@@ -14,6 +14,8 @@ import {
   setProtoMeta,
 } from './reflect.utils'
 import { CRUDMethods } from './fcrud-tokens'
+import { FC, FastCrudFieldOptions } from './fastcrud-gen/fastcrud.decorator'
+import { applyDecorators } from '@nestjs/common'
 
 export type FieldOptions = {
   name: string
@@ -28,10 +30,7 @@ export type FieldOptionsObject = {
 
 export function Field(opt: Partial<FieldOptions> = {}): PropertyDecorator {
   return function (target: any, key: string) {
-    let {
-      name,
-      type,
-    } = opt
+    let { name, type } = opt
     const _type_constructor = Reflect.getMetadata('design:type', target, key)
     const _name = key
     // const _key = Symbol(key);
@@ -39,7 +38,8 @@ export function Field(opt: Partial<FieldOptions> = {}): PropertyDecorator {
     name = name || _name
     type = type || _type_constructor.name
     const newOption = Object.assign(opt, {
-      name, type
+      name,
+      type,
     })
     const existingMetadata = Reflect.getMetadata(FIELDS_TOKEN, target) || {}
     Reflect.defineMetadata(
@@ -50,42 +50,66 @@ export function Field(opt: Partial<FieldOptions> = {}): PropertyDecorator {
   }
 }
 
+export function FieldFC(
+  opt: Partial<FieldOptions & { fc: FastCrudFieldOptions }> = {}
+) {
+  return applyDecorators(Field(opt), FC(opt.fc))
+}
+
 export type CURDOptions = {
   name: string
   methods: CRUDMethods[]
 }
 
-export function CRUD<T extends { new(...args: any[]): InstanceType<T> }>(
+export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
   options: Partial<CURDOptions> = {}
 ) {
   return function classDecorator(target: T) {
-    const properties = Reflect.getMetadataKeys(target.prototype)
+    const properties = FIELDS_TOKEN
+    console.log(`props`, properties)
     const fields: { [key: string]: FieldOptions } = {}
     const li = Reflect.getMetadata('ignore', target.prototype) || []
     setProtoMeta(target, ENTITY_NAME_TOKEN, options.name)
     setProtoMeta(target, GEN_CRUD_METHOD_TOKEN, options.methods)
     // console.log(li)
-    for (const property of properties) {
-      if (!li.includes(property)) {
-        const metadata = Reflect.getMetadata(property, target.prototype)
-        if (metadata && metadata.name && metadata.type) {
-          fields[metadata.name] = {
-            name: metadata.name,
-            type: metadata.type,
-          }
-        }
-      }
-    }
+    // for (const property of properties) {
+    //   if (!li.includes(property)) {
+    //     const metadata = Reflect.getMetadata(property, target.prototype)
+    //     if (metadata && metadata.name && metadata.type) {
+    //       fields[metadata.name] = {
+    //         name: metadata.name,
+    //         type: metadata.type,
+    //       }
+    //     }
+    //   }
+    // }
   }
 }
-
+export type FieldSelector<T> = (keyof T)[] | RegExp
 export type BeforeActionOptions<T extends {}> = {
+  /**
+   * if enabled, the input data will not be transformed
+   * that means, pagination, sort, etc. will not be parsed
+   */
+  rawInput: boolean
+  pagination: {
+    min?: number
+    max: number
+  }
+  sort: {
+    enable: boolean
+    default: {
+      prop: keyof T
+      order: 'ascending' | 'descending'
+    }
+    allow: (keyof T)[]
+  }
   checkType: boolean
-  requires: (keyof T)[]
-  denies: (keyof T)[]
-  exactly: (keyof T)[]
+  requires: FieldSelector<T>
+  denies: FieldSelector<T>
+  exactly: FieldSelector<T>
   route: string
-  expect: ((data: T) => boolean) | (((data: T) => boolean)[])
+  expect: ((data: T) => boolean) | ((data: T) => boolean)[]
   transform: (data: T) => T
   transformReturn: (data: T) => any
   onSuccess: (data: T) => any
@@ -95,21 +119,21 @@ export type BeforeActionOptions<T extends {}> = {
 }
 
 export type ClassType<T extends abstract new (...args: any) => any> = {
-  new(...args: any[]): InstanceType<T>
+  new (...args: any[]): InstanceType<T>
 }
 
 export type PartialBeforeActionOptions<T extends ClassType<T>> = Partial<
   BeforeActionOptions<InstanceType<T>>
 >
 
-export type ConfigCtx<T extends ClassType<T>> = {
+export type ConfigCtx<T extends ClassType<T> = any> = {
   options: PartialBeforeActionOptions<T>
   target: T
   fields: FieldOptionsObject
 }
 
 export function BeforeAction<
-  T extends { new(...args: any[]): InstanceType<T> }
+  T extends { new (...args: any[]): InstanceType<T> }
 >(action: CRUDMethods, options: PartialBeforeActionOptions<T> = {}) {
   return function classDecorator(target: T) {
     const token: BeforeActionTokenType = `before-action-${action}`
@@ -142,8 +166,7 @@ export function Delete<T extends ClassType<T>>(
 }
 
 export function IgnoreField<
-  T extends { new(...args: any[]): InstanceType<T> }
+  T extends { new (...args: any[]): InstanceType<T> }
 >(li: (keyof InstanceType<T>)[]) {
   return (target: T) => Reflect.defineMetadata(IGNORE_FIEIDS_TOKEN, li, target)
 }
-
