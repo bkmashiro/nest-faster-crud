@@ -53,7 +53,7 @@ export function pagination_checker({ options }: ConfigCtx) {
 
 export function except_checker({ options }: ConfigCtx) {
   const { expect } = options
-  let check_expect = (data: any) => void 0
+  let check_expect = ({data}: any) => void 0
   if (expect) {
     if (isArrayOfFunctions(expect)) {
       check_expect = (data: any) => {
@@ -65,7 +65,7 @@ export function except_checker({ options }: ConfigCtx) {
       }
     } else if (typeof expect === 'function') {
       //TODO check if this is correct
-      check_expect = (data: any) => {
+      check_expect = ({data}: any) => {
         if (!expect(data)) {
           throw new Error(`Expectation failed`)
         }
@@ -81,15 +81,17 @@ export function requrie_checker({ options }: ConfigCtx) {
   const { requires } = options
   let check_requirements = (data: any) => void 0
   if (requires && Array.isArray(requires) && requires.length > 0) {
-    check_requirements = (data: any) => {
+    check_requirements = ({ data }: any) => {
       for (const field of requires) {
         if (!data.hasOwnProperty(field)) {
-          throw new Error(`Missing field ${String(field)}`)
+          throw new Error(
+            `Missing field ${String(field)} data: ${JSON.stringify(data)}`
+          )
         }
       }
     }
   } else if (requires instanceof RegExp) {
-    check_requirements = (data: any) => {
+    check_requirements = ({ data }: any) => {
       for (const field in data) {
         if (!requires.test(field)) {
           throw new Error(`Unexpected field ${String(field)}`)
@@ -102,17 +104,17 @@ export function requrie_checker({ options }: ConfigCtx) {
 
 export function deny_checker({ options }: ConfigCtx) {
   const { denies } = options
-  let check_requirements = (data: any) => void 0
+  let check_requirements = ({data}: any) => void 0
   if (denies && Array.isArray(denies) && denies.length > 0) {
-    check_requirements = (data: any) => {
+    check_requirements = ({data}: any) => {
       for (const field of denies) {
         if (data.hasOwnProperty(field)) {
           throw new Error(`Denied field ${String(field)}`)
         }
       }
     }
-  }  else if (denies instanceof RegExp) { 
-    check_requirements = (data: any) => {
+  } else if (denies instanceof RegExp) {
+    check_requirements = ({data}: any) => {
       for (const field in data) {
         if (denies.test(field)) {
           throw new Error(`Denied field ${String(field)}`)
@@ -126,9 +128,9 @@ export function deny_checker({ options }: ConfigCtx) {
 
 export function exactly_checker({ options }: ConfigCtx) {
   const { exactly } = options
-  let check_requirements = (data: any) => void 0
+  let check_requirements = ({data}: any) => void 0
   if (exactly && Array.isArray(exactly) && exactly.length > 0) {
-    check_requirements = (data: any) => {
+    check_requirements = ({data}: any) => {
       for (const field of exactly) {
         if (!data.hasOwnProperty(field)) {
           throw new Error(`Missing field ${String(field)}`)
@@ -146,9 +148,9 @@ export function exactly_checker({ options }: ConfigCtx) {
 
 export function type_checker({ options, fields }: ConfigCtx) {
   const { checkType } = options
-  let check_requirements = (data: AnyError) => void 0
+  let check_requirements = (data: any) => void 0
   if (checkType) {
-    check_requirements = (data: any) => {
+    check_requirements = ({data}: any) => {
       for (const [key, f] of Object.entries(fields)) {
         const val = data[key]
         const validator: ((x: any) => boolean) | null =

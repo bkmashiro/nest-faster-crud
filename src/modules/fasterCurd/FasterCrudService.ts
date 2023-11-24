@@ -34,11 +34,21 @@ import {
   type_checker,
 } from './fragments'
 
-export type QueryData = {}
+export type QueryData = {
+  data: any
+  pagination?: {
+    currentPage: number
+    pageSize: number
+  }
+  sort?: {
+    prop: string
+    order: string
+  }
+}
 
 @Injectable()
 export class FasterCrudService {
-  prefix = ``
+  prefix = `dt-api/`
   default_method: HttpMethods = 'post'
 
   constructor(private adapterHost: HttpAdapterHost) {
@@ -127,11 +137,12 @@ export class FasterCrudService {
     //   check_pagination,
     //   shape_checker,
     // ];
-    const { checkers, pre_transformers, post_transformers, hooks } = this.parseOptions({
-      options,
-      target,
-      fields,
-    })
+    const { checkers, pre_transformers, post_transformers, hooks } =
+      this.parseOptions({
+        options,
+        target,
+        fields,
+      })
     return async (data: any) => {
       try {
         // run all checkers
@@ -141,6 +152,8 @@ export class FasterCrudService {
         for (const transformer of pre_transformers) {
           data = transformer(data)
         }
+
+        console.log(`exec with data:`, data)
 
         let result = await method(data)
 

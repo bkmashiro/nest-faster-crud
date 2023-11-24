@@ -28,7 +28,7 @@ export type FieldOptionsObject = {
   [key: string]: FieldOptions
 }
 
-export function FieldOnly(opt: Partial<FieldOptions> = {}): PropertyDecorator {
+export function Field(opt: Partial<FieldOptions> = {}): PropertyDecorator {
   return function (target: any, key: string) {
     let { name, type } = opt
     const _type_constructor = Reflect.getMetadata('design:type', target, key)
@@ -50,10 +50,10 @@ export function FieldOnly(opt: Partial<FieldOptions> = {}): PropertyDecorator {
   }
 }
 
-export function Field(
+export function FieldFC(
   opt: Partial<FieldOptions & { fc: FastCrudFieldOptions }> = {}
 ) {
-  return applyDecorators(FieldOnly(opt), FC(opt.fc))
+  return applyDecorators(Field(opt), FC(opt.fc))
 }
 
 export type CURDOptions = {

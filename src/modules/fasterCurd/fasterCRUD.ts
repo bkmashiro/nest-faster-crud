@@ -9,11 +9,14 @@ import { Logger } from '@nestjs/common'
 import { Router } from 'express'
 import { Repository } from 'typeorm'
 import { Validator } from './defaultValidators'
+import { QueryData } from './FasterCrudService'
 export const logger = new Logger('FasterCRUDService')
 
 type KeyType = string
 
-export function isArrayOfFunctions(data: any): data is ((data: any) => boolean)[] {
+export function isArrayOfFunctions(
+  data: any
+): data is ((data: any) => boolean)[] {
   return Array.isArray(data) && data.every((item) => typeof item === 'function')
 }
 
@@ -32,10 +35,12 @@ export interface CRUDProvider<T> {
   delete(data: any): Promise<any>
 }
 
-export class TypeORMRepoAdapter<T extends {}> implements CRUDProvider<T> {
+export class TypeORMRepoAdapter<T>
+  implements CRUDProvider<T>
+{
   constructor(private readonly repo: Repository<T>) {}
 
-  async create(data: T) {
+  async create({ data }: any) {
     return await this.repo.insert(data)
   }
 
