@@ -126,7 +126,7 @@ export type PartialBeforeActionOptions<T extends ClassType<T>> = Partial<
   BeforeActionOptions<InstanceType<T>>
 >
 
-export type ConfigCtx<T extends ClassType<T>> = {
+export type ConfigCtx<T extends ClassType<T> = any> = {
   options: PartialBeforeActionOptions<T>
   target: T
   fields: FieldOptionsObject

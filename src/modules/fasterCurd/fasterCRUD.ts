@@ -167,31 +167,17 @@ export class FasterCrudService {
   // 2. transformers
   // 3. hooks
 
-  private parseOptions<T extends ClassType<T>>({
-    options,
-    target,
-    fields,
-  }: ConfigCtx<T>) {
-    const {
-      requires,
-      denies,
-      exactly,
-      expect,
-      transform,
-      onSuccess,
-      transformReturn,
-      checkType,
-    } = deconstrcuOrNull(options)
-    const shape_checker = this.shape_checker(options.rawInput)
-    const check_requirements = this.requrie_checker(requires)
-    const check_denies = this.deny_checker(denies)
-    const check_exactly = this.exactly_checker(exactly)
-    const check_expect = this.except_checker(expect)
-    const transform_data = this.transform_processor(transform)
-    const transform_return = this.transform_return_processor(transformReturn)
-    const check_type = this.type_checker(checkType, fields)
-    const check_pagination = this.pagination_checker(options?.pagination)
-    const pagination_transformer = this.pagination_transformer(options)
+  private parseOptions(ctx: ConfigCtx) {
+    const shape_checker = this.shape_checker(ctx)
+    const check_requirements = this.requrie_checker(ctx)
+    const check_denies = this.deny_checker(ctx)
+    const check_exactly = this.exactly_checker(ctx)
+    const check_expect = this.except_checker(ctx)
+    const transform_data = this.transform_processor(ctx)
+    const transform_return = this.transform_return_processor(ctx)
+    const check_type = this.type_checker(ctx)
+    const check_pagination = this.pagination_checker(ctx)
+    const pagination_transformer = this.pagination_transformer(ctx)
     return {
       shape_checker,
       check_requirements,
@@ -206,27 +192,11 @@ export class FasterCrudService {
     }
   }
 
-  /**
-   * check input shape, if rawInput is false, then data must be in the form of
-   * {
-   *    data: any
-   *    pagination?: {
-   *      currentPage: number,
-   *      pageSize: number
-   *    }
-   *    sort?: {
-   *      prop: string,
-   *      order: 'ascending' | 'descending'
-   *    }
-   * }
-   *
-   * @param rawInput
-   * @returns
-   */
-  private shape_checker<T>(rawInput: boolean) {
-    let check_shape = (data: T) => data as any
+  private shape_checker({ options }: ConfigCtx) {
+    const { rawInput } = options
+    let check_shape = (data: any) => data as any
     if (!rawInput) {
-      check_shape = (data: T) => {
+      check_shape = (data: any) => {
         if (!data.hasOwnProperty('data')) {
           throw new Error(`data not found, wrong input format`)
         }
@@ -235,7 +205,18 @@ export class FasterCrudService {
     return check_shape
   }
 
-  private transform_return_processor<T>(transform: (data: T) => any) {
+  private transform_return_processor({ options }: ConfigCtx) {
+    const { transformReturn } = options
+    let transform_data = (data: any) => data
+    if (transformReturn) {
+      //TODO add check for function
+      transform_data = transformReturn
+    }
+    return transform_data
+  }
+
+  private transform_processor({ options }: ConfigCtx) {
+    const { transform } = options
     let transform_data = (data: any) => data
     if (transform) {
       //TODO add check for function
@@ -244,21 +225,11 @@ export class FasterCrudService {
     return transform_data
   }
 
-  private transform_processor<T>(transform: (data: T) => T) {
-    let transform_data = (data: any) => data
-    if (transform) {
-      //TODO add check for function
-      transform_data = transform
-    }
-    return transform_data
-  }
-
-  private pagination_checker<T>(
-    pagination: BeforeActionOptions<T>['pagination']
-  ) {
-    let check_pagination = (data: T) => void 0
+  private pagination_checker({ options }: ConfigCtx) {
+    let check_pagination = (data: any) => void 0
+    const { pagination } = options
     if (pagination) {
-      check_pagination = (data: T) => {
+      check_pagination = (data: any) => {
         // check if pagination is exist
         if (!data.hasOwnProperty('pagination')) {
           throw new Error(`pagination not found for paginated query`)
@@ -278,7 +249,8 @@ export class FasterCrudService {
     return check_pagination
   }
 
-  private pagination_transformer({ pagination, rawInput }: PartialBeforeActionOptions<any>) {
+  private pagination_transformer({ options }: ConfigCtx) {
+    const { pagination, rawInput } = options
     if (rawInput) {
       return (data: any) => data
     }
@@ -321,8 +293,9 @@ export class FasterCrudService {
   }
 
   private except_checker<T>(
-    expect: ((data: T) => boolean) | ((data: T) => boolean)[]
+    { options }: ConfigCtx
   ) {
+    const { expect } = options
     let check_expect = (data: T) => void 0
     if (expect) {
       if (isArrayOfFunctions(expect)) {
@@ -347,10 +320,11 @@ export class FasterCrudService {
     return check_expect
   }
 
-  private requrie_checker<T>(requires: (keyof T)[]) {
-    let check_requirements = (data: T) => void 0
+  private requrie_checker({ options }: ConfigCtx) {
+    const { requires } = options
+    let check_requirements = (data: any) => void 0
     if (requires && Array.isArray(requires) && requires.length > 0) {
-      check_requirements = (data: T) => {
+      check_requirements = (data: any) => {
         for (const field of requires) {
           if (!data.hasOwnProperty(field)) {
             throw new Error(`Missing field ${String(field)}`)
@@ -361,10 +335,11 @@ export class FasterCrudService {
     return check_requirements
   }
 
-  private deny_checker<T>(denies: (keyof T)[]) {
-    let check_requirements = (data: T) => void 0
+  private deny_checker({ options }: ConfigCtx) {
+    const { denies } = options
+    let check_requirements = (data: any) => void 0
     if (denies && Array.isArray(denies) && denies.length > 0) {
-      check_requirements = (data: T) => {
+      check_requirements = (data: any) => {
         for (const field of denies) {
           if (data.hasOwnProperty(field)) {
             throw new Error(`Denied field ${String(field)}`)
@@ -375,10 +350,11 @@ export class FasterCrudService {
     return check_requirements
   }
 
-  private exactly_checker<T>(exactly: (keyof T)[]) {
-    let check_requirements = (data: T) => void 0
+  private exactly_checker({ options }: ConfigCtx) {
+    const { exactly } = options
+    let check_requirements = (data: any) => void 0
     if (exactly && Array.isArray(exactly) && exactly.length > 0) {
-      check_requirements = (data: T) => {
+      check_requirements = (data: any) => {
         for (const field of exactly) {
           if (!data.hasOwnProperty(field)) {
             throw new Error(`Missing field ${String(field)}`)
@@ -394,10 +370,11 @@ export class FasterCrudService {
     return check_requirements
   }
 
-  private type_checker<T>(checkType: boolean, fields: FieldOptionsObject) {
-    let check_requirements = (data: T, target: any) => void 0
+  private type_checker({ options, fields }: ConfigCtx) {
+    const { checkType } = options
+    let check_requirements = (data: any, target: any) => void 0
     if (checkType) {
-      check_requirements = (data: T) => {
+      check_requirements = (data: any) => {
         for (const [key, f] of Object.entries(fields)) {
           const val = data[key]
           const validator: ((x: any) => boolean) | null =
@@ -425,6 +402,8 @@ export class FasterCrudService {
     return this.adapterHost.httpAdapter.getInstance()
   }
 }
+
+type KeyType = string
 
 function isArrayOfFunctions(data: any): data is ((data: any) => boolean)[] {
   return Array.isArray(data) && data.every((item) => typeof item === 'function')
