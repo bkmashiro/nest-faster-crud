@@ -13,8 +13,7 @@ import { FC } from './fastcrud-gen/fastcrud.decorator';
 
 @Read({
   pagination: {
-    enable: true,
-    defaultPageSize: 2,
+    defaultSize: 2,
     limit: {
       max:5
     }

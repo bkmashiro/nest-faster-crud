@@ -107,6 +107,7 @@ export class FasterCrudService {
     }
 
     const {
+      shape_checker,
       check_requirements,
       check_denies,
       check_exactly,
@@ -124,6 +125,7 @@ export class FasterCrudService {
       check_exactly,
       check_expect,
       check_pagination,
+      shape_checker,
     ]
 
     return async (data: {
@@ -175,6 +177,7 @@ export class FasterCrudService {
       transformReturn,
       checkType,
     } = deconstrcuOrNull(options)
+    const shape_checker = this.shape_checker(options.rawInput)
     const check_requirements = this.requrie_checker(requires)
     const check_denies = this.deny_checker(denies)
     const check_exactly = this.exactly_checker(exactly)
@@ -185,6 +188,7 @@ export class FasterCrudService {
     const check_pagination = this.pagination_checker(options?.pagination)
     const pagination_transformer = this.pagination_transformer(options?.pagination)
     return {
+      shape_checker,
       check_requirements,
       check_denies,
       check_exactly,
@@ -195,6 +199,35 @@ export class FasterCrudService {
       check_pagination,
       pagination_transformer,
     }
+  }
+
+  /**
+   * check input shape, if rawInput is false, then data must be in the form of
+   * {
+   *    data: any
+   *    pagination?: {
+   *      currentPage: number,
+   *      pageSize: number
+   *    }
+   *    sort?: {
+   *      prop: string,
+   *      order: 'ascending' | 'descending'
+   *    }
+   * }
+   * 
+   * @param rawInput 
+   * @returns 
+   */
+  private shape_checker<T>(rawInput: boolean) {
+    let check_shape = (data: T) => data as any
+    if (!rawInput) {
+      check_shape = (data: T) => {
+        if (!data.hasOwnProperty('data')) {
+          throw new Error(`data not found, wrong input format`)
+        }
+      }
+    }
+    return check_shape
   }
 
   private transform_return_processor<T>(transform: (data: T) => any) {
@@ -219,7 +252,7 @@ export class FasterCrudService {
     pagination: BeforeActionOptions<T>['pagination']
   ) {
     let check_pagination = (data: T) => void 0
-    if (pagination && pagination.enable) {
+    if (pagination) {
       check_pagination = (data: T) => {
         // check if pagination is exist
         if (!data.hasOwnProperty('pagination')) {
@@ -243,20 +276,26 @@ export class FasterCrudService {
   private pagination_transformer<T>(
     pagination: BeforeActionOptions<T>['pagination']
   ) {
-    const remove_pagination = (data: any) => {
-      if (data.hasOwnProperty('pagination')) {
-        delete data['pagination']
+    let transform_pagination = (data: {
+      data: any
+      pagination?: {
+        currentPage: number,
+        pageSize: number
       }
-      return data
-    }
-    let transform_pagination = (data: T) => {
+    }) => {
       return {
-        data: remove_pagination(data)
+        data: data.data,
       }
     }
-    if (pagination && pagination.enable) {
+    if (pagination) {
       // add skip and limit to data
-      transform_pagination = (data: T) => {
+      transform_pagination = (data: {
+        data: any
+        pagination?: {
+          currentPage: number,
+          pageSize: number
+        }
+      }) => {
         if (!data.hasOwnProperty('pagination')) {
           throw new Error(`pagination not found for paginated query`)
         }
@@ -265,7 +304,7 @@ export class FasterCrudService {
         const skip = currentPage * pageSize
         const take = pageSize
         return {
-          data: remove_pagination(data),
+          data: data.data,
           skip,
           take,
         }

@@ -90,9 +90,13 @@ export function CRUD<T extends { new(...args: any[]): InstanceType<T> }>(
 }
 
 export type BeforeActionOptions<T extends {}> = {
+  /**
+   * if enabled, the input data will not be transformed
+   * that means, pagination, sort, etc. will not be parsed
+   */
+  rawInput: boolean
   pagination: {
-    enable: boolean
-    defaultPageSize: number
+    defaultSize: number
     limit?: {
       min?: number
       max: number
