@@ -6,6 +6,8 @@ import {
   BeforeActionOptions,
   ClassType,
   ConfigCtx,
+  FieldOptions,
+  FieldOptionsObject,
   PartialBeforeActionOptions,
 } from './decorators'
 import { BeforeActionTokenType, CRUDMethods, FIELDS_TOKEN, HttpMethods } from './fcrud-tokens'
@@ -16,7 +18,7 @@ import { Logger } from '@nestjs/common'
 import { Router } from 'express'
 import { Repository } from 'typeorm'
 import { defaultCrudMethod } from './fcrud-tokens'
-import { z } from "zod";
+import validatorMap, { Validator } from './defaultValidators'
 export const logger = new Logger('FasterCRUDService')
 
 @Injectable()
@@ -35,8 +37,7 @@ export class FasterCrudService {
     router.stack.forEach((r) => {
       if (r.route && r.route.path) {
         logger.debug(
-          `Mapped {${route}${
-            r.route.path
+          `Mapped {${route}${r.route.path
           }}, ${r.route.stack[0].method.toUpperCase()}} route`
         )
       }
@@ -63,6 +64,7 @@ export class FasterCrudService {
       const decoratedMethod = this.configureMethod({
         options: decoration_config,
         target: entity,
+        fields
       }, method)
 
       const route = fixRoute(decoration_config?.route ?? `/${action}`)
@@ -75,7 +77,7 @@ export class FasterCrudService {
   }
 
   configureMethod<T extends ClassType<T>>(
-    {options, target}: ConfigCtx<T>,
+    { options, target, fields }: ConfigCtx<T>,
     method: (data: any) => Promise<any>
   ) {
     if (!options) {
@@ -90,7 +92,7 @@ export class FasterCrudService {
       check_expect,
       transform_data,
       transform_return,
-    } = this.parseOptions(options)
+    } = this.parseOptions({ options, target, fields })
 
     const univariate_checkers = [
       check_requirements,
@@ -107,7 +109,7 @@ export class FasterCrudService {
         }
 
         //type check
-        check_type(data, target)
+        check_type(data, fields)
 
         const transformed = transform_data(data)
 
@@ -121,7 +123,7 @@ export class FasterCrudService {
   }
 
   private parseOptions<T extends ClassType<T>>(
-    options: Partial<BeforeActionOptions<InstanceType<T>>>
+    { options, target, fields }: ConfigCtx<T>
   ) {
     const {
       requires,
@@ -139,7 +141,7 @@ export class FasterCrudService {
     const check_expect = this.except_checker(expect)
     const transform_data = this.transform_processor(transform)
     const transform_return = this.transform_return_processor(transformReturn)
-    const check_type = this.type_checker(checkType, z.object({}))
+    const check_type = this.type_checker(checkType, fields)
     return {
       check_requirements,
       check_denies,
@@ -239,12 +241,24 @@ export class FasterCrudService {
     return check_requirements
   }
 
-  private type_checker<T>(checkType: boolean, schema: z.ZodObject<any, any>) {
+  private type_checker<T>(checkType: boolean, fields: FieldOptionsObject) {
     let check_requirements = (data: T, target: any) => void 0
     if (checkType) {
       check_requirements = (data: T) => {
-        if (schema.safeParse(data).success === false) {
-          throw new Error(`Type check failed`)
+        for (const [key, f] of Object.entries(fields)) {
+          const val = data[key]
+          const validator: ((x: any) => boolean) | null = f.validator || validatorMap[f.type]
+          if (!f.noCheck && validator) {
+            if (validator(val)) {
+              // all good
+            } else {
+              throw new Error(`type assertion for cheched type ${f.type} (named ${key})`)
+            }
+          } else {
+            if (!f.noCheck) {
+              throw new Error(`missing validator for checked type ${f.type} (named ${key})`)
+            }
+          }
         }
       }
     }
@@ -268,7 +282,7 @@ export interface CRUDProvider<T> {
 }
 
 export class TypeORMRepoAdapter<T extends {}> implements CRUDProvider<T> {
-  constructor(private readonly repo: Repository<T>) {}
+  constructor(private readonly repo: Repository<T>) { }
 
   async create(data: T) {
     return await this.repo.insert(data)
@@ -290,7 +304,7 @@ export class TypeORMRepoAdapter<T extends {}> implements CRUDProvider<T> {
 export class FasterCrudRouterBuilder {
   router: Router = express.Router()
 
-  constructor() {}
+  constructor() { }
   setRoute(
     method: 'get' | 'post' | 'put' | 'delete' | 'patch',
     path: string,

@@ -12,7 +12,7 @@ import { Create, CRUD, Field } from './decorators';
   route: 'create-user',
   checkType: true,
 })
-@CRUD()
+@CRUD({ name: 'user', methods:['create', 'read']})
 export class CRUDUser {
   @PrimaryGeneratedColumn()
   id: number;

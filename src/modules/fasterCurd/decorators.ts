@@ -15,9 +15,15 @@ import {
 } from './reflect.utils'
 import { CRUDMethods } from './fcrud-tokens'
 
-interface FieldMetadata {
+export type FieldOptions<T = any> = {
   name: string
-  type: string
+  type: string | T
+  validator?: (x: T) => boolean
+  noCheck?: boolean
+}
+
+export  type FieldOptionsObject = {
+  [key: string]: FieldOptions
 }
 
 export function Field({
@@ -32,12 +38,11 @@ export function Field({
 
     name = name || _name
     type = type || _type_constructor.name
-    const existingMetadata = Reflect.getMetadata(FIELDS_TOKEN, target) || {} //FIXME: set to wrong target
     const options = {
       name,
       type,
     }
-    console.log(`options`, options)
+    const existingMetadata = Reflect.getMetadata(FIELDS_TOKEN, target) || {}
     Reflect.defineMetadata(
       FIELDS_TOKEN,
       Object.assign(existingMetadata, { [name]: options }),
@@ -111,12 +116,12 @@ export type CURDOptions = {
 //   }
 // }
 
-export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
+export function CRUD<T extends { new(...args: any[]): InstanceType<T> }>(
   options: Partial<CURDOptions> = {}
 ) {
   return function classDecorator(target: T) {
     const properties = Reflect.getMetadataKeys(target.prototype)
-    const fields: {[key:string]:FieldMetadata}  = {}
+    const fields: { [key: string]: FieldOptions } = {}
     const li = Reflect.getMetadata('ignore', target.prototype) || []
     setProtoMeta(target, ENTITY_NAME_TOKEN, options.name)
     setProtoMeta(target, GEN_CRUD_METHOD_TOKEN, options.methods)
@@ -132,12 +137,12 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
         }
       }
     }
-    
+
     // setProtoMeta(target, FIELDS_TOKEN, fields) //FIXME why this line mess things up 
 
-    Object.defineProperty(target, 'fields', {
-      value: fields,
-    })
+    // Object.defineProperty(target, 'fields', {
+    //   value: fields,
+    // })
 
     // console.log(`process done`, Reflect.getMetadata('fields', target.prototype))
   }
@@ -148,9 +153,6 @@ export type BeforeActionOptions<T extends {}> = {
   requires: (keyof T)[]
   denies: (keyof T)[]
   exactly: (keyof T)[]
-  /**
-   * override route
-   */
   route: string
   expect: (data: T) => boolean | ((data: T) => boolean)[]
   transform: (data: T) => T
@@ -162,7 +164,7 @@ export type BeforeActionOptions<T extends {}> = {
 }
 
 export type ClassType<T extends abstract new (...args: any) => any> = {
-  new (...args: any[]): InstanceType<T>
+  new(...args: any[]): InstanceType<T>
 }
 
 export type PartialBeforeActionOptions<T extends ClassType<T>> = Partial<
@@ -172,10 +174,11 @@ export type PartialBeforeActionOptions<T extends ClassType<T>> = Partial<
 export type ConfigCtx<T extends ClassType<T>> = {
   options: PartialBeforeActionOptions<T>
   target: T
+  fields: FieldOptionsObject
 }
 
 export function BeforeAction<
-  T extends { new (...args: any[]): InstanceType<T> }
+  T extends { new(...args: any[]): InstanceType<T> }
 >(action: CRUDMethods, options: PartialBeforeActionOptions<T> = {}) {
   return function classDecorator(target: T) {
     const token: BeforeActionTokenType = `before-action-${action}`
@@ -208,9 +211,8 @@ export function Delete<T extends ClassType<T>>(
 }
 
 export function IgnoreField<
-  T extends { new (...args: any[]): InstanceType<T> }
+  T extends { new(...args: any[]): InstanceType<T> }
 >(li: (keyof InstanceType<T>)[]) {
   return (target: T) => Reflect.defineMetadata(IGNORE_FIEIDS_TOKEN, li, target)
 }
 
-export type FieldOptions = {}
