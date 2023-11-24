@@ -49,7 +49,7 @@ export class FasterCrudService {
     const fcrudName = getProtoMeta(entity, ENTITY_NAME_TOKEN) ?? entity.name
     const router = new FasterCrudRouterBuilder()
     const fields = getProtoMeta(entity, FIELDS_TOKEN) ?? {}
-    console.log(`fields`, fields)
+    // console.log(`fields`, fields)
     // create all CRUD routes
     const actions: CRUDMethods[] =
       getProtoMeta(entity, GEN_CRUD_METHOD_TOKEN) ?? defaultCrudMethod
@@ -176,8 +176,6 @@ export class FasterCrudService {
   ) {
     let check_expect = (data: T) => void 0
     if (expect) {
-      console.log('has expect')
-
       if (isArrayOfFunctions(expect)) {
         check_expect = (data: T) => {
           for (const func of expect) {
