@@ -1,18 +1,20 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { Create, CRUD, Field } from './decorators';
+import { Create, CRUD, Field, Read } from './decorators';
 
 @Entity()
 @Create({
-  requires: ['username', 'email'],
-  expect: (data) => data.username.length > 3,
-  transform: (data) => {
-    data.username = data.username.toUpperCase();
-    return data;
-  },
-  route: 'create-user',
-  checkType: true,
+  requires: ['username'],
+  denies: ['id'],
+  transform: x => { x.username = x.username.toUpperCase(); return x },
+  expect: [(x: CRUDUser) => x.username.length > 3] as ((data: CRUDUser) => boolean)[],
+  route: "create-user"
 })
-@CRUD({ name: 'user', methods: ['create', 'read'] })
+
+@Read({
+  transformReturn: () => "666"
+})
+
+@CRUD({name: 'user-management'})
 export class CRUDUser {
   @PrimaryGeneratedColumn()
   id: number;
@@ -22,7 +24,7 @@ export class CRUDUser {
   username: string;
 
   @Column()
-  @Field({ validator: x => /^\S+@\S+\.\S+$/.test(String(x)) })
+  @Field()
   email: string;
 }
 
