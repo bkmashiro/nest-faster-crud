@@ -15,7 +15,7 @@ import {
 } from './reflect.utils'
 import { CRUDMethods } from './fcrud-tokens'
 import { FC, FastCrudFieldOptions } from './fastcrud-gen/fastcrud.decorator'
-import { applyDecorators } from '@nestjs/common';
+import { applyDecorators } from '@nestjs/common'
 
 export type FieldOptions = {
   name: string
@@ -30,10 +30,7 @@ export type FieldOptionsObject = {
 
 export function FieldOnly(opt: Partial<FieldOptions> = {}): PropertyDecorator {
   return function (target: any, key: string) {
-    let {
-      name,
-      type,
-    } = opt
+    let { name, type } = opt
     const _type_constructor = Reflect.getMetadata('design:type', target, key)
     const _name = key
     // const _key = Symbol(key);
@@ -41,7 +38,8 @@ export function FieldOnly(opt: Partial<FieldOptions> = {}): PropertyDecorator {
     name = name || _name
     type = type || _type_constructor.name
     const newOption = Object.assign(opt, {
-      name, type
+      name,
+      type,
     })
     const existingMetadata = Reflect.getMetadata(FIELDS_TOKEN, target) || {}
     Reflect.defineMetadata(
@@ -52,11 +50,10 @@ export function FieldOnly(opt: Partial<FieldOptions> = {}): PropertyDecorator {
   }
 }
 
-export function Field(opt: Partial<FieldOptions & { fc: FastCrudFieldOptions }> = {}) {
-  return applyDecorators(
-    FieldOnly(opt),
-    FC(opt.fc),
-  );
+export function Field(
+  opt: Partial<FieldOptions & { fc: FastCrudFieldOptions }> = {}
+) {
+  return applyDecorators(FieldOnly(opt), FC(opt.fc))
 }
 
 export type CURDOptions = {
@@ -64,7 +61,7 @@ export type CURDOptions = {
   methods: CRUDMethods[]
 }
 
-export function CRUD<T extends { new(...args: any[]): InstanceType<T> }>(
+export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
   options: Partial<CURDOptions> = {}
 ) {
   return function classDecorator(target: T) {
@@ -96,11 +93,8 @@ export type BeforeActionOptions<T extends {}> = {
    */
   rawInput: boolean
   pagination: {
-    defaultSize: number
-    limit?: {
-      min?: number
-      max: number
-    }
+    min?: number
+    max: number
   }
   sort: {
     enable: boolean
@@ -115,7 +109,7 @@ export type BeforeActionOptions<T extends {}> = {
   denies: (keyof T)[]
   exactly: (keyof T)[]
   route: string
-  expect: ((data: T) => boolean) | (((data: T) => boolean)[])
+  expect: ((data: T) => boolean) | ((data: T) => boolean)[]
   transform: (data: T) => T
   transformReturn: (data: T) => any
   onSuccess: (data: T) => any
@@ -125,7 +119,7 @@ export type BeforeActionOptions<T extends {}> = {
 }
 
 export type ClassType<T extends abstract new (...args: any) => any> = {
-  new(...args: any[]): InstanceType<T>
+  new (...args: any[]): InstanceType<T>
 }
 
 export type PartialBeforeActionOptions<T extends ClassType<T>> = Partial<
@@ -139,7 +133,7 @@ export type ConfigCtx<T extends ClassType<T>> = {
 }
 
 export function BeforeAction<
-  T extends { new(...args: any[]): InstanceType<T> }
+  T extends { new (...args: any[]): InstanceType<T> }
 >(action: CRUDMethods, options: PartialBeforeActionOptions<T> = {}) {
   return function classDecorator(target: T) {
     const token: BeforeActionTokenType = `before-action-${action}`
@@ -172,8 +166,7 @@ export function Delete<T extends ClassType<T>>(
 }
 
 export function IgnoreField<
-  T extends { new(...args: any[]): InstanceType<T> }
+  T extends { new (...args: any[]): InstanceType<T> }
 >(li: (keyof InstanceType<T>)[]) {
   return (target: T) => Reflect.defineMetadata(IGNORE_FIEIDS_TOKEN, li, target)
 }
-

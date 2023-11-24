@@ -267,8 +267,8 @@ export class FasterCrudService {
         // check if pagination is valid
         const { currentPage, pageSize } = data['pagination'] // currentPage is not checked here
         const [min, max] = [
-          pagination.limit.min ?? 0,
-          pagination.limit.max, //this must be defined
+          pagination.min ?? 0,
+          pagination.max, //this must be defined
         ]
         if (pageSize < min || pageSize > max) {
           throw new Error(`pageSize out of range`)
