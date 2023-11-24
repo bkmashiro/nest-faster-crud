@@ -18,7 +18,7 @@ export function FC(opt: Partial<FastCrudFieldOptions> = {}): PropertyDecorator {
     const _type_constructor = Reflect.getMetadata('design:type', target, key)
     const _name = key
     name = name || _name
-    type = type || _type_constructor.name
+    type = type || _type_constructor.name //TODO add type mapping
 
     const newOption = Object.assign(opt, {
       name, type

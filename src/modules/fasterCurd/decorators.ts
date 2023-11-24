@@ -14,6 +14,8 @@ import {
   setProtoMeta,
 } from './reflect.utils'
 import { CRUDMethods } from './fcrud-tokens'
+import { FC, FastCrudFieldOptions } from './fastcrud-gen/fastcrud.decorator'
+import { applyDecorators } from '@nestjs/common';
 
 export type FieldOptions = {
   name: string
@@ -26,7 +28,7 @@ export type FieldOptionsObject = {
   [key: string]: FieldOptions
 }
 
-export function Field(opt: Partial<FieldOptions> = {}): PropertyDecorator {
+export function FieldOnly(opt: Partial<FieldOptions> = {}): PropertyDecorator {
   return function (target: any, key: string) {
     let {
       name,
@@ -48,6 +50,13 @@ export function Field(opt: Partial<FieldOptions> = {}): PropertyDecorator {
       target
     )
   }
+}
+
+export function Field(opt: Partial<FieldOptions & { fc: FastCrudFieldOptions }> = {}) {
+  return applyDecorators(
+    FieldOnly(opt),
+    FC(opt.fc),
+  );
 }
 
 export type CURDOptions = {

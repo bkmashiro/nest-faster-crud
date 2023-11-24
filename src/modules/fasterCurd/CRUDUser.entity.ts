@@ -18,16 +18,24 @@ import { FC } from './fastcrud-gen/fastcrud.decorator';
 @CRUD({ name: 'user-management' })
 export class CRUDUser {
   @PrimaryGeneratedColumn()
-  @FC({
-    title: "ID",
-    type: "number",
-    column: { width: 50 },
-    form: { show: false }
+  @Field({
+    fc: {
+      title: "ID",
+      type: "number",
+      column: { width: 50 },
+      form: { show: false }
+    }
   })
   id: number;
 
   @Column()
-  @Field()
+  @Field({
+    fc: {
+      title: "姓名",
+      type: "text",
+      search: { show: true }
+    }
+  })
   username: string;
 
   @Column()
