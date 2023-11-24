@@ -14,6 +14,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { TrackerModule } from './modules/tracker/tracker.module';
 import { SioModule } from './modules/sio/sio.module';
 import { DeviceModule } from './modules/device/device.module';
+import { FasterCrudModule } from './modules/fasterCurd/fasterCrud.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { DeviceModule } from './modules/device/device.module';
     TrackerModule,
     SioModule,
     DeviceModule,
+    FasterCrudModule
   ],
   controllers: [AppController],
   providers: [AppService],

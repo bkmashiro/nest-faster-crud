@@ -4,7 +4,6 @@ import { Server, Socket } from 'socket.io';
 import { SessionManager } from './sessions';
 import { DEFAULT_ROOM } from './tokens';
 
-
 @Injectable()
 export class SioService {
   private server: Server = null
