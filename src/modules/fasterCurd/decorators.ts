@@ -85,7 +85,7 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
     // }
   }
 }
-
+export type FieldSelector<T> = (keyof T)[] | RegExp
 export type BeforeActionOptions<T extends {}> = {
   /**
    * if enabled, the input data will not be transformed
@@ -105,9 +105,9 @@ export type BeforeActionOptions<T extends {}> = {
     allow: (keyof T)[]
   }
   checkType: boolean
-  requires: (keyof T)[]
-  denies: (keyof T)[]
-  exactly: (keyof T)[]
+  requires: FieldSelector<T>
+  denies: FieldSelector<T>
+  exactly: FieldSelector<T>
   route: string
   expect: ((data: T) => boolean) | ((data: T) => boolean)[]
   transform: (data: T) => T

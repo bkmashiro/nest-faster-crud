@@ -4,24 +4,15 @@ import { FC } from './fastcrud-gen/fastcrud.decorator'
 
 @Entity()
 @Create({
-  requires: ['username'],
-  denies: ['id'],
-  transform: (x) => {
-    x.username = x.username.toUpperCase()
-    return x
-  },
-  expect: [(x: CRUDUser) => x.username.length > 3] as ((
-    data: CRUDUser
-  ) => boolean)[],
-  route: 'create-user',
+  requires: ['username', 'email'],
+  expect: (x) => x.username.length > 3,
 })
 @Read({
   pagination: {
     max: 5,
   },
-  // rawInput: true,
 })
-@CRUD({ name: 'user-management' })
+@CRUD()
 export class CRUDUser {
   @PrimaryGeneratedColumn()
   @Field({

@@ -88,6 +88,14 @@ export function requrie_checker({ options }: ConfigCtx) {
         }
       }
     }
+  } else if (requires instanceof RegExp) {
+    check_requirements = (data: any) => {
+      for (const field in data) {
+        if (!requires.test(field)) {
+          throw new Error(`Unexpected field ${String(field)}`)
+        }
+      }
+    }
   }
   return check_requirements
 }
@@ -103,7 +111,16 @@ export function deny_checker({ options }: ConfigCtx) {
         }
       }
     }
+  }  else if (denies instanceof RegExp) { 
+    check_requirements = (data: any) => {
+      for (const field in data) {
+        if (denies.test(field)) {
+          throw new Error(`Denied field ${String(field)}`)
+        }
+      }
+    }
   }
+
   return check_requirements
 }
 
