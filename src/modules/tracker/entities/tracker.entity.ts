@@ -2,7 +2,7 @@ import { BaseEntity, Column, Entity, Geometry, PrimaryColumn, PrimaryGeneratedCo
 
 @Entity()
 export class Tracker extends BaseEntity {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column('geometry', { nullable: false, spatialFeatureType: 'Point', srid: 4326 })

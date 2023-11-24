@@ -10,7 +10,13 @@ import {
   FieldOptionsObject,
   PartialBeforeActionOptions,
 } from './decorators'
-import { BeforeActionTokenType, CRUDMethods, FCRUD_GEN_CFG_TOKEN, FIELDS_TOKEN, HttpMethods } from './fcrud-tokens'
+import {
+  BeforeActionTokenType,
+  CRUDMethods,
+  FCRUD_GEN_CFG_TOKEN,
+  FIELDS_TOKEN,
+  HttpMethods,
+} from './fcrud-tokens'
 import { ENTITY_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './fcrud-tokens'
 import { getProtoMeta } from './reflect.utils'
 import { deconstrcuOrNull } from 'src/utils/objectTools'
@@ -37,7 +43,8 @@ export class FasterCrudService {
     router.stack.forEach((r) => {
       if (r.route && r.route.path) {
         logger.debug(
-          `Mapped {${route}${r.route.path
+          `Mapped {${route}${
+            r.route.path
           }}, ${r.route.stack[0].method.toUpperCase()}} route`
         )
       }
@@ -50,8 +57,18 @@ export class FasterCrudService {
     const router = new FasterCrudRouterBuilder()
     const fields = getProtoMeta(entity, FIELDS_TOKEN) ?? {}
     const docs = getProtoMeta(entity, FCRUD_GEN_CFG_TOKEN) ?? {}
-    console.log(`fields`, fields)
-    console.log(`docs`, docs)
+    // console.log(`fields`, fields)
+    // console.log(`docs`, docs)
+    router.setRoute('get', `/dict`, async function (req, res) {
+      res.status(200).json(docs)
+    })
+    logger.debug(`data dict for ${fcrudName} is `, docs)
+    logger.debug(
+      `data dict is avaliable at {/${
+        this.prefix
+      }${fcrudName.toLowerCase()}/dict, GET}`
+    )
+
     // create all CRUD routes
     const actions: CRUDMethods[] =
       getProtoMeta(entity, GEN_CRUD_METHOD_TOKEN) ?? defaultCrudMethod
@@ -63,11 +80,14 @@ export class FasterCrudService {
         entity,
         action_token
       ) as PartialBeforeActionOptions<T>
-      const decoratedMethod = this.configureMethod({
-        options: decoration_config,
-        target: entity,
-        fields
-      }, method)
+      const decoratedMethod = this.configureMethod(
+        {
+          options: decoration_config,
+          target: entity,
+          fields,
+        },
+        method
+      )
 
       const route = fixRoute(decoration_config?.route ?? `/${action}`)
       router.setRoute(this.default_method, route, async function (req, res) {
@@ -94,6 +114,8 @@ export class FasterCrudService {
       check_expect,
       transform_data,
       transform_return,
+      check_pagination,
+      pagination_transformer,
     } = this.parseOptions({ options, target, fields })
 
     const univariate_checkers = [
@@ -101,9 +123,20 @@ export class FasterCrudService {
       check_denies,
       check_exactly,
       check_expect,
+      check_pagination,
     ]
 
-    return async (data: any) => {
+    return async (data: {
+      data: any,
+      pagination?: {
+        currentPage: number,
+        pageSize: number
+      },
+      sort?: {
+        prop: string,
+        order: 'ascending' | 'descending'
+      }
+    }) => {
       try {
         //univariate check
         for (const checker of univariate_checkers) {
@@ -114,8 +147,11 @@ export class FasterCrudService {
         check_type(data, fields)
 
         const transformed = transform_data(data)
+        const paginated = pagination_transformer(transformed)
 
-        const ret = await method(transformed)
+        console.log(`paginated`, paginated)
+
+        const ret = await method(paginated)
 
         return transform_return(ret)
       } catch (e) {
@@ -124,9 +160,11 @@ export class FasterCrudService {
     }
   }
 
-  private parseOptions<T extends ClassType<T>>(
-    { options, target, fields }: ConfigCtx<T>
-  ) {
+  private parseOptions<T extends ClassType<T>>({
+    options,
+    target,
+    fields,
+  }: ConfigCtx<T>) {
     const {
       requires,
       denies,
@@ -144,6 +182,8 @@ export class FasterCrudService {
     const transform_data = this.transform_processor(transform)
     const transform_return = this.transform_return_processor(transformReturn)
     const check_type = this.type_checker(checkType, fields)
+    const check_pagination = this.pagination_checker(options?.pagination)
+    const pagination_transformer = this.pagination_transformer(options?.pagination)
     return {
       check_requirements,
       check_denies,
@@ -151,7 +191,9 @@ export class FasterCrudService {
       check_expect,
       transform_data,
       transform_return,
-      check_type
+      check_type,
+      check_pagination,
+      pagination_transformer,
     }
   }
 
@@ -173,8 +215,67 @@ export class FasterCrudService {
     return transform_data
   }
 
+  private pagination_checker<T>(
+    pagination: BeforeActionOptions<T>['pagination']
+  ) {
+    let check_pagination = (data: T) => void 0
+    if (pagination && pagination.enable) {
+      check_pagination = (data: T) => {
+        // check if pagination is exist
+        if (!data.hasOwnProperty('pagination')) {
+          throw new Error(`pagination not found for paginated query`)
+        }
+
+        // check if pagination is valid
+        const { currentPage, pageSize } = data['pagination'] // currentPage is not checked here
+        const [min, max] = [
+          pagination.limit.min ?? 0,
+          pagination.limit.max, //this must be defined
+        ]
+        if (pageSize < min || pageSize > max) {
+          throw new Error(`pageSize out of range`)
+        }
+      }
+    }
+    return check_pagination
+  }
+
+  private pagination_transformer<T>(
+    pagination: BeforeActionOptions<T>['pagination']
+  ) {
+    const remove_pagination = (data: any) => {
+      if (data.hasOwnProperty('pagination')) {
+        delete data['pagination']
+      }
+      return data
+    }
+    let transform_pagination = (data: T) => {
+      return {
+        data: remove_pagination(data)
+      }
+    }
+    if (pagination && pagination.enable) {
+      // add skip and limit to data
+      transform_pagination = (data: T) => {
+        if (!data.hasOwnProperty('pagination')) {
+          throw new Error(`pagination not found for paginated query`)
+        }
+
+        const { currentPage, pageSize } = data['pagination'] // all start from 0
+        const skip = currentPage * pageSize
+        const take = pageSize
+        return {
+          data: remove_pagination(data),
+          skip,
+          take,
+        }
+      }
+    }
+    return transform_pagination
+  }
+
   private except_checker<T>(
-    expect: ((data: T) => boolean) | (((data: T) => boolean)[])
+    expect: ((data: T) => boolean) | ((data: T) => boolean)[]
   ) {
     let check_expect = (data: T) => void 0
     if (expect) {
@@ -253,7 +354,8 @@ export class FasterCrudService {
       check_requirements = (data: T) => {
         for (const [key, f] of Object.entries(fields)) {
           const val = data[key]
-          const validator: ((x: any) => boolean) | null = f.validator || validatorMap[f.type]
+          const validator: ((x: any) => boolean) | null =
+            f.validator || validatorMap[f.type]
           if (!f.noCheck && validator) {
             if (validator(val)) {
               // all good
@@ -262,7 +364,9 @@ export class FasterCrudService {
             }
           } else {
             if (!f.noCheck) {
-              throw new Error(`missing validator for checked type ${f.type} (named ${key})`)
+              throw new Error(
+                `missing validator for checked type ${f.type} (named ${key})`
+              )
             }
           }
         }
@@ -282,13 +386,21 @@ function isArrayOfFunctions(data: any): data is ((data: any) => boolean)[] {
 
 export interface CRUDProvider<T> {
   create(data: any): Promise<any>
-  read(data: any): Promise<any>
+  read({
+    data,
+    skip,
+    take,
+  }: {
+    data: any
+    skip?: number
+    take?: number
+  }): Promise<any>
   update(data: any): Promise<any>
   delete(data: any): Promise<any>
 }
 
 export class TypeORMRepoAdapter<T extends {}> implements CRUDProvider<T> {
-  constructor(private readonly repo: Repository<T>) { }
+  constructor(private readonly repo: Repository<T>) {}
 
   async create(data: T) {
     return await this.repo.insert(data)
@@ -302,15 +414,27 @@ export class TypeORMRepoAdapter<T extends {}> implements CRUDProvider<T> {
     return await this.repo.delete(data)
   }
 
-  async read(data: any) {
-    return await this.repo.find(data)
+  async read({
+    data,
+    skip,
+    take,
+  }: {
+    data: any
+    skip?: number
+    take?: number
+  }) {
+    return await this.repo.find({
+      where: data,
+      skip,
+      take,
+    })
   }
 }
 
 export class FasterCrudRouterBuilder {
   router: Router = express.Router()
 
-  constructor() { }
+  constructor() {}
   setRoute(
     method: 'get' | 'post' | 'put' | 'delete' | 'patch',
     path: string,

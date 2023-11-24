@@ -90,6 +90,22 @@ export function CRUD<T extends { new(...args: any[]): InstanceType<T> }>(
 }
 
 export type BeforeActionOptions<T extends {}> = {
+  pagination: {
+    enable: boolean
+    defaultPageSize: number
+    limit?: {
+      min?: number
+      max: number
+    }
+  }
+  sort: {
+    enable: boolean
+    default: {
+      prop: keyof T
+      order: 'ascending' | 'descending'
+    }
+    allow: (keyof T)[]
+  }
   checkType: boolean
   requires: (keyof T)[]
   denies: (keyof T)[]

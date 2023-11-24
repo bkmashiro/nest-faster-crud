@@ -12,7 +12,13 @@ import { FC } from './fastcrud-gen/fastcrud.decorator';
 })
 
 @Read({
-  transformReturn: () => "666"
+  pagination: {
+    enable: true,
+    defaultPageSize: 2,
+    limit: {
+      max:5
+    }
+  }
 })
 
 @CRUD({ name: 'user-management' })

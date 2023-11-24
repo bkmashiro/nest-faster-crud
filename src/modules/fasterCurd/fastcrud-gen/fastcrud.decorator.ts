@@ -1,4 +1,4 @@
-import { FCRUD_GEN_CFG_TOKEN } from "../fcrud-tokens"
+import { FCRUD_GEN_CFG_TOKEN } from '../fcrud-tokens'
 
 export type FastCrudFieldOptions = {
   name?: string
@@ -11,20 +11,24 @@ export type FastCrudFieldOptions = {
 }
 
 export type GenerateFCOption = {}
-
+const typeMapping = {
+  String: 'string',
+}
 export function FC(opt: Partial<FastCrudFieldOptions> = {}): PropertyDecorator {
   return function (target: any, key: string) {
     let { name, type } = opt
     const _type_constructor = Reflect.getMetadata('design:type', target, key)
     const _name = key
     name = name || _name
-    type = type || _type_constructor.name //TODO add type mapping
+    type = type || typeMapping[_type_constructor.name] || _type_constructor.name
 
     const newOption = Object.assign(opt, {
-      name, type
+      name,
+      type,
     })
 
-    const existingMetadata = Reflect.getMetadata(FCRUD_GEN_CFG_TOKEN, target) || {}
+    const existingMetadata =
+      Reflect.getMetadata(FCRUD_GEN_CFG_TOKEN, target) || {}
     Reflect.defineMetadata(
       FCRUD_GEN_CFG_TOKEN,
       Object.assign(existingMetadata, { [name]: newOption }),
@@ -33,9 +37,9 @@ export function FC(opt: Partial<FastCrudFieldOptions> = {}): PropertyDecorator {
   }
 }
 
-export function GenerateFCOption<T extends { new(...args: any[]): InstanceType<T> }>(
-  options: Partial<GenerateFCOption> = {}
-) {
+export function GenerateFCOption<
+  T extends { new (...args: any[]): InstanceType<T> }
+>(options: Partial<GenerateFCOption> = {}) {
   return function classDecorator(target: T) {
     const properties = Reflect.getMetadataKeys(target.prototype)
     const fields: { [key: string]: FastCrudFieldOptions } = {}
