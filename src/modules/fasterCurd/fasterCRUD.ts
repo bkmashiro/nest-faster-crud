@@ -161,6 +161,11 @@ export class FasterCrudService {
       }
     }
   }
+  //TODO refactor this
+  // divide options into three parts
+  // 1. checkers
+  // 2. transformers
+  // 3. hooks
 
   private parseOptions<T extends ClassType<T>>({
     options,
