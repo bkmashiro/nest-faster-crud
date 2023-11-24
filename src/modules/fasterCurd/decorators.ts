@@ -50,70 +50,10 @@ export function Field(opt: Partial<FieldOptions> = {}): PropertyDecorator {
   }
 }
 
-// export function Field({
-//   name,
-//   type,
-// }: { name?: string; type?: string } = {}): PropertyDecorator {
-//   return function (target: any, key: string) {
-//     const _type_constructor = Reflect.getMetadata('design:type', target, key)
-//     const _value = target[key]
-//     const _name = key
-//     // const _key = Symbol(key);
-
-//     name = name || _name
-//     type = type || _type_constructor.name
-//     const existingMetadata = Reflect.getMetadata('fields', target) || {}
-//     const options = {
-//       name,
-//       type,
-//     }
-//     Reflect.defineMetadata(
-//       'fields',
-//       Object.assign(existingMetadata, { [name]: options }),
-//       target
-//     )
-//   }
-// }
-
 export type CURDOptions = {
   name: string
   methods: CRUDMethods[]
 }
-
-// export function CRUD<T extends ClassType<T>>(
-//   options: Partial<CURDOptions> = {}
-// ) {
-//   return function classDecorator(target: T) {
-//     const properties = Reflect.getMetadataKeys(target.prototype)
-//     let fields: { [key: string]: FieldMetadata } = {}
-//     const li = getProtoMeta(target, IGNORE_FIEIDS_TOKEN) || {}
-//     setProtoMeta(target, ENTITY_NAME_TOKEN, options.name)
-//     setProtoMeta(target, GEN_CRUD_METHOD_TOKEN, options.methods)
-
-//     for (const property of properties) {
-//       if (!li.hasOwnProperty(property)) {
-//         const metadata = Reflect.getMetadata(property, target.prototype)
-//         if (metadata && metadata.name && metadata.type) {
-//           console.log(`metadata`, metadata)
-//           fields = Object.assign(fields, {
-//             [metadata.name]: {
-//               name: metadata.name,
-//               type: metadata.type,
-//             },
-//           })
-//         }
-//       }
-//     }
-//     console.log(`fields`, fields)
-//     setProtoMeta(target, FIELDS_TOKEN, fields)
-
-//     Object.defineProperty(target, 'fields', {
-//       value: fields,
-//     })
-
-//     console.log(`process done`, Reflect.getMetadata('fields', target.prototype))
-//   }
-// }
 
 export function CRUD<T extends { new(...args: any[]): InstanceType<T> }>(
   options: Partial<CURDOptions> = {}
@@ -136,14 +76,6 @@ export function CRUD<T extends { new(...args: any[]): InstanceType<T> }>(
         }
       }
     }
-
-    // setProtoMeta(target, FIELDS_TOKEN, fields) //FIXME why this line mess things up 
-
-    // Object.defineProperty(target, 'fields', {
-    //   value: fields,
-    // })
-
-    // console.log(`process done`, Reflect.getMetadata('fields', target.prototype))
   }
 }
 
@@ -153,7 +85,7 @@ export type BeforeActionOptions<T extends {}> = {
   denies: (keyof T)[]
   exactly: (keyof T)[]
   route: string
-  expect: (data: T) => boolean | ((data: T) => boolean)[]
+  expect: ((data: T) => boolean) | (((data: T) => boolean)[])
   transform: (data: T) => T
   transformReturn: (data: T) => any
   onSuccess: (data: T) => any

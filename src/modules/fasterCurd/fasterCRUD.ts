@@ -172,7 +172,7 @@ export class FasterCrudService {
   }
 
   private except_checker<T>(
-    expect: (data: T) => boolean | ((data: T) => boolean)[]
+    expect: ((data: T) => boolean) | (((data: T) => boolean)[])
   ) {
     let check_expect = (data: T) => void 0
     if (expect) {
