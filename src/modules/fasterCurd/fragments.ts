@@ -59,7 +59,7 @@ function pagination_checker({ options }: ConfigCtx) {
   return check_pagination
 }
 
-function except_checker({ options }: ConfigCtx) {
+function except_checker({ options }: ConfigCtx) {//TODO sync this with requrie_checker
   const { expect } = options
   let check_expect: PendingCheckerType = IGNORE_ME
   if (expect) {
@@ -113,7 +113,7 @@ function requrie_checker({ options, fields }: ConfigCtx) {
   return check_requirements
 }
 
-function deny_checker({ options }: ConfigCtx) {
+function deny_checker({ options }: ConfigCtx) { //TODO sync this with requrie_checker
   const { denies } = options
   let check_requirements: PendingCheckerType = IGNORE_ME
   if (denies && Array.isArray(denies) && denies.length > 0) {
@@ -137,7 +137,7 @@ function deny_checker({ options }: ConfigCtx) {
   return check_requirements
 }
 
-function exactly_checker({ options }: ConfigCtx) {
+function exactly_checker({ options }: ConfigCtx) {//TODO sync this with requrie_checker
   const { exactly } = options
   let check_requirements: PendingCheckerType = IGNORE_ME
   if (exactly && Array.isArray(exactly) && exactly.length > 0) {

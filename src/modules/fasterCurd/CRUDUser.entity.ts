@@ -7,7 +7,7 @@ import { $, FC } from './fastcrud-gen/fastcrud.decorator'
   requires: /.*/,
   expect: (x) => x.name.length > 3,
 })
-@CRUD({ methods: ['create'] })
+@CRUD({ methods: ['create'], exposeDict: false })
 @IgnoreField(['id'])
 export class CRUDUser {
   @PrimaryGeneratedColumn()

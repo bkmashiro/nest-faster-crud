@@ -8,6 +8,7 @@ import {
   CRUDMethods,
   FCRUD_GEN_CFG_TOKEN,
   FIELDS_TOKEN,
+  GEN_DATA_DICT_TOKEN,
   HttpMethods,
 } from './fcrud-tokens'
 import { ENTITY_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './fcrud-tokens'
@@ -77,14 +78,16 @@ export class FasterCrudService {
   }
 
   generateCRUD<T extends ClassType<T>>(entity: T, provider: CRUDProvider<T>) {
-    const { docs, fcrudName, fields } = this.getEntityMeta<T>(entity)
+    const { docs, fcrudName, fields, doGenerateDataDict } = this.getEntityMeta<T>(entity)
     const router = new FasterCrudRouterBuilder()
       .addPreMiddlewares(this.fCrudJwtMiddleware.FcrudJwtMiddleware)
       .addPostMiddlewares(exceptionMiddleware)
-
-    router.setRoute('get', `/dict`, async function (req, res) {
-      res.status(200).json(docs)
-    })
+    if (doGenerateDataDict) {
+      router.setRoute('get', `/dict`, async function (req, res) {
+        res.status(200).json(docs)
+      })
+    }
+    
 
     // create all CRUD routes
     const actions: CRUDMethods[] =
@@ -120,7 +123,8 @@ export class FasterCrudService {
     const fcrudName = getProtoMeta(entity, ENTITY_NAME_TOKEN) ?? entity.name
     const fields = getProtoMeta(entity, FIELDS_TOKEN) ?? {}
     const docs = getProtoMeta(entity, FCRUD_GEN_CFG_TOKEN) ?? {}
-    return { docs, fcrudName, fields }
+    const doGenerateDataDict = getProtoMeta(entity, GEN_DATA_DICT_TOKEN) ?? true
+    return { docs, fcrudName, fields, doGenerateDataDict }
   }
 
   configureMethod<T extends ClassType<T>>(
