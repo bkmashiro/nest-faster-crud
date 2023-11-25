@@ -129,50 +129,29 @@ export class FasterCrudService {
   }
 
   configureMethod<T extends ClassType<T>>(
-    { options, target, fields }: ConfigCtx<T>,
+    cfg: ConfigCtx<T>,
     method: (data: any) => Promise<any>
   ) {
-    if (!options) {
-      // logger.debug(`no options for ${method.name}, skip`)
+    if (!cfg || !cfg.options) {
       return method
     }
 
-    // const {
-    //   shape_checker, check_requirements, check_denies, check_exactly, check_type, check_expect, transform_data, transform_return, check_pagination, pagination_transformer,
-    // } = this.parseOptions2({ options, target, fields });
-
-    // const univariate_checkers = [
-    //   check_requirements,
-    //   check_denies,
-    //   check_exactly,
-    //   check_expect,
-    //   check_pagination,
-    //   shape_checker,
-    // ];
     const { checkers, pre_transformers, post_transformers, hooks } =
-      this.parseOptions({
-        options,
-        target,
-        fields,
-      })
+      this.parseOptions(cfg)
     return async (data: any) => {
       try {
-        for (const checker of checkers) {
-          checker(data)
-        }
+        applyCheckers(checkers, data)
 
-        for (const transformer of pre_transformers) {
-          data = transformer(data)
-        }
+        data = applyTransformers(pre_transformers, data)
 
         console.log(`exec with data:`, data)
 
         let result = await method(data)
 
-        for (const transformer of post_transformers) {
-          result = transformer(result)
-        }
+        result = applyTransformers(post_transformers, result)
+
         logger.debug(`exec result:`, result)
+
         return result
       } catch (e) {
         logger.error(`error when executing method ${method.name}:`, e)
@@ -180,26 +159,18 @@ export class FasterCrudService {
       }
     }
   }
-  //TODO refactor this
-  // divide options into three parts
-  // 1. checkers
-  // 2. transformers
-  // 3. hooks
+
   private parseOptions(ctx: ConfigCtx) {
     let [checkers, pre_transformers, post_transformers] = [
       checker_factories,
       pre_transformer_factories,
       post_transformer_factories,
     ].map((f) => {
-      return f.map((f) => f(ctx))
+      // get all products, and filter out empty ones
+      return f.map((f) => f(ctx)).filter((item) => item !== IGNORE_ME)
     })
 
-    // filter all elements that values equal Symbol('ignore me')
-    checkers = checkers.filter((item) => item !== IGNORE_ME)
-    pre_transformers = pre_transformers.filter((item) => item !== IGNORE_ME)
-    post_transformers = post_transformers.filter((item) => item !== IGNORE_ME)
-
-    const hooks = []
+    const hooks = [] //TODO: hooks are not implemented yet
 
     return {
       checkers: checkers as CheckerType[],
@@ -212,4 +183,16 @@ export class FasterCrudService {
   get app(): Express {
     return this.adapterHost.httpAdapter.getInstance()
   }
+}
+function applyCheckers(checkers: CheckerType[], data: any) {
+  for (const checker of checkers) {
+    checker(data)
+  }
+}
+
+function applyTransformers(post_transformers: TransformerType[], result: any) {
+  for (const transformer of post_transformers) {
+    result = transformer(result)
+  }
+  return result
 }
