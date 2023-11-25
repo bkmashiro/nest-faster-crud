@@ -10,6 +10,7 @@ import { Router } from 'express'
 import { Repository } from 'typeorm'
 import { Validator } from './defaultValidators'
 import { QueryData } from './FasterCrudService'
+import { AddReq, DelReq, EditReq, PageQuery } from './fastcrud-gen/interface'
 export const logger = new Logger('FasterCRUDService')
 
 type KeyType = string
@@ -21,56 +22,40 @@ export function isArrayOfFunctions(
 }
 
 export interface CRUDProvider<T> {
-  create(data: any): Promise<any>
-  read({
-    data,
-    skip,
-    take,
-  }: {
-    data: any
-    skip?: number
-    take?: number
-  }): Promise<any>
-  update(data: any): Promise<any>
-  delete(data: any): Promise<any>
+  create(data: AddReq): Promise<any>
+  read(query: PageQuery): Promise<any>
+  update(data: EditReq): Promise<any>
+  delete(data: DelReq): Promise<any>
 }
 
-export class TypeORMRepoAdapter<T>
-  implements CRUDProvider<T>
-{
+export class TypeORMRepoAdapter<T> implements CRUDProvider<T> {
   constructor(private readonly repo: Repository<T>) {}
-
-  async create({ data }: any) {
-    return await this.repo.insert(data)
-  }
-
-  async update(data: { find: any; update: any }) {
-    return await this.repo.update(data.find, data.update)
-  }
-
-  async delete(data: any) {
-    return await this.repo.delete(data)
-  }
-
-  async read({
-    data,
-    skip,
-    take,
-  }: {
-    data: any
-    skip?: number
-    take?: number
-  }) {
+  async read(query: PageQuery) {
+    console.log(query)
     return await this.repo.find({
-      where: data,
-      skip,
-      take,
+      where: query.form,
+      skip: (query.page.currentPage - 1) * query.page.pageSize,
+      take: query.page.pageSize,
     })
+  }
+
+  async create({ form }: AddReq) {
+    return await this.repo.insert(form)
+  }
+
+  async update({ form, row }: EditReq) {
+    return await this.repo.update(row, form)
+  }
+
+  async delete({ row }: DelReq) {
+    return await this.repo.delete(row)
   }
 }
 
 export class FasterCrudRouterBuilder {
   router: Router = express.Router()
+  pre_middlewares: express.RequestHandler[] = []
+  post_middlewares: express.RequestHandler[] = []
 
   constructor() {}
   setRoute(
@@ -78,8 +63,17 @@ export class FasterCrudRouterBuilder {
     path: string,
     handler: express.RequestHandler
   ) {
-    this.router[method](path, handler)
+    this.router[method](path, ...this.pre_middlewares, handler)
+    return this
+  }
 
+  addPreMiddlewares(...middleware: any[]) {
+    this.pre_middlewares.push(...middleware)
+    return this
+  }
+
+  addPostMiddlewares(...middleware: any[]) {
+    this.post_middlewares.push(...middleware)
     return this
   }
 

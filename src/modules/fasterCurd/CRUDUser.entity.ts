@@ -6,10 +6,11 @@ import { FC } from './fastcrud-gen/fastcrud.decorator'
 @Create({
   requires: ['name', 'type'],
   expect: (x) => x.name.length > 3,
-})
-@Read({
-  pagination: {
-    max: 5,
+  transformReturn: (x) => {
+    return {
+      ...x,
+      name: x.name.toUpperCase(),
+    }
   },
 })
 @CRUD()
