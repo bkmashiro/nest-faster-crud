@@ -9,7 +9,7 @@ export class FCrudJwtMiddleware {
     if (process.env.NODE_ENV === 'production') {
       logger.debug('FCrudJwtMiddleware init')
     } else if (process.env.NODE_ENV === 'dev') {
-      logger.debug('FCrud JWT Middleware disabled in development mode')
+      logger.warn('FCrud JWT Middleware disabled in development mode')
       this.skip_auth = true
     }
   }

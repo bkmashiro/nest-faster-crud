@@ -91,12 +91,6 @@ export class FasterCrudService {
     router.setRoute('get', `/dict`, async function (req, res) {
       res.status(200).json(docs)
     })
-    logger.debug(`data dict for ${fcrudName} is `, docs)
-    logger.debug(
-      `data dict is avaliable at {/${
-        this.prefix
-      }${fcrudName.toLowerCase()}/dict, GET}`
-    )
 
     // create all CRUD routes
     const actions: CRUDMethods[] =
