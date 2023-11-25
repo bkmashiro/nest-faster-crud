@@ -13,7 +13,12 @@ import {
 import { ENTITY_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './fcrud-tokens'
 import { getProtoMeta } from './reflect.utils'
 import { defaultCrudMethod } from './fcrud-tokens'
-import { CheckerType, IGNORE_ME, post_transformer_factories } from './fragments'
+import {
+  CheckerType,
+  IGNORE_ME,
+  TransformerType,
+  post_transformer_factories,
+} from './fragments'
 import { FCrudJwtMiddleware } from './middleware/jwt.middleware'
 import {
   logger,
@@ -79,11 +84,10 @@ export class FasterCrudService {
 
   generateCRUD<T extends ClassType<T>>(entity: T, provider: CRUDProvider<T>) {
     const { docs, fcrudName, fields } = this.getMeta<T>(entity)
-    const router = new FasterCrudRouterBuilder().addPreMiddlewares(
-      this.fCrudJwtMiddleware.FcrudJwtMiddleware,
-    ).addPostMiddlewares(exceptionMiddleware)
-    
-    
+    const router = new FasterCrudRouterBuilder()
+      .addPreMiddlewares(this.fCrudJwtMiddleware.FcrudJwtMiddleware)
+      .addPostMiddlewares(exceptionMiddleware)
+
     router.setRoute('get', `/dict`, async function (req, res) {
       res.status(200).json(docs)
     })
@@ -205,8 +209,8 @@ export class FasterCrudService {
 
     return {
       checkers: checkers as CheckerType[],
-      pre_transformers,
-      post_transformers,
+      pre_transformers: pre_transformers as TransformerType[],
+      post_transformers: post_transformers as TransformerType[],
       hooks,
     }
   }
