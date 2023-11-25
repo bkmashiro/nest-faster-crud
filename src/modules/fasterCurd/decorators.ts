@@ -18,18 +18,19 @@ import { FC, FastCrudFieldOptions } from './fastcrud-gen/fastcrud.decorator'
 import { applyDecorators } from '@nestjs/common'
 import { InsertResult } from 'typeorm'
 
-export type FieldOptions = {
+export type FieldOptions = Partial<{
   name: string
   type: string
   validator?: (x: any) => boolean
   noCheck?: boolean
-}
+  requires_override?: boolean
+}>
 
 export type FieldOptionsObject = {
   [key: string]: FieldOptions
 }
 
-export function Field(opt: Partial<FieldOptions> = {}): PropertyDecorator {
+export function Field(opt: FieldOptions = {}): PropertyDecorator {
   return function (target: any, key: string) {
     let { name, type } = opt
     const _type_constructor = Reflect.getMetadata('design:type', target, key)
@@ -66,24 +67,19 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
   options: Partial<CURDOptions> = {}
 ) {
   return function classDecorator(target: T) {
-    const properties = FIELDS_TOKEN
-    console.log(`props`, properties)
-    const fields: { [key: string]: FieldOptions } = {}
-    const li = Reflect.getMetadata('ignore', target.prototype) || []
+    const li = getProtoMeta(target, IGNORE_FIEIDS_TOKEN)
+    const fields = getProtoMeta(target, FIELDS_TOKEN)
+    console.log(li)
+    console.log(fields)
     setProtoMeta(target, ENTITY_NAME_TOKEN, options.name)
     setProtoMeta(target, GEN_CRUD_METHOD_TOKEN, options.methods)
-    // console.log(li)
-    // for (const property of properties) {
-    //   if (!li.includes(property)) {
-    //     const metadata = Reflect.getMetadata(property, target.prototype)
-    //     if (metadata && metadata.name && metadata.type) {
-    //       fields[metadata.name] = {
-    //         name: metadata.name,
-    //         type: metadata.type,
-    //       }
-    //     }
-    //   }
-    // }
+    // remove ignored fields
+    if (li && Array.isArray(li) && fields) {
+      for (const field of li) {
+        delete fields[field]
+      }
+    }
+    setProtoMeta(target, FIELDS_TOKEN, fields)
   }
 }
 export type FieldSelector<T> = (keyof T)[] | RegExp
@@ -113,11 +109,12 @@ export type BeforeActionOptions<T extends {}> = {
   expect: ((data: T) => boolean) | ((data: T) => boolean)[]
   transform: (data: T) => T
   transformQueryReturn: (result: any) => any
-  transformAfter: (data: T) => any
+  transformAfter: (data: { form: T }, queryRet: any) => any
   onSuccess: (data: T) => any
   onCheckFailure: (data: T) => any
   onTransformFailure: (data: T) => any
   onExecFailure: (data: T) => any
+  ctx: object | null
 }
 
 export type ClassType<T extends abstract new (...args: any) => any> = {
@@ -171,5 +168,7 @@ export function Delete<T extends ClassType<T>>(
 export function IgnoreField<
   T extends { new (...args: any[]): InstanceType<T> }
 >(li: (keyof InstanceType<T>)[]) {
-  return (target: T) => Reflect.defineMetadata(IGNORE_FIEIDS_TOKEN, li, target)
+  return (target: T) => {
+    setProtoMeta(target, IGNORE_FIEIDS_TOKEN, li)
+  }
 }

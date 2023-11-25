@@ -1,6 +1,6 @@
 import { applyDecorators } from '@nestjs/common'
 import { FCRUD_GEN_CFG_TOKEN } from '../fcrud-tokens'
-import { Field } from '../decorators'
+import { Field, FieldOptions } from '../decorators'
 
 export type FastCrudFieldOptions = {
   name?: string
@@ -44,10 +44,11 @@ export function FC(opt: Partial<FastCrudFieldOptions> = {}): PropertyDecorator {
 
 function PresetFC(
   preset_options: Partial<FastCrudFieldOptions>,
-  remaining_options?: Partial<FastCrudFieldOptions>
+  remaining_options?: Partial<FastCrudFieldOptions>,
+  field_options?: Partial<FieldOptions>
 ) {
   return applyDecorators(
-    Field(),
+    Field(field_options),
     FC(Object.assign(preset_options, remaining_options))
   )
 }
@@ -74,8 +75,8 @@ export function GenerateFCOption<
 export namespace $ {
   type FC_type = 'text' | 'number' | 'dict-select' | 'date-picker'
   const _ = FC
-
-  export const Text = (title?: string, args?: object) => {
+  type ArgsType = FastCrudFieldOptions & Partial<FieldOptions>
+  export const Text = (title?: string, args?: ArgsType) => {
     return PresetFC(
       {
         title,
@@ -84,28 +85,39 @@ export namespace $ {
       args
     )
   }
-  export const Number = (title?: string, args?: object) => {
+  export const Number = (
+    title?: string,
+    fcargs?: FastCrudFieldOptions,
+    field_options?: FieldOptions
+  ) => {
     return PresetFC(
       {
         title,
         type: 'number',
       },
-      args
+      fcargs,
+      field_options
     )
   }
-  export const DictSelect = (title?: string, args?: object) => {
+  export const DictSelect = (
+    title?: string,
+    fcargs?: FastCrudFieldOptions,
+    field_options?: FieldOptions
+  ) => {
     return PresetFC(
       {
         title,
         type: 'dict-select',
       },
-      args
+      fcargs,
+      field_options
     )
   }
   export const NumberDictSelect = (
     dictArr: string[],
     title?: string,
-    args?: object
+    fcargs?: FastCrudFieldOptions,
+    field_options?: FieldOptions
   ) => {
     return PresetFC(
       {
@@ -115,16 +127,22 @@ export namespace $ {
           data: dictArr.map((x, i) => ({ value: i, label: x })),
         },
       },
-      args
+      fcargs,
+      field_options
     )
   }
-  export const DatePicker = (title?: string, args?: object) => {
+  export const DatePicker = (
+    title?: string,
+    fcargs?: FastCrudFieldOptions,
+    field_options?: FieldOptions
+  ) => {
     return PresetFC(
       {
         title,
         type: 'date-picker',
       },
-      args
+      fcargs,
+      field_options
     )
   }
 }

@@ -18,6 +18,7 @@ import {
   IGNORE_ME,
   TransformerType,
   post_transformer_factories,
+  transform_after_processor,
 } from './fragments'
 import { FCrudJwtMiddleware } from './middleware/jwt.middleware'
 import {
@@ -130,7 +131,7 @@ export class FasterCrudService {
       return method
     }
 
-    const { checkers, pre_transformers, post_transformers, hooks } =
+    const { checkers, pre_transformers, post_transformers, hooks, transform_after } =
       this.parseOptions(cfg)
     return async (data: any) => {
       try {
@@ -140,19 +141,19 @@ export class FasterCrudService {
 
         console.log(`exec with data:`, data)
 
-        let result = await method(data)
+        let queryResult = await method(data)
 
-        console.debug(`exec result:`, result)
+        console.debug(`exec result:`, queryResult)
 
-        result = applyTransformers(post_transformers, result)
+        queryResult = applyTransformers(post_transformers, queryResult)
 
-        console.debug(`transformed result:`, result)
+        console.debug(`transformed result:`, queryResult)
 
-        return result
+        return transform_after(data, queryResult)
       } catch (e) {
         logger.error(`error when executing method ${method.name}:`, e)
-        logger.debug(`error data:`, data)
-        logger.debug(`stack:`, e.stack)
+        // logger.debug(`error data:`, data)
+        // logger.debug(`stack:`, e.stack)
         throw new Error(e.message)
       }
     }
@@ -174,6 +175,7 @@ export class FasterCrudService {
       checkers: checkers as CheckerType[],
       pre_transformers: pre_transformers as TransformerType[],
       post_transformers: post_transformers as TransformerType[],
+      transform_after: transform_after_processor(ctx),
       hooks,
     }
   }

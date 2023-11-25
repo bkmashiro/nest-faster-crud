@@ -6,9 +6,9 @@ import { CRUDMethods } from './fcrud-tokens'
 
 export const IGNORE_ME = Symbol('ignore me')
 export type PendingCheckerType = ((data: any) => void) | typeof IGNORE_ME
-export type CheckerType = ((data: any) => void)
+export type CheckerType = (data: any) => void
 export type PendingTransformerType = ((data: any) => any) | typeof IGNORE_ME
-export type TransformerType = ((data: any) => any)
+export type TransformerType = (data: any) => any
 
 const form_requests: CRUDMethods[] = ['create', 'update', 'delete']
 function shape_checker({ options, action }: ConfigCtx) {
@@ -28,7 +28,7 @@ function pagination_checker({ options }: ConfigCtx) {
   let check_pagination: PendingCheckerType = IGNORE_ME
   const { pagination } = options
   if (pagination) {
-    check_pagination = ({page}: PageQuery) => {
+    check_pagination = ({ page }: PageQuery) => {
       // check if pagination is exist
       if (!page) {
         throw new Error(`pagination not found for paginated query`)
@@ -85,24 +85,27 @@ function except_checker({ options }: ConfigCtx) {
   return check_expect
 }
 
-function requrie_checker({ options }: ConfigCtx) {
+function requrie_checker({ options, fields }: ConfigCtx) {
   const { requires } = options
   let check_requirements: PendingCheckerType = IGNORE_ME
   if (requires && Array.isArray(requires) && requires.length > 0) {
     check_requirements = ({ form }: any) => {
       for (const field of requires) {
         if (!form.hasOwnProperty(field)) {
-          throw new Error(
-            `Missing field ${String(field)} form`
-          )
+          throw new Error(`Missing field ${String(field)} form`)
         }
       }
     }
   } else if (requires instanceof RegExp) {
     check_requirements = ({ form }: any) => {
-      for (const field in form) {
-        if (!requires.test(field)) {
-          throw new Error(`Unexpected field ${String(field)}`)
+      for (const [name, field] of Object.entries(fields)) {
+        console.log(name, field)
+        if (
+          requires.test(name) &&
+          !form.hasOwnProperty(name) &&
+          field.requires_override !== false // note that unset (undefined) is true
+        ) {
+          throw new Error(`Missing field ${String(name)} form`)
         }
       }
     }
@@ -183,13 +186,13 @@ function type_checker({ options, fields }: ConfigCtx) {
 }
 
 function transform_return_processor({ options }: ConfigCtx) {
-  const { transformQueryReturn: transformReturn } = options
-  let transform_data: PendingTransformerType = IGNORE_ME
-  if (transformReturn) {
+  const { transformQueryReturn } = options
+  let transform_query_return: PendingTransformerType = IGNORE_ME
+  if (transformQueryReturn) {
     //TODO add check for function
-    transform_data = transformReturn
+    transform_query_return = transformQueryReturn
   }
-  return transform_data
+  return transform_query_return
 }
 
 function pre_transform_processor({ options }: ConfigCtx) {
@@ -200,6 +203,23 @@ function pre_transform_processor({ options }: ConfigCtx) {
     transform_data = transform
   }
   return transform_data
+}
+
+// this is a special one
+function transform_after_processor({ options, action }: ConfigCtx) {
+  const { transformAfter } = options
+  let transform_after = (data: any, queryRet: any) => data
+  if (form_requests.includes(action)) {
+    // if this is a form request, unwrap the form
+    transform_after = (data: any, queryRet: any) => {
+      return data.form
+    }
+  }
+  if (transformAfter) {
+    //TODO add check for function
+    transform_after = transformAfter
+  }
+  return transform_after
 }
 
 // export function pagination_transformer({ options }: ConfigCtx) {
@@ -249,3 +269,5 @@ export const pre_transformer_factories = [
 ]
 
 export const post_transformer_factories = [transform_return_processor]
+
+export { transform_after_processor }
