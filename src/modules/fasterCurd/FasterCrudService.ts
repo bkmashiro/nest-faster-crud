@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { HttpAdapterHost } from '@nestjs/core'
 import { Express } from 'express'
 import express = require('express')
@@ -21,23 +21,14 @@ import {
 } from './fragments'
 import { FCrudJwtMiddleware } from './middleware/jwt.middleware'
 import {
-  logger,
   CRUDProvider,
   FasterCrudRouterBuilder,
   fixRoute,
   perform_task,
-  isArrayOfFunctions,
 } from './fasterCRUD'
 import {
   checker_factories,
-  deny_checker,
-  exactly_checker,
-  except_checker,
-  pagination_checker,
-  requrie_checker,
-  shape_checker,
   pre_transformer_factories,
-  type_checker,
 } from './fragments'
 import { exceptionMiddleware } from './middleware/exception.middleware'
 
@@ -52,6 +43,8 @@ export type QueryData = {
     order: string
   }
 }
+
+const logger = new Logger('FasterCRUDService')
 
 @Injectable()
 export class FasterCrudService {
@@ -83,7 +76,7 @@ export class FasterCrudService {
   }
 
   generateCRUD<T extends ClassType<T>>(entity: T, provider: CRUDProvider<T>) {
-    const { docs, fcrudName, fields } = this.getMeta<T>(entity)
+    const { docs, fcrudName, fields } = this.getEntityMeta<T>(entity)
     const router = new FasterCrudRouterBuilder()
       .addPreMiddlewares(this.fCrudJwtMiddleware.FcrudJwtMiddleware)
       .addPostMiddlewares(exceptionMiddleware)
@@ -108,6 +101,7 @@ export class FasterCrudService {
           options: decoration_config,
           target: entity,
           fields,
+          action
         },
         method
       )
@@ -121,7 +115,7 @@ export class FasterCrudService {
     this.addRouter(`/${this.prefix}${fcrudName.toLowerCase()}`, router.build())
   }
 
-  private getMeta<T extends ClassType<T>>(entity: T) {
+  private getEntityMeta<T extends ClassType<T>>(entity: T) {
     const fcrudName = getProtoMeta(entity, ENTITY_NAME_TOKEN) ?? entity.name
     const fields = getProtoMeta(entity, FIELDS_TOKEN) ?? {}
     const docs = getProtoMeta(entity, FCRUD_GEN_CFG_TOKEN) ?? {}
@@ -148,13 +142,17 @@ export class FasterCrudService {
 
         let result = await method(data)
 
+        console.debug(`exec result:`, result)
+
         result = applyTransformers(post_transformers, result)
 
-        logger.debug(`exec result:`, result)
+        console.debug(`transformed result:`, result)
 
         return result
       } catch (e) {
         logger.error(`error when executing method ${method.name}:`, e)
+        logger.debug(`error data:`, data)
+        logger.debug(`stack:`, e.stack)
         throw new Error(e.message)
       }
     }
@@ -184,6 +182,7 @@ export class FasterCrudService {
     return this.adapterHost.httpAdapter.getInstance()
   }
 }
+
 function applyCheckers(checkers: CheckerType[], data: any) {
   for (const checker of checkers) {
     checker(data)

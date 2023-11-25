@@ -11,7 +11,6 @@ import { Repository } from 'typeorm'
 import { Validator } from './defaultValidators'
 import { QueryData } from './FasterCrudService'
 import { AddReq, DelReq, EditReq, PageQuery } from './fastcrud-gen/interface'
-export const logger = new Logger('FasterCRUDService')
 
 type KeyType = string
 

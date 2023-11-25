@@ -16,6 +16,7 @@ import {
 import { CRUDMethods } from './fcrud-tokens'
 import { FC, FastCrudFieldOptions } from './fastcrud-gen/fastcrud.decorator'
 import { applyDecorators } from '@nestjs/common'
+import { InsertResult } from 'typeorm'
 
 export type FieldOptions = {
   name: string
@@ -111,7 +112,8 @@ export type BeforeActionOptions<T extends {}> = {
   route: string
   expect: ((data: T) => boolean) | ((data: T) => boolean)[]
   transform: (data: T) => T
-  transformReturn: (data: T) => any
+  transformQueryReturn: (result: any) => any
+  transformAfter: (data: T) => any
   onSuccess: (data: T) => any
   onCheckFailure: (data: T) => any
   onTransformFailure: (data: T) => any
@@ -130,6 +132,7 @@ export type ConfigCtx<T extends ClassType<T> = any> = {
   options: PartialBeforeActionOptions<T>
   target: T
   fields: FieldOptionsObject
+  action: CRUDMethods
 }
 
 export function BeforeAction<
