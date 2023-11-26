@@ -11,10 +11,10 @@ import {
   GEN_DATA_DICT_TOKEN,
   HttpMethods,
   fcrud_prefix,
-} from './fc.tokens'
-import { ENTITY_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './fc.tokens'
+} from './backend/fc.tokens'
+import { ENTITY_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './backend/fc.tokens'
 import { getProtoMeta } from '../../utils/reflect.utils'
-import { defaultCrudMethod } from './fc.tokens'
+import { defaultCrudMethod } from './backend/fc.tokens'
 import {
   CheckerType,
   IGNORE_ME,

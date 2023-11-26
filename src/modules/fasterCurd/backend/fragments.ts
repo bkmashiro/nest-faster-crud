@@ -1,7 +1,7 @@
 import { ConfigCtx } from '../fc.decorators'
 import validatorMap from './validators'
 import { PageQuery } from '../crud-gen/fast-crud.decl'
-import { CRUDMethods } from '../fc.tokens'
+import { CRUDMethods } from './fc.tokens'
 import { isEmptyObject } from 'src/utils/utils'
 
 export const IGNORE_ME = Symbol('ignore me')

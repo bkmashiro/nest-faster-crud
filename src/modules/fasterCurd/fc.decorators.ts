@@ -7,9 +7,9 @@ import {
   GEN_DATA_DICT_TOKEN,
   IGNORE_FIEIDS_TOKEN,
   fcrud_prefix,
-} from './fc.tokens'
+} from './backend/fc.tokens'
 import { getProtoMeta, setProtoMeta } from '../../utils/reflect.utils'
-import { CRUDMethods } from './fc.tokens'
+import { CRUDMethods } from './backend/fc.tokens'
 import { FC } from './crud-gen/fast-crud.decorator'
 import { FastCrudFieldOptions } from './crud-gen/fast-crud.decl'
 import { applyDecorators } from '@nestjs/common'

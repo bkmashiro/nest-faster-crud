@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common'
-import { FCRUD_GEN_CFG_TOKEN } from '../fc.tokens'
+import { FCRUD_GEN_CFG_TOKEN } from '../backend/fc.tokens'
 import { Field, FieldOptions } from '../fc.decorators'
 import { FastCrudFieldOptions, GenerateFCOption } from './fast-crud.decl'
 
