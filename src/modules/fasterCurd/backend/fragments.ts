@@ -1,8 +1,7 @@
-import { ConfigCtx } from './decorators'
-import { isArrayOfFunctions } from 'src/utils/utils'
-import validatorMap from './defaultValidators'
-import { FormReq, PageQuery } from './fastcrud-gen/interface'
-import { CRUDMethods } from './fcrud-tokens'
+import { ConfigCtx } from '../fc.decorators'
+import validatorMap from './validators'
+import { PageQuery } from '../fastcrud-gen/fast-crud.decl'
+import { CRUDMethods } from '../fc.tokens'
 import { isEmptyObject } from 'src/utils/utils'
 
 export const IGNORE_ME = Symbol('ignore me')
@@ -75,7 +74,8 @@ function sort_checker({ options }: ConfigCtx) {
   return check_sort
 }
 
-function except_checker({ options }: ConfigCtx) {//TODO sync this with requrie_checker
+function except_checker({ options }: ConfigCtx) {
+  //TODO sync this with requrie_checker
   const { expect } = options
   let check_expect: PendingCheckerType = IGNORE_ME
   if (expect && Array.isArray(expect) && expect.length > 0) {
@@ -126,7 +126,8 @@ function requrie_checker({ options, fields }: ConfigCtx) {
   return check_requirements
 }
 
-function deny_checker({ options }: ConfigCtx) { //TODO sync this with requrie_checker
+function deny_checker({ options }: ConfigCtx) {
+  //TODO sync this with requrie_checker
   const { denies } = options
   let check_requirements: PendingCheckerType = IGNORE_ME
   if (denies && Array.isArray(denies) && denies.length > 0) {
@@ -229,17 +230,17 @@ function transform_after_processor({ options, action }: ConfigCtx) {
 
   if (form_requests.includes(action)) {
     // if Create, Update, Delete, then return form
-    transform_after =  (data: any, queryRet: any) => {
+    transform_after = (data: any, queryRet: any) => {
       return data.form
     }
   }
   if (query_requests.includes(action)) {
     // if Read, then return records
-    transform_after =  (data: any, transformedQueryRet: any) => {
+    transform_after = (data: any, transformedQueryRet: any) => {
       return transformedQueryRet
     }
   }
-  
+
   return transform_after
 }
 

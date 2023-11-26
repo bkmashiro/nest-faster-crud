@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { HttpAdapterHost } from '@nestjs/core'
 import { Express } from 'express'
 import express = require('express')
-import { BeforeActionOptions,  ConfigCtx } from './decorators'
+import { BeforeActionOptions, ConfigCtx } from './fc.decorators'
 import {
   BeforeActionTokenType,
   CRUDMethods,
@@ -11,42 +11,31 @@ import {
   GEN_DATA_DICT_TOKEN,
   HttpMethods,
   fcrud_prefix,
-} from './fcrud-tokens'
-import { ENTITY_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './fcrud-tokens'
+} from './fc.tokens'
+import { ENTITY_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './fc.tokens'
 import { getProtoMeta } from '../../utils/reflect.utils'
-import { defaultCrudMethod } from './fcrud-tokens'
+import { defaultCrudMethod } from './fc.tokens'
 import {
   CheckerType,
   IGNORE_ME,
   TransformerType,
   post_transformer_factories,
   transform_after_processor,
-} from './fragments'
+} from './backend/fragments'
 import { FCrudJwtMiddleware } from './middleware/jwt.middleware'
-import {
-  CRUDProvider,
-  FasterCrudRouterBuilder as RouterBuilder,
-  perform_task,
-} from './fasterCRUD'
 import { fixRoute } from 'src/utils/utils'
-import { checker_factories, pre_transformer_factories } from './fragments'
+import { checker_factories, pre_transformer_factories } from './backend/fragments'
 import { exceptionMiddleware } from './middleware/exception.middleware'
-import { ObjectLiteral } from './fastcrud-gen/interface'
+import { ObjectLiteral } from './fastcrud-gen/fast-crud.decl'
 import { log } from 'src/utils/debug'
-
-
-export type QueryData = {
-  data: any
-  pagination?: {
-    currentPage: number
-    pageSize: number
-  }
-  sort?: {
-    prop: string
-    order: string
-  }
-}
-
+import { Router } from 'express'
+import {
+  AddReq,
+  DelReq,
+  EditReq,
+  PageQuery,
+  PageRes,
+} from './fastcrud-gen/fast-crud.decl'
 const logger = new Logger('FasterCRUDService')
 
 @Injectable()
@@ -56,7 +45,7 @@ export class FasterCrudService {
 
   constructor(
     private readonly adapterHost: HttpAdapterHost,
-    private readonly fCrudJwtMiddleware: FCrudJwtMiddleware,
+    private readonly fCrudJwtMiddleware: FCrudJwtMiddleware
   ) {
     this.app.use(express.json())
 
@@ -95,7 +84,10 @@ export class FasterCrudService {
     for (const action of actions) {
       const method = provider[action].bind(provider) // have to bind to provider, otherwise this will be undefined
       const action_token: BeforeActionTokenType = `${fcrud_prefix}before-action-${action}`
-      const decoration_config: BeforeActionOptions<T> = getProtoMeta( entity,  action_token)
+      const decoration_config: BeforeActionOptions<T> = getProtoMeta(
+        entity,
+        action_token
+      )
       const decoratedMethod = this.configureMethod(
         {
           options: decoration_config,
@@ -217,4 +209,60 @@ function applyTransformers(post_transformers: TransformerType[], result: any) {
     result = transformer(result)
   }
   return result
+}
+
+export interface CRUDProvider<T> {
+  create(data: AddReq<T>): Promise<any>
+  read(query: PageQuery<T>): Promise<PageRes<T>>
+  update(data: EditReq<T>): Promise<any>
+  delete(data: DelReq<T>): Promise<any>
+}
+
+export class RouterBuilder {
+  router: Router = express.Router()
+  pre_middlewares: express.RequestHandler[] = []
+  post_middlewares: express.RequestHandler[] = []
+
+  constructor() {}
+  setRoute(
+    method: 'get' | 'post' | 'put' | 'delete' | 'patch',
+    path: string,
+    handler: express.RequestHandler
+  ) {
+    this.router[method](path, ...this.pre_middlewares, handler)
+    return this
+  }
+
+  addPreMiddlewares(...middleware: any[]) {
+    this.pre_middlewares.push(...middleware)
+    return this
+  }
+
+  addPostMiddlewares(...middleware: any[]) {
+    this.post_middlewares.push(...middleware)
+    return this
+  }
+
+  build() {
+    return this.router
+  }
+}
+
+export async function perform_task(
+  req: express.Request,
+  task: (data: any) => Promise<any>,
+  res: express.Response
+) {
+  const body = req.body
+  try {
+    const result = await task(body)
+    res.status(200).json(result)
+  } catch (e) {
+    res
+      .status(500)
+      .json({
+        message: e.message,
+      })
+      .end()
+  }
 }

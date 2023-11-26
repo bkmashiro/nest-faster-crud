@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
-import { Create, CRUD, IgnoreField, Read } from './decorators'
-import { $ } from './fastcrud-gen/fastcrud.decorator'
+import { Create, CRUD, IgnoreField, Read } from '../fc.decorators'
+import { $ } from '../fastcrud-gen/fastcrud.decorator'
 
 @Entity()
 @Create({

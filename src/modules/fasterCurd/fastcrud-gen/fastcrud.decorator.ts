@@ -1,21 +1,12 @@
 import { applyDecorators } from '@nestjs/common'
-import { FCRUD_GEN_CFG_TOKEN } from '../fcrud-tokens'
-import { Field, FieldOptions } from '../decorators'
+import { FCRUD_GEN_CFG_TOKEN } from '../fc.tokens'
+import { Field, FieldOptions } from '../fc.decorators'
+import { FastCrudFieldOptions, GenerateFCOption } from './fast-crud.decl'
 
-export type FastCrudFieldOptions = {
-  name?: string
-  title?: string
-  type?: string
-  column?: object
-  form?: object
-  search?: object
-  dict?: object
-}
-
-export type GenerateFCOption = {}
 const typeMapping = {
   String: 'string',
 }
+
 export function FC(opt: Partial<FastCrudFieldOptions> = {}): PropertyDecorator {
   return function (target: any, key: string) {
     let { name, type, title } = opt
@@ -51,25 +42,6 @@ function PresetFC(
     Field(field_options),
     FC(Object.assign(preset_options, remaining_options))
   )
-}
-
-export function GenerateFCOption<
-  T extends { new (...args: any[]): InstanceType<T> }
->(options: Partial<GenerateFCOption> = {}) {
-  return function classDecorator(target: T) {
-    const properties = Reflect.getMetadataKeys(target.prototype)
-    const fields: { [key: string]: FastCrudFieldOptions } = {}
-
-    for (const property of properties) {
-      const metadata = Reflect.getMetadata(property, target.prototype)
-      if (metadata && metadata.name && metadata.type) {
-        fields[metadata.name] = {
-          name: metadata.name,
-          type: metadata.type,
-        }
-      }
-    }
-  }
 }
 
 export namespace $ {

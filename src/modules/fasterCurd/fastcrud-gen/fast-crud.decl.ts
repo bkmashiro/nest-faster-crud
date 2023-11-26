@@ -1,4 +1,14 @@
-import { CRUDUser } from '../CRUDUser.entity'
+export type FastCrudFieldOptions = {
+  name?: string
+  title?: string
+  type?: string
+  column?: object
+  form?: object
+  search?: object
+  dict?: object
+}
+
+export type GenerateFCOption = {}
 
 export type Page = {
   /**

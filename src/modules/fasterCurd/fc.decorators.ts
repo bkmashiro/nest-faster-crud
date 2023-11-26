@@ -7,12 +7,13 @@ import {
   GEN_DATA_DICT_TOKEN,
   IGNORE_FIEIDS_TOKEN,
   fcrud_prefix,
-} from './fcrud-tokens'
+} from './fc.tokens'
 import { getProtoMeta, setProtoMeta } from '../../utils/reflect.utils'
-import { CRUDMethods } from './fcrud-tokens'
-import { FC, FastCrudFieldOptions } from './fastcrud-gen/fastcrud.decorator'
+import { CRUDMethods } from './fc.tokens'
+import { FC } from './fastcrud-gen/fastcrud.decorator'
+import { FastCrudFieldOptions } from './fastcrud-gen/fast-crud.decl'
 import { applyDecorators } from '@nestjs/common'
-import { ObjectLiteral } from './fastcrud-gen/interface'
+import { ObjectLiteral } from "./fastcrud-gen/fast-crud.decl"
 
 export type FieldOptions = Partial<{
   name: string

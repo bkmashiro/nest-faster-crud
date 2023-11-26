@@ -6,11 +6,11 @@ import {
   Page,
   PageQuery,
   PageRes,
-  PageSort,
-} from './fastcrud-gen/interface'
-import { CRUDProvider } from './fasterCRUD'
+  PageSort
+} from "../../fastcrud-gen/fast-crud.decl"
 import { isEmptyObject } from 'src/utils/utils'
 import { deconstrcuOrNull } from 'src/utils/objectTools'
+import { CRUDProvider } from '../../fc.service'
 
 export class TypeORMRepoAdapter<T extends ObjectLiteral>
   implements CRUDProvider<T>

@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
-import { FasterCrudService } from './FasterCrudService';
+import { FasterCrudService } from './fc.service';
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { CRUDUser } from './CRUDUser.entity';
-import { CRUDUserService } from "./CRUDUser.service";
+import { CRUDUser } from './demo/CRUDUser.entity';
+import { CRUDUserService } from "./demo/CRUDUser.service";
 import { FCrudJwtMiddleware } from "./middleware/jwt.middleware";
 import { AuthModule } from "../auth/auth.module";
 
