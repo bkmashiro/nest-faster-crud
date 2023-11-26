@@ -32,6 +32,7 @@ import {
 import { checker_factories, pre_transformer_factories } from './fragments'
 import { exceptionMiddleware } from './middleware/exception.middleware'
 import { ObjectLiteral } from './fastcrud-gen/interface'
+import { log } from 'src/utils/debug'
 
 
 export type QueryData = {
@@ -157,18 +158,18 @@ export class FasterCrudService {
 
         data = applyTransformers(pre_transformers, data)
 
-        console.log(`exec with data:`, data)
+        log(`exec with data:`, data)
 
         let queryResult = await method(data)
 
-        console.log(`exec result:`, queryResult)
+        log(`exec result:`, queryResult)
 
         queryResult = applyTransformers(post_transformers, queryResult)
 
-        console.log(`transformed result:`, queryResult)
+        log(`transformed result:`, queryResult)
         const after = transform_after(data, queryResult)
-        console.log(data, queryResult)
-        console.log(`transformed after:`, after)
+        log(data, queryResult)
+        log(`transformed after:`, after)
         return after
       } catch (e) {
         logger.error(`error when executing method ${method.name}:`, e)

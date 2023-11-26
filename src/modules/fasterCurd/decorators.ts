@@ -8,15 +8,11 @@ import {
   IGNORE_FIEIDS_TOKEN,
   fcrud_prefix,
 } from './fcrud-tokens'
-import {
-  getProtoMeta,
-  setProtoMeta,
-} from './reflect.utils'
+import { getProtoMeta, setProtoMeta } from './reflect.utils'
 import { CRUDMethods } from './fcrud-tokens'
 import { FC, FastCrudFieldOptions } from './fastcrud-gen/fastcrud.decorator'
 import { applyDecorators } from '@nestjs/common'
 import { ObjectLiteral } from './fastcrud-gen/interface'
-
 
 export type FieldOptions = Partial<{
   name: string
@@ -87,7 +83,7 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
 
 export type FieldSelector<T> = (keyof T)[] | RegExp
 
-export type BeforeActionOptions<T extends ObjectLiteral> = Partial<{
+export type BeforeActionOptions<T> = Partial<{
   /**
    * if enabled, the input data will not be transformed
    * that means, pagination, sort, etc. will not be parsed
@@ -129,8 +125,8 @@ export type ConfigCtx<T extends ObjectLiteral = any> = {
 }
 
 export function BeforeAction<
-  T extends { new (...args: any[]): InstanceType<T> }
->(action: CRUDMethods, options: BeforeActionOptions<T> = {}) {
+  T extends abstract new (...args: any) => InstanceType<T>
+>(action: CRUDMethods, options: BeforeActionOptions<InstanceType<T>> = {}) {
   return function classDecorator(target: T) {
     const token: BeforeActionTokenType = `${fcrud_prefix}before-action-${action}`
     setProtoMeta(target, token, options)
@@ -138,25 +134,25 @@ export function BeforeAction<
 }
 
 export function Create<T extends ClassType<T>>(
-  options: BeforeActionOptions<T> = {}
+  options: BeforeActionOptions<InstanceType<T>> = {}
 ) {
   return BeforeAction<T>('create', options)
 }
 
-export function Read<T extends ClassType<T>>(
-  options: BeforeActionOptions<T> = {}
+export function Read<T extends abstract new (...args: any) => InstanceType<T>>(
+  options: BeforeActionOptions<InstanceType<T>> = {}
 ) {
   return BeforeAction<T>('read', options)
 }
 
 export function Update<T extends ClassType<T>>(
-  options: BeforeActionOptions<T> = {}
+  options: BeforeActionOptions<InstanceType<T>> = {}
 ) {
   return BeforeAction<T>('update', options)
 }
 
 export function Delete<T extends ClassType<T>>(
-  options: BeforeActionOptions<T> = {}
+  options: BeforeActionOptions<InstanceType<T>> = {}
 ) {
   return BeforeAction<T>('delete', options)
 }
