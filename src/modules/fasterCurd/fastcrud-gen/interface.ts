@@ -1,5 +1,4 @@
-import { ObjectLiteral } from "typeorm"
-import { CRUDUser } from "../CRUDUser.entity"
+import { CRUDUser } from '../CRUDUser.entity'
 
 export type Page = {
   /**
@@ -14,13 +13,13 @@ export type Page = {
 /**
  * 查询排序参数
  */
-export type PageSort = {
-  prop?: string
+export type PageSort<T extends ObjectLiteral> = {
+  prop?: keyof T
   order?: string
   asc?: boolean
 }
 
-export type PageQuery = {
+export type PageQuery<T = any> = {
   /**
    * 分页参数
    */
@@ -28,11 +27,15 @@ export type PageQuery = {
   /**
    * 查询表单
    */
-  form?: any
+  form?: Partial<T>
   /**
    * 远程排序配置
    */
-  sort?: PageSort
+  sort?: PageSort<T>
+}
+
+export interface ObjectLiteral {
+  [key: string]: any
 }
 
 export type PageRes<T extends ObjectLiteral> = {
@@ -54,39 +57,26 @@ export type PageRes<T extends ObjectLiteral> = {
   records: Array<T>
 }
 
-// const pgres: PageRes<number> = {
-//   currentPage: 1,
-//   pageSize: 10,
-//   total: 0,
-//   records: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-// }
-
-// const pgres2: PageRes<CRUDUser> = {
-//   currentPage: 1,
-//   pageSize: 10,
-//   total: 0,
-//   records: [new CRUDUser()],
-// }
-
-export type EditReq = {
-  form?: any
-  row?: any
+export type EditReq<T> = {
+  form?: Partial<T>
+  row?: Partial<T>
   [key: string]: any
 }
-export type AddReq = {
-  form?: any
+export type AddReq<T> = {
+  form?: Partial<T>
   [key: string]: any
 }
 
-export type FormReq = AddReq | EditReq | PageQuery
+export type FormReq<T> = AddReq<T> | EditReq<T> | PageQuery<T>
 
-export type DelReq = {
-  row?: any
+export type DelReq<T> = {
+  row?: Partial<T>
   [key: string]: any
 }
-export type InfoReq = {
+
+export type InfoReq<T> = {
   mode?: string
-  row?: any
+  row?: Partial<T>
   [key: string]: any
 }
 /**

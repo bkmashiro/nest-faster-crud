@@ -9,10 +9,10 @@ export function isArrayOfFunctions(
 }
 
 export interface CRUDProvider<T> {
-  create(data: AddReq): Promise<any>
-  read(query: PageQuery): Promise<PageRes<T>>
-  update(data: EditReq): Promise<any>
-  delete(data: DelReq): Promise<any>
+  create(data: AddReq<T>): Promise<any>
+  read(query: PageQuery<T>): Promise<PageRes<T>>
+  update(data: EditReq<T>): Promise<any>
+  delete(data: DelReq<T>): Promise<any>
 }
 
 export class FasterCrudRouterBuilder {

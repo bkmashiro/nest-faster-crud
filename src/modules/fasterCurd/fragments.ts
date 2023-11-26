@@ -60,50 +60,50 @@ function pagination_checker({ options }: ConfigCtx) {
   return check_pagination
 }
 
-const default_order = 'ASC'
-function sort_checker({ options }: ConfigCtx) {
-  const { sort: default_sort } = options
-  let check_sort: PendingCheckerType = IGNORE_ME
-  if (default_sort) {
-    check_sort = (query: PageQuery) => {
-      // query.sort: { prop: string, order: string }
-      // should be transformed to {[prop: string]: 'ASC' | 'DESC'}
-      // if not set, set it to default
-      console.log(query)
-      if (!query.hasOwnProperty('sort')) {
-        query.sort = default_sort
-        return check_sort
-      }
-      // if is empty, set it to default
-      if (Object.keys(query.sort).length === 0) {
-        query.sort = default_sort
-        return check_sort
-      }
-      console.log(query)
-      const { sort } = query //TODO if needs transform, check if this is correct
-      if (sort) {
-        if (typeof sort === 'string') {
-          query.sort = {
-            [sort]: default_order,
-          }
-        } else if (Array.isArray(sort)) {
-          query.sort = sort.reduce((acc, cur) => {
-            acc[cur] = default_order
-            return acc
-          }, {} as any)
-        } else if (typeof sort === 'object') {
-          query.sort = {
-            [sort.prop]: sort.order,
-          }
-        } else {
-          throw new Error(`sort must be string, array or object`)
-        }
-      }
+// const default_order = 'ASC'
+// function sort_checker({ options }: ConfigCtx) {
+//   const { sort: default_sort } = options
+//   let check_sort: PendingCheckerType = IGNORE_ME
+//   if (default_sort) {
+//     check_sort = (query: PageQuery) => {
+//       // query.sort: { prop: string, order: string }
+//       // should be transformed to {[prop: string]: 'ASC' | 'DESC'}
+//       // if not set, set it to default
+//       console.log(query)
+//       if (!query.hasOwnProperty('sort')) {
+//         query.sort = default_sort
+//         return check_sort
+//       }
+//       // if is empty, set it to default
+//       if (Object.keys(query.sort).length === 0) {
+//         query.sort = default_sort
+//         return check_sort
+//       }
+//       console.log(query)
+//       const { sort } = query //TODO if needs transform, check if this is correct
+//       if (sort) {
+//         if (typeof sort === 'string') {
+//           query.sort = {
+//             [sort]: default_order,
+//           }
+//         } else if (Array.isArray(sort)) {
+//           query.sort = sort.reduce((acc, cur) => {
+//             acc[cur] = default_order
+//             return acc
+//           }, {} as any)
+//         } else if (typeof sort === 'object') {
+//           query.sort = {
+//             [sort.prop]: sort.order,
+//           }
+//         } else {
+//           throw new Error(`sort must be string, array or object`)
+//         }
+//       }
       
-    }
-  }
-  return check_sort
-}
+//     }
+//   }
+//   return check_sort
+// }
 
 function except_checker({ options }: ConfigCtx) {//TODO sync this with requrie_checker
   const { expect } = options
@@ -306,7 +306,7 @@ function transform_after_processor({ options, action }: ConfigCtx) {
 
 export const checker_factories = [
   shape_checker,
-  sort_checker,
+  // sort_checker,
   requrie_checker,
   deny_checker,
   except_checker,

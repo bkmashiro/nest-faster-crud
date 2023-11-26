@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 import {
-  BEFORE_ACTION_TOKEN,
   BeforeActionTokenType,
   ENTITY_NAME_TOKEN,
   FIELDS_TOKEN,
@@ -11,14 +10,13 @@ import {
 } from './fcrud-tokens'
 import {
   getProtoMeta,
-  getProtoMetaKeys,
-  mergeProtoMeta,
   setProtoMeta,
 } from './reflect.utils'
 import { CRUDMethods } from './fcrud-tokens'
 import { FC, FastCrudFieldOptions } from './fastcrud-gen/fastcrud.decorator'
 import { applyDecorators } from '@nestjs/common'
-import { ObjectLiteral } from 'typeorm'
+import { ObjectLiteral } from './fastcrud-gen/interface'
+
 
 export type FieldOptions = Partial<{
   name: string
@@ -89,7 +87,7 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
 
 export type FieldSelector<T> = (keyof T)[] | RegExp
 
-export type BeforeActionOptions<T extends ObjectLiteral> = {
+export type BeforeActionOptions<T extends ObjectLiteral> = Partial<{
   /**
    * if enabled, the input data will not be transformed
    * that means, pagination, sort, etc. will not be parsed
@@ -100,7 +98,7 @@ export type BeforeActionOptions<T extends ObjectLiteral> = {
     max: number
   }
   sort: {
-    [prop in keyof T]?:  'ASC' | 'DESC'
+    [prop in keyof T]?: 'ASC' | 'DESC'
   }
   allow_sort: FieldSelector<T>
   checkType: boolean
@@ -117,18 +115,14 @@ export type BeforeActionOptions<T extends ObjectLiteral> = {
   onTransformFailure: (data: T) => any
   onExecFailure: (data: T) => any
   ctx: object | null
-}
+}>
 
 export type ClassType<T extends abstract new (...args: any) => any> = {
   new (...args: any[]): InstanceType<T>
 }
 
-export type PartialBeforeActionOptions<T extends ObjectLiteral> = Partial<
-  BeforeActionOptions<T>
->
-
 export type ConfigCtx<T extends ObjectLiteral = any> = {
-  options: PartialBeforeActionOptions<T>
+  options: BeforeActionOptions<T>
   target: T
   fields: FieldOptionsObject
   action: CRUDMethods
@@ -136,7 +130,7 @@ export type ConfigCtx<T extends ObjectLiteral = any> = {
 
 export function BeforeAction<
   T extends { new (...args: any[]): InstanceType<T> }
->(action: CRUDMethods, options: PartialBeforeActionOptions<T> = {}) {
+>(action: CRUDMethods, options: BeforeActionOptions<T> = {}) {
   return function classDecorator(target: T) {
     const token: BeforeActionTokenType = `${fcrud_prefix}before-action-${action}`
     setProtoMeta(target, token, options)
@@ -144,25 +138,25 @@ export function BeforeAction<
 }
 
 export function Create<T extends ClassType<T>>(
-  options: PartialBeforeActionOptions<T> = {}
+  options: BeforeActionOptions<T> = {}
 ) {
   return BeforeAction<T>('create', options)
 }
 
 export function Read<T extends ClassType<T>>(
-  options: PartialBeforeActionOptions<T> = {}
+  options: BeforeActionOptions<T> = {}
 ) {
   return BeforeAction<T>('read', options)
 }
 
 export function Update<T extends ClassType<T>>(
-  options: PartialBeforeActionOptions<T> = {}
+  options: BeforeActionOptions<T> = {}
 ) {
   return BeforeAction<T>('update', options)
 }
 
 export function Delete<T extends ClassType<T>>(
-  options: PartialBeforeActionOptions<T> = {}
+  options: BeforeActionOptions<T> = {}
 ) {
   return BeforeAction<T>('delete', options)
 }

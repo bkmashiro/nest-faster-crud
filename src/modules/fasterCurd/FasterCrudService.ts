@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { HttpAdapterHost } from '@nestjs/core'
 import { Express } from 'express'
 import express = require('express')
-import { ClassType, ConfigCtx, PartialBeforeActionOptions } from './decorators'
+import { BeforeActionOptions,  ConfigCtx } from './decorators'
 import {
   BeforeActionTokenType,
   CRUDMethods,
@@ -25,13 +25,14 @@ import {
 import { FCrudJwtMiddleware } from './middleware/jwt.middleware'
 import {
   CRUDProvider,
-  FasterCrudRouterBuilder,
+  FasterCrudRouterBuilder as RouterBuilder,
   fixRoute,
   perform_task,
 } from './fasterCRUD'
 import { checker_factories, pre_transformer_factories } from './fragments'
 import { exceptionMiddleware } from './middleware/exception.middleware'
-import { ObjectLiteral } from 'typeorm'
+import { ObjectLiteral } from './fastcrud-gen/interface'
+
 
 export type QueryData = {
   data: any
@@ -54,7 +55,7 @@ export class FasterCrudService {
 
   constructor(
     private readonly adapterHost: HttpAdapterHost,
-    private readonly fCrudJwtMiddleware: FCrudJwtMiddleware
+    private readonly fCrudJwtMiddleware: FCrudJwtMiddleware,
   ) {
     this.app.use(express.json())
 
@@ -76,20 +77,15 @@ export class FasterCrudService {
     this.app.use(route, router)
   }
 
-  generateCRUD<T extends abstract new (...args: any) => any>(
+  generateCRUD<T extends abstract new (...args: any) => InstanceType<T>>(
     entity: T,
     provider: CRUDProvider<InstanceType<T>>
   ) {
-    const {
-      docs: dict,
-      fcrudName,
-      fields,
-      doGenerateDataDict,
-    } = this.getEntityMeta<T>(entity)
-    const router = new FasterCrudRouterBuilder()
+    const { dict, fcrudName, fields, doGenerateDataDict } =
+      this.getEntityMeta(entity)
+    const router = new RouterBuilder()
       .addPreMiddlewares(this.fCrudJwtMiddleware.FcrudJwtMiddleware)
       .addPostMiddlewares(exceptionMiddleware)
-    console.log(fcrudName)
 
     // create all CRUD routes
     const actions: CRUDMethods[] =
@@ -98,10 +94,7 @@ export class FasterCrudService {
     for (const action of actions) {
       const method = provider[action].bind(provider) // have to bind to provider, otherwise this will be undefined
       const action_token: BeforeActionTokenType = `${fcrud_prefix}before-action-${action}`
-      const decoration_config = getProtoMeta(
-        entity,
-        action_token
-      ) as PartialBeforeActionOptions<T>
+      const decoration_config: BeforeActionOptions<T> = getProtoMeta( entity,  action_token)
       const decoratedMethod = this.configureMethod(
         {
           options: decoration_config,
@@ -135,9 +128,9 @@ export class FasterCrudService {
   private getEntityMeta<T extends ObjectLiteral>(entity: T) {
     const fcrudName = getProtoMeta(entity, ENTITY_NAME_TOKEN) ?? entity.name
     const fields = getProtoMeta(entity, FIELDS_TOKEN) ?? {}
-    const docs = getProtoMeta(entity, FCRUD_GEN_CFG_TOKEN) ?? {}
+    const dict = getProtoMeta(entity, FCRUD_GEN_CFG_TOKEN) ?? {}
     const doGenerateDataDict = getProtoMeta(entity, GEN_DATA_DICT_TOKEN) ?? true
-    return { docs, fcrudName, fields, doGenerateDataDict }
+    return { dict, fcrudName, fields, doGenerateDataDict }
   }
 
   configureMethod<T extends ObjectLiteral>(
