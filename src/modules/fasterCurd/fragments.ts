@@ -11,6 +11,7 @@ export type PendingTransformerType = ((data: any) => any) | typeof IGNORE_ME
 export type TransformerType = (data: any) => any
 
 const form_requests: CRUDMethods[] = ['create', 'update', 'delete']
+const query_requests: CRUDMethods[] = ['read']
 function shape_checker({ options, action }: ConfigCtx) {
   const { rawInput } = options
   let check_shape: PendingCheckerType = IGNORE_ME
@@ -57,6 +58,51 @@ function pagination_checker({ options }: ConfigCtx) {
     }
   }
   return check_pagination
+}
+
+const default_order = 'ASC'
+function sort_checker({ options }: ConfigCtx) {
+  const { sort: default_sort } = options
+  let check_sort: PendingCheckerType = IGNORE_ME
+  if (default_sort) {
+    check_sort = (query: PageQuery) => {
+      // query.sort: { prop: string, order: string }
+      // should be transformed to {[prop: string]: 'ASC' | 'DESC'}
+      // if not set, set it to default
+      console.log(query)
+      if (!query.hasOwnProperty('sort')) {
+        query.sort = default_sort
+        return check_sort
+      }
+      // if is empty, set it to default
+      if (Object.keys(query.sort).length === 0) {
+        query.sort = default_sort
+        return check_sort
+      }
+      console.log(query)
+      const { sort } = query //TODO if needs transform, check if this is correct
+      if (sort) {
+        if (typeof sort === 'string') {
+          query.sort = {
+            [sort]: default_order,
+          }
+        } else if (Array.isArray(sort)) {
+          query.sort = sort.reduce((acc, cur) => {
+            acc[cur] = default_order
+            return acc
+          }, {} as any)
+        } else if (typeof sort === 'object') {
+          query.sort = {
+            [sort.prop]: sort.order,
+          }
+        } else {
+          throw new Error(`sort must be string, array or object`)
+        }
+      }
+      
+    }
+  }
+  return check_sort
 }
 
 function except_checker({ options }: ConfigCtx) {//TODO sync this with requrie_checker
@@ -208,17 +254,25 @@ function pre_transform_processor({ options }: ConfigCtx) {
 // this is a special one
 function transform_after_processor({ options, action }: ConfigCtx) {
   const { transformAfter } = options
+  if (transformAfter) {
+    // user's override, use it
+    return transformAfter
+  }
   let transform_after = (data: any, queryRet: any) => data
+
   if (form_requests.includes(action)) {
-    // if this is a form request, unwrap the form
-    transform_after = (data: any, queryRet: any) => {
+    // if Create, Update, Delete, then return form
+    transform_after =  (data: any, queryRet: any) => {
       return data.form
     }
   }
-  if (transformAfter) {
-    //TODO add check for function
-    transform_after = transformAfter
+  if (query_requests.includes(action)) {
+    // if Read, then return records
+    transform_after =  (data: any, transformedQueryRet: any) => {
+      return transformedQueryRet
+    }
   }
+  
   return transform_after
 }
 
@@ -255,6 +309,7 @@ function transform_after_processor({ options, action }: ConfigCtx) {
 
 export const checker_factories = [
   shape_checker,
+  sort_checker,
   requrie_checker,
   deny_checker,
   except_checker,

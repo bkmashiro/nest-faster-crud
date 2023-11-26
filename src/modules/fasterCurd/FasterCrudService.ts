@@ -10,6 +10,7 @@ import {
   FIELDS_TOKEN,
   GEN_DATA_DICT_TOKEN,
   HttpMethods,
+  fcrud_prefix,
 } from './fcrud-tokens'
 import { ENTITY_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './fcrud-tokens'
 import { getProtoMeta } from './reflect.utils'
@@ -28,10 +29,7 @@ import {
   fixRoute,
   perform_task,
 } from './fasterCRUD'
-import {
-  checker_factories,
-  pre_transformer_factories,
-} from './fragments'
+import { checker_factories, pre_transformer_factories } from './fragments'
 import { exceptionMiddleware } from './middleware/exception.middleware'
 
 export type QueryData = {
@@ -78,24 +76,24 @@ export class FasterCrudService {
   }
 
   generateCRUD<T extends ClassType<T>>(entity: T, provider: CRUDProvider<T>) {
-    const { docs, fcrudName, fields, doGenerateDataDict } = this.getEntityMeta<T>(entity)
+    const {
+      docs: dict,
+      fcrudName,
+      fields,
+      doGenerateDataDict,
+    } = this.getEntityMeta<T>(entity)
     const router = new FasterCrudRouterBuilder()
       .addPreMiddlewares(this.fCrudJwtMiddleware.FcrudJwtMiddleware)
       .addPostMiddlewares(exceptionMiddleware)
-    if (doGenerateDataDict) {
-      router.setRoute('get', `/dict`, async function (req, res) {
-        res.status(200).json(docs)
-      })
-    }
-    
+    console.log(fcrudName)
 
     // create all CRUD routes
     const actions: CRUDMethods[] =
       getProtoMeta(entity, GEN_CRUD_METHOD_TOKEN) ?? defaultCrudMethod
-
+    const docs = { crud: {}, dict: ''}
     for (const action of actions) {
       const method = provider[action].bind(provider) // have to bind to provider, otherwise this will be undefined
-      const action_token: BeforeActionTokenType = `before-action-${action}`
+      const action_token: BeforeActionTokenType = `${fcrud_prefix}before-action-${action}`
       const decoration_config = getProtoMeta(
         entity,
         action_token
@@ -105,7 +103,7 @@ export class FasterCrudService {
           options: decoration_config,
           target: entity,
           fields,
-          action
+          action,
         },
         method
       )
@@ -114,7 +112,18 @@ export class FasterCrudService {
       router.setRoute(this.default_method, route, async function (req, res) {
         await perform_task(req, decoratedMethod, res)
       })
+      docs.crud[action] = `/${fcrudName.toLowerCase()}${route}`
     }
+
+    if (doGenerateDataDict) {
+      docs.dict = `/${fcrudName.toLowerCase()}/dict`
+      router.setRoute('get', `/dict`, async function (req, res) {
+        res.status(200).json(dict)
+      })
+    }
+    router.setRoute('get', `/docs`, async function (req, res) {
+      res.status(200).json(docs)
+    })
 
     this.addRouter(`/${this.prefix}${fcrudName.toLowerCase()}`, router.build())
   }
@@ -131,12 +140,20 @@ export class FasterCrudService {
     cfg: ConfigCtx<T>,
     method: (data: any) => Promise<any>
   ) {
-    if (!cfg || !cfg.options) {
+    if (!cfg) {
       return method
     }
+    if (!cfg.options) {
+      cfg.options = {}
+    }
 
-    const { checkers, pre_transformers, post_transformers, hooks, transform_after } =
-      this.parseOptions(cfg)
+    const {
+      checkers,
+      pre_transformers,
+      post_transformers,
+      hooks,
+      transform_after,
+    } = this.parseOptions(cfg)
     return async (data: any) => {
       try {
         applyCheckers(checkers, data)
@@ -147,13 +164,15 @@ export class FasterCrudService {
 
         let queryResult = await method(data)
 
-        console.debug(`exec result:`, queryResult)
+        console.log(`exec result:`, queryResult)
 
         queryResult = applyTransformers(post_transformers, queryResult)
 
-        console.debug(`transformed result:`, queryResult)
-
-        return transform_after(data, queryResult)
+        console.log(`transformed result:`, queryResult)
+        const after = transform_after(data, queryResult)
+        console.log(data, queryResult)
+        console.log(`transformed after:`, after)
+        return after
       } catch (e) {
         logger.error(`error when executing method ${method.name}:`, e)
         // logger.debug(`error data:`, data)

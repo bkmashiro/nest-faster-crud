@@ -1,13 +1,14 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
-import { Create, CRUD, IgnoreField } from './decorators'
-import { $, FC } from './fastcrud-gen/fastcrud.decorator'
+import { Create, CRUD, IgnoreField, Read } from './decorators'
+import { $ } from './fastcrud-gen/fastcrud.decorator'
 
 @Entity()
 @Create({
   requires: /.*/,
   expect: (x) => x.name.length > 3,
 })
-@CRUD({ methods: ['create'], exposeDict: false })
+@Read({ sort: { id: 'ASC' } })
+@CRUD({ name: 'user' })
 @IgnoreField(['id'])
 export class CRUDUser {
   @PrimaryGeneratedColumn()

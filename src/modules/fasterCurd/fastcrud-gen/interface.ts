@@ -31,6 +31,22 @@ export type PageQuery = {
    */
   sort?: PageSort
 }
+
+export type PageQueryTransformed = {
+  /**
+   * 分页参数
+   */
+  page?: Page
+  /**
+   * 查询表单
+   */
+  form?: any
+  /**
+   * 远程排序配置
+   */
+  sort?: {[key: string]: 'ASC' | 'DESC'}
+}
+
 export type PageRes = {
   /**
    * 当前页

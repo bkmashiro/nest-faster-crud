@@ -1,7 +1,7 @@
 import express = require('express')
 import { Router } from 'express'
 import { Repository } from 'typeorm'
-import { AddReq, DelReq, EditReq, PageQuery } from './fastcrud-gen/interface'
+import { AddReq, DelReq, EditReq, PageQuery, PageQueryTransformed } from './fastcrud-gen/interface'
 
 type KeyType = string
 
@@ -20,13 +20,20 @@ export interface CRUDProvider<T> {
 
 export class TypeORMRepoAdapter<T> implements CRUDProvider<T> {
   constructor(private readonly repo: Repository<T>) {}
-  async read(query: PageQuery) {
+  async read(query: PageQueryTransformed) {
     console.log(query)
-    return await this.repo.find({
+    const [ret, count] = await this.repo.findAndCount({
       where: query.form,
       skip: (query.page.currentPage - 1) * query.page.pageSize,
       take: query.page.pageSize,
+      order: query.sort as any,
     })
+    return {
+      records: ret,
+      currentPage: query.page.currentPage,
+      pageSize: query.page.pageSize,
+      total: count,
+    }
   }
 
   async create({ form }: AddReq) {

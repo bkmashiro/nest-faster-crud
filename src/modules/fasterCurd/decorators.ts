@@ -7,6 +7,7 @@ import {
   GEN_CRUD_METHOD_TOKEN,
   GEN_DATA_DICT_TOKEN,
   IGNORE_FIEIDS_TOKEN,
+  fcrud_prefix,
 } from './fcrud-tokens'
 import {
   getProtoMeta,
@@ -71,8 +72,8 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
   return function classDecorator(target: T) {
     const li = getProtoMeta(target, IGNORE_FIEIDS_TOKEN)
     const fields = getProtoMeta(target, FIELDS_TOKEN)
-    console.log(li)
-    console.log(fields)
+    // console.log(li)
+    // console.log(fields)
     setProtoMeta(target, ENTITY_NAME_TOKEN, options.name)
     setProtoMeta(target, GEN_CRUD_METHOD_TOKEN, options.methods)
     setProtoMeta(target, GEN_DATA_DICT_TOKEN, options.exposeDict)
@@ -86,6 +87,9 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
   }
 }
 export type FieldSelector<T> = (keyof T)[] | RegExp
+
+
+
 export type BeforeActionOptions<T extends {}> = {
   /**
    * if enabled, the input data will not be transformed
@@ -97,13 +101,9 @@ export type BeforeActionOptions<T extends {}> = {
     max: number
   }
   sort: {
-    enable: boolean
-    default: {
-      prop: keyof T
-      order: 'ascending' | 'descending'
-    }
-    allow: (keyof T)[]
+    [prop in keyof T]?:  'ASC' | 'DESC'
   }
+  allow_sort: FieldSelector<T>
   checkType: boolean
   requires: FieldSelector<T>
   denies: FieldSelector<T>
@@ -139,7 +139,7 @@ export function BeforeAction<
   T extends { new (...args: any[]): InstanceType<T> }
 >(action: CRUDMethods, options: PartialBeforeActionOptions<T> = {}) {
   return function classDecorator(target: T) {
-    const token: BeforeActionTokenType = `before-action-${action}`
+    const token: BeforeActionTokenType = `${fcrud_prefix}before-action-${action}`
     setProtoMeta(target, token, options)
   }
 }
