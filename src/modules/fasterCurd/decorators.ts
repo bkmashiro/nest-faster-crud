@@ -85,9 +85,8 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
     setProtoMeta(target, FIELDS_TOKEN, fields)
   }
 }
+
 export type FieldSelector<T> = (keyof T)[] | RegExp
-
-
 
 export type BeforeActionOptions<T extends {}> = {
   /**
@@ -106,7 +105,7 @@ export type BeforeActionOptions<T extends {}> = {
   checkType: boolean
   requires: FieldSelector<T>
   denies: FieldSelector<T>
-  exactly: FieldSelector<T>
+  exactly: (keyof T)[] // Not support regex
   route: string
   expect: ((data: T) => boolean) | ((data: T) => boolean)[]
   transform: (data: T) => T

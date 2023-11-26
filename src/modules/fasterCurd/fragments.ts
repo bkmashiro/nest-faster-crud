@@ -108,24 +108,21 @@ function sort_checker({ options }: ConfigCtx) {
 function except_checker({ options }: ConfigCtx) {//TODO sync this with requrie_checker
   const { expect } = options
   let check_expect: PendingCheckerType = IGNORE_ME
-  if (expect) {
-    if (isArrayOfFunctions(expect)) {
-      check_expect = ({ form }: FormReq) => {
-        for (const func of expect) {
-          if (!func(form)) {
-            throw new Error(`Expectation failed`)
-          }
+  if (expect && Array.isArray(expect) && expect.length > 0) {
+    check_expect = ({ form }: any) => {
+      for (const field of expect) {
+        if (form.hasOwnProperty(field)) {
+          throw new Error(`Unexpected field ${String(field)}`)
         }
       }
-    } else if (typeof expect === 'function') {
-      //TODO check if this is correct
-      check_expect = ({ form }: FormReq) => {
-        if (!expect(form)) {
-          throw new Error(`Expectation failed`)
+    }
+  } else if (expect instanceof RegExp) {
+    check_expect = ({ form }: any) => {
+      for (const field in form) {
+        if (expect.test(field)) {
+          throw new Error(`Unexpected field ${String(field)}`)
         }
       }
-    } else {
-      throw new Error(`Expect must be a function or array of functions`)
     }
   }
   return check_expect
@@ -166,7 +163,7 @@ function deny_checker({ options }: ConfigCtx) { //TODO sync this with requrie_ch
     check_requirements = ({ form }: any) => {
       for (const field of denies) {
         if (form.hasOwnProperty(field)) {
-          throw new Error(`Denied field ${String(field)}`)
+          throw new Error(`Unexpected field ${String(field)}`)
         }
       }
     }
@@ -174,7 +171,7 @@ function deny_checker({ options }: ConfigCtx) { //TODO sync this with requrie_ch
     check_requirements = ({ form }: any) => {
       for (const field in form) {
         if (denies.test(field)) {
-          throw new Error(`Denied field ${String(field)}`)
+          throw new Error(`Unexpected field ${String(field)}`)
         }
       }
     }
@@ -183,14 +180,14 @@ function deny_checker({ options }: ConfigCtx) { //TODO sync this with requrie_ch
   return check_requirements
 }
 
-function exactly_checker({ options }: ConfigCtx) {//TODO sync this with requrie_checker
+function exactly_checker({ options }: ConfigCtx) {
   const { exactly } = options
   let check_requirements: PendingCheckerType = IGNORE_ME
   if (exactly && Array.isArray(exactly) && exactly.length > 0) {
     check_requirements = ({ form }: any) => {
       for (const field of exactly) {
         if (!form.hasOwnProperty(field)) {
-          throw new Error(`Missing field ${String(field)}`)
+          throw new Error(`Missing field ${String(field)} form`)
         }
       }
       for (const field in form) {
