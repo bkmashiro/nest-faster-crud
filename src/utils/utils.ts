@@ -90,3 +90,7 @@ export class MaxBackOffError extends Error {
 export function NOT_IMPLEMENTED() {
   throw new Error('Not implemented')
 }
+
+export function isEmptyObject(obj: any) {
+  return Object.keys(obj).length === 0
+}
