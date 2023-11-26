@@ -1,5 +1,5 @@
 export function getProtoMeta(
-  target: { prototype: Object },
+  target: any,
   field: any,
   default_value = null
 ) {
@@ -7,7 +7,7 @@ export function getProtoMeta(
 }
 
 export function mergeProtoMeta(
-  target: { prototype: Object },
+  target: any,
   field: any,
   value: any
 ) {
@@ -43,13 +43,13 @@ export function appendProtoMeta(
 }
 
 export function setProtoMeta(
-  target: { prototype: Object },
+  target: any,
   field: any,
   value: any
 ) {
   return Reflect.defineMetadata(field, value, target.prototype)
 }
 
-export function getProtoMetaKeys(target: { prototype: Object }) {
+export function getProtoMetaKeys(target: any) {
   return Reflect.getMetadataKeys(target.prototype)
 }

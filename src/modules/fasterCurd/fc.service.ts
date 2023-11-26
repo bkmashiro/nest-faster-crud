@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { HttpAdapterHost } from '@nestjs/core'
 import { Express } from 'express'
 import express = require('express')
-import { ClassType, ConfigCtx, PartialBeforeActionOptions } from './decorators'
+import { BeforeActionOptions, ConfigCtx } from './fc.decorators'
 import {
   BeforeActionTokenType,
   CRUDMethods,
@@ -11,45 +11,39 @@ import {
   GEN_DATA_DICT_TOKEN,
   HttpMethods,
   fcrud_prefix,
-} from './fcrud-tokens'
-import { ENTITY_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './fcrud-tokens'
-import { getProtoMeta } from './reflect.utils'
-import { defaultCrudMethod } from './fcrud-tokens'
+} from './backend/fc.tokens'
+import { ENTITY_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './backend/fc.tokens'
+import { getProtoMeta } from '../../utils/reflect.utils'
+import { defaultCrudMethod } from './backend/fc.tokens'
 import {
   CheckerType,
   IGNORE_ME,
   TransformerType,
   post_transformer_factories,
   transform_after_processor,
-} from './fragments'
+} from './backend/fragments'
 import { FCrudJwtMiddleware } from './middleware/jwt.middleware'
+import { fixRoute } from 'src/utils/utils'
 import {
-  CRUDProvider,
-  FasterCrudRouterBuilder,
-  fixRoute,
-  perform_task,
-} from './fasterCRUD'
-import { checker_factories, pre_transformer_factories } from './fragments'
+  checker_factories,
+  pre_transformer_factories,
+} from './backend/fragments'
 import { exceptionMiddleware } from './middleware/exception.middleware'
-
-export type QueryData = {
-  data: any
-  pagination?: {
-    currentPage: number
-    pageSize: number
-  }
-  sort?: {
-    prop: string
-    order: string
-  }
-}
-
+import { ObjectLiteral } from './crud-gen/fast-crud.decl'
+import { log } from 'src/utils/debug'
+import { Router } from 'express'
+import {
+  AddReq,
+  DelReq,
+  EditReq,
+  PageQuery,
+  PageRes,
+} from './crud-gen/fast-crud.decl'
 const logger = new Logger('FasterCRUDService')
-
+const POST: HttpMethods = 'post'
 @Injectable()
 export class FasterCrudService {
-  prefix = `dt-api/`
-  default_method: HttpMethods = 'post'
+  prefix = `/dt-api`
 
   constructor(
     private readonly adapterHost: HttpAdapterHost,
@@ -75,48 +69,38 @@ export class FasterCrudService {
     this.app.use(route, router)
   }
 
-  generateCRUD<T extends ClassType<T>>(entity: T, provider: CRUDProvider<T>) {
-    const {
-      docs: dict,
-      fcrudName,
-      fields,
-      doGenerateDataDict,
-    } = this.getEntityMeta<T>(entity)
-    const router = new FasterCrudRouterBuilder()
+  generateCRUD<T extends abstract new (...args: any) => InstanceType<T>>(
+    target: T,
+    provider: CRUDProvider<InstanceType<T>>
+  ) {
+    const { dict, fcrudName, fields, doGenerateDataDict } =
+      this.parseEntityMeta(target)
+
+    const router = new RouterBuilder()
       .addPreMiddlewares(this.fCrudJwtMiddleware.FcrudJwtMiddleware)
       .addPostMiddlewares(exceptionMiddleware)
-    console.log(fcrudName)
 
     // create all CRUD routes
     const actions: CRUDMethods[] =
-      getProtoMeta(entity, GEN_CRUD_METHOD_TOKEN) ?? defaultCrudMethod
-    const docs = { crud: {}, dict: ''}
+      getProtoMeta(target, GEN_CRUD_METHOD_TOKEN) ?? defaultCrudMethod
+
+    const docs: any = {}
     for (const action of actions) {
       const method = provider[action].bind(provider) // have to bind to provider, otherwise this will be undefined
       const action_token: BeforeActionTokenType = `${fcrud_prefix}before-action-${action}`
-      const decoration_config = getProtoMeta(
-        entity,
-        action_token
-      ) as PartialBeforeActionOptions<T>
-      const decoratedMethod = this.configureMethod(
-        {
-          options: decoration_config,
-          target: entity,
-          fields,
-          action,
-        },
-        method
-      )
+      const options = getProtoMeta(target, action_token)
+      const cfg = { options, target, fields, action }
+      const decoratedMethod = this.configureMethod(cfg, method)
 
-      const route = fixRoute(decoration_config?.route ?? `/${action}`)
-      router.setRoute(this.default_method, route, async function (req, res) {
+      const route = fixRoute(options?.route ?? `/${action}`)
+      router.setRoute(POST, route, async function (req, res) {
         await perform_task(req, decoratedMethod, res)
       })
-      docs.crud[action] = `/${fcrudName.toLowerCase()}${route}`
+      docs.crud[action] = `/${fcrudName}${route}`
     }
 
     if (doGenerateDataDict) {
-      docs.dict = `/${fcrudName.toLowerCase()}/dict`
+      docs.dict = `/${fcrudName}/dict`
       router.setRoute('get', `/dict`, async function (req, res) {
         res.status(200).json(dict)
       })
@@ -125,18 +109,20 @@ export class FasterCrudService {
       res.status(200).json(docs)
     })
 
-    this.addRouter(`/${this.prefix}${fcrudName.toLowerCase()}`, router.build())
+    this.addRouter(`${this.prefix}/${fcrudName}`, router.build())
   }
 
-  private getEntityMeta<T extends ClassType<T>>(entity: T) {
-    const fcrudName = getProtoMeta(entity, ENTITY_NAME_TOKEN) ?? entity.name
+  private parseEntityMeta<T extends ObjectLiteral>(entity: T) {
+    const fcrudName = (
+      getProtoMeta(entity, ENTITY_NAME_TOKEN) ?? entity.name
+    ).toLowerCase()
     const fields = getProtoMeta(entity, FIELDS_TOKEN) ?? {}
-    const docs = getProtoMeta(entity, FCRUD_GEN_CFG_TOKEN) ?? {}
+    const dict = getProtoMeta(entity, FCRUD_GEN_CFG_TOKEN) ?? {}
     const doGenerateDataDict = getProtoMeta(entity, GEN_DATA_DICT_TOKEN) ?? true
-    return { docs, fcrudName, fields, doGenerateDataDict }
+    return { dict, fcrudName, fields, doGenerateDataDict }
   }
 
-  configureMethod<T extends ClassType<T>>(
+  configureMethod<T extends ObjectLiteral>(
     cfg: ConfigCtx<T>,
     method: (data: any) => Promise<any>
   ) {
@@ -160,18 +146,18 @@ export class FasterCrudService {
 
         data = applyTransformers(pre_transformers, data)
 
-        console.log(`exec with data:`, data)
+        log(`exec with data:`, data)
 
         let queryResult = await method(data)
 
-        console.log(`exec result:`, queryResult)
+        log(`exec result:`, queryResult)
 
         queryResult = applyTransformers(post_transformers, queryResult)
 
-        console.log(`transformed result:`, queryResult)
+        log(`transformed result:`, queryResult)
         const after = transform_after(data, queryResult)
-        console.log(data, queryResult)
-        console.log(`transformed after:`, after)
+        log(data, queryResult)
+        log(`transformed after:`, after)
         return after
       } catch (e) {
         logger.error(`error when executing method ${method.name}:`, e)
@@ -219,4 +205,60 @@ function applyTransformers(post_transformers: TransformerType[], result: any) {
     result = transformer(result)
   }
   return result
+}
+
+export interface CRUDProvider<T> {
+  create(data: AddReq<T>): Promise<any>
+  read(query: PageQuery<T>): Promise<PageRes<T>>
+  update(data: EditReq<T>): Promise<any>
+  delete(data: DelReq<T>): Promise<any>
+}
+
+export class RouterBuilder {
+  router: Router = express.Router()
+  pre_middlewares: express.RequestHandler[] = []
+  post_middlewares: express.RequestHandler[] = []
+
+  constructor() {}
+  setRoute(
+    method: 'get' | 'post' | 'put' | 'delete' | 'patch',
+    path: string,
+    handler: express.RequestHandler
+  ) {
+    this.router[method](path, ...this.pre_middlewares, handler)
+    return this
+  }
+
+  addPreMiddlewares(...middleware: any[]) {
+    this.pre_middlewares.push(...middleware)
+    return this
+  }
+
+  addPostMiddlewares(...middleware: any[]) {
+    this.post_middlewares.push(...middleware)
+    return this
+  }
+
+  build() {
+    return this.router
+  }
+}
+
+export async function perform_task(
+  req: express.Request,
+  task: (data: any) => Promise<any>,
+  res: express.Response
+) {
+  const body = req.body
+  try {
+    const result = await task(body)
+    res.status(200).json(result)
+  } catch (e) {
+    res
+      .status(500)
+      .json({
+        message: e.message,
+      })
+      .end()
+  }
 }

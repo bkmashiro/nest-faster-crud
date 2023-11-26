@@ -90,3 +90,22 @@ export class MaxBackOffError extends Error {
 export function NOT_IMPLEMENTED() {
   throw new Error('Not implemented')
 }
+
+export function isEmptyObject(obj: any) {
+  return Object.keys(obj).length === 0
+}
+export function isArrayOfFunctions(
+  data: any
+): data is ((data: any) => boolean)[] {
+  return Array.isArray(data) && data.every((item) => typeof item === 'function')
+}export function fixRoute(route: string) {
+  if (route.startsWith('/')) {
+    return route
+  } else {
+    return `/${route}`
+  }
+}
+export type ClassType<T extends abstract new (...args: any) => any> = {
+  new(...args: any[]): InstanceType<T>
+}
+

@@ -1,8 +1,8 @@
-import { ConfigCtx } from './decorators'
-import { isArrayOfFunctions } from './fasterCRUD'
-import validatorMap from './defaultValidators'
-import { FormReq, PageQuery } from './fastcrud-gen/interface'
-import { CRUDMethods } from './fcrud-tokens'
+import { ConfigCtx } from '../fc.decorators'
+import validatorMap from './validators'
+import { PageQuery } from '../crud-gen/fast-crud.decl'
+import { CRUDMethods } from './fc.tokens'
+import { isEmptyObject } from 'src/utils/utils'
 
 export const IGNORE_ME = Symbol('ignore me')
 export type PendingCheckerType = ((data: any) => void) | typeof IGNORE_ME
@@ -60,72 +60,39 @@ function pagination_checker({ options }: ConfigCtx) {
   return check_pagination
 }
 
-const default_order = 'ASC'
 function sort_checker({ options }: ConfigCtx) {
   const { sort: default_sort } = options
   let check_sort: PendingCheckerType = IGNORE_ME
   if (default_sort) {
     check_sort = (query: PageQuery) => {
-      // query.sort: { prop: string, order: string }
-      // should be transformed to {[prop: string]: 'ASC' | 'DESC'}
-      // if not set, set it to default
-      console.log(query)
-      if (!query.hasOwnProperty('sort')) {
+      const { sort } = query
+      if (!sort || isEmptyObject(sort)) {
         query.sort = default_sort
-        return check_sort
       }
-      // if is empty, set it to default
-      if (Object.keys(query.sort).length === 0) {
-        query.sort = default_sort
-        return check_sort
-      }
-      console.log(query)
-      const { sort } = query //TODO if needs transform, check if this is correct
-      if (sort) {
-        if (typeof sort === 'string') {
-          query.sort = {
-            [sort]: default_order,
-          }
-        } else if (Array.isArray(sort)) {
-          query.sort = sort.reduce((acc, cur) => {
-            acc[cur] = default_order
-            return acc
-          }, {} as any)
-        } else if (typeof sort === 'object') {
-          query.sort = {
-            [sort.prop]: sort.order,
-          }
-        } else {
-          throw new Error(`sort must be string, array or object`)
-        }
-      }
-      
     }
   }
   return check_sort
 }
 
-function except_checker({ options }: ConfigCtx) {//TODO sync this with requrie_checker
+function except_checker({ options }: ConfigCtx) {
+  //TODO sync this with requrie_checker
   const { expect } = options
   let check_expect: PendingCheckerType = IGNORE_ME
-  if (expect) {
-    if (isArrayOfFunctions(expect)) {
-      check_expect = ({ form }: FormReq) => {
-        for (const func of expect) {
-          if (!func(form)) {
-            throw new Error(`Expectation failed`)
-          }
+  if (expect && Array.isArray(expect) && expect.length > 0) {
+    check_expect = ({ form }: any) => {
+      for (const field of expect) {
+        if (form.hasOwnProperty(field)) {
+          throw new Error(`Unexpected field ${String(field)}`)
         }
       }
-    } else if (typeof expect === 'function') {
-      //TODO check if this is correct
-      check_expect = ({ form }: FormReq) => {
-        if (!expect(form)) {
-          throw new Error(`Expectation failed`)
+    }
+  } else if (expect instanceof RegExp) {
+    check_expect = ({ form }: any) => {
+      for (const field in form) {
+        if (expect.test(field)) {
+          throw new Error(`Unexpected field ${String(field)}`)
         }
       }
-    } else {
-      throw new Error(`Expect must be a function or array of functions`)
     }
   }
   return check_expect
@@ -145,7 +112,7 @@ function requrie_checker({ options, fields }: ConfigCtx) {
   } else if (requires instanceof RegExp) {
     check_requirements = ({ form }: any) => {
       for (const [name, field] of Object.entries(fields)) {
-        console.log(name, field)
+        // console.log(name, field)
         if (
           requires.test(name) &&
           !form.hasOwnProperty(name) &&
@@ -159,14 +126,15 @@ function requrie_checker({ options, fields }: ConfigCtx) {
   return check_requirements
 }
 
-function deny_checker({ options }: ConfigCtx) { //TODO sync this with requrie_checker
+function deny_checker({ options }: ConfigCtx) {
+  //TODO sync this with requrie_checker
   const { denies } = options
   let check_requirements: PendingCheckerType = IGNORE_ME
   if (denies && Array.isArray(denies) && denies.length > 0) {
     check_requirements = ({ form }: any) => {
       for (const field of denies) {
         if (form.hasOwnProperty(field)) {
-          throw new Error(`Denied field ${String(field)}`)
+          throw new Error(`Unexpected field ${String(field)}`)
         }
       }
     }
@@ -174,7 +142,7 @@ function deny_checker({ options }: ConfigCtx) { //TODO sync this with requrie_ch
     check_requirements = ({ form }: any) => {
       for (const field in form) {
         if (denies.test(field)) {
-          throw new Error(`Denied field ${String(field)}`)
+          throw new Error(`Unexpected field ${String(field)}`)
         }
       }
     }
@@ -183,14 +151,14 @@ function deny_checker({ options }: ConfigCtx) { //TODO sync this with requrie_ch
   return check_requirements
 }
 
-function exactly_checker({ options }: ConfigCtx) {//TODO sync this with requrie_checker
+function exactly_checker({ options }: ConfigCtx) {
   const { exactly } = options
   let check_requirements: PendingCheckerType = IGNORE_ME
   if (exactly && Array.isArray(exactly) && exactly.length > 0) {
     check_requirements = ({ form }: any) => {
       for (const field of exactly) {
         if (!form.hasOwnProperty(field)) {
-          throw new Error(`Missing field ${String(field)}`)
+          throw new Error(`Missing field ${String(field)} form`)
         }
       }
       for (const field in form) {
@@ -262,17 +230,17 @@ function transform_after_processor({ options, action }: ConfigCtx) {
 
   if (form_requests.includes(action)) {
     // if Create, Update, Delete, then return form
-    transform_after =  (data: any, queryRet: any) => {
+    transform_after = (data: any, queryRet: any) => {
       return data.form
     }
   }
   if (query_requests.includes(action)) {
     // if Read, then return records
-    transform_after =  (data: any, transformedQueryRet: any) => {
+    transform_after = (data: any, transformedQueryRet: any) => {
       return transformedQueryRet
     }
   }
-  
+
   return transform_after
 }
 

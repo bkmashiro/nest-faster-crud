@@ -1,7 +1,7 @@
 import { InjectRepository } from '@nestjs/typeorm'
 import { CRUDUser } from './CRUDUser.entity'
-import { TypeORMRepoAdapter } from './fasterCRUD'
-import { FasterCrudService } from './FasterCrudService'
+import { TypeORMRepoAdapter } from '../backend/typeorm/TypeORMRepoAdapter'
+import { FasterCrudService } from '../fc.service'
 import { Repository } from 'typeorm'
 import { Injectable } from '@nestjs/common'
 

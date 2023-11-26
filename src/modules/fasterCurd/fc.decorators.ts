@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 import {
-  BEFORE_ACTION_TOKEN,
   BeforeActionTokenType,
   ENTITY_NAME_TOKEN,
   FIELDS_TOKEN,
@@ -8,16 +7,14 @@ import {
   GEN_DATA_DICT_TOKEN,
   IGNORE_FIEIDS_TOKEN,
   fcrud_prefix,
-} from './fcrud-tokens'
-import {
-  getProtoMeta,
-  getProtoMetaKeys,
-  mergeProtoMeta,
-  setProtoMeta,
-} from './reflect.utils'
-import { CRUDMethods } from './fcrud-tokens'
-import { FC, FastCrudFieldOptions } from './fastcrud-gen/fastcrud.decorator'
+} from './backend/fc.tokens'
+import { getProtoMeta, setProtoMeta } from '../../utils/reflect.utils'
+import { CRUDMethods } from './backend/fc.tokens'
+import { FC } from './crud-gen/fast-crud.decorator'
+import { FastCrudFieldOptions } from './crud-gen/fast-crud.decl'
 import { applyDecorators } from '@nestjs/common'
+import { ObjectLiteral } from './crud-gen/fast-crud.decl'
+import { ClassType } from 'src/utils/utils'
 
 export type FieldOptions = Partial<{
   name: string
@@ -59,7 +56,7 @@ export function FieldFC(
   return applyDecorators(Field(opt), FC(opt.fc))
 }
 
-export type CURDOptions = {
+type CURDOptions = {
   name: string
   methods: CRUDMethods[]
   exposeDict: boolean
@@ -85,11 +82,10 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
     setProtoMeta(target, FIELDS_TOKEN, fields)
   }
 }
-export type FieldSelector<T> = (keyof T)[] | RegExp
 
+type FieldSelector<T> = (keyof T)[] | RegExp
 
-
-export type BeforeActionOptions<T extends {}> = {
+export type BeforeActionOptions<T> = Partial<{
   /**
    * if enabled, the input data will not be transformed
    * that means, pagination, sort, etc. will not be parsed
@@ -100,13 +96,13 @@ export type BeforeActionOptions<T extends {}> = {
     max: number
   }
   sort: {
-    [prop in keyof T]?:  'ASC' | 'DESC'
+    [prop in keyof T]?: 'ASC' | 'DESC'
   }
   allow_sort: FieldSelector<T>
   checkType: boolean
   requires: FieldSelector<T>
   denies: FieldSelector<T>
-  exactly: FieldSelector<T>
+  exactly: (keyof T)[] // Not support regex
   route: string
   expect: ((data: T) => boolean) | ((data: T) => boolean)[]
   transform: (data: T) => T
@@ -117,26 +113,19 @@ export type BeforeActionOptions<T extends {}> = {
   onTransformFailure: (data: T) => any
   onExecFailure: (data: T) => any
   ctx: object | null
-}
+}>
 
-export type ClassType<T extends abstract new (...args: any) => any> = {
-  new (...args: any[]): InstanceType<T>
-}
-
-export type PartialBeforeActionOptions<T extends ClassType<T>> = Partial<
-  BeforeActionOptions<InstanceType<T>>
->
-
-export type ConfigCtx<T extends ClassType<T> = any> = {
-  options: PartialBeforeActionOptions<T>
+export type ConfigCtx<T extends ObjectLiteral = any> = {
+  options: BeforeActionOptions<T>
   target: T
   fields: FieldOptionsObject
   action: CRUDMethods
 }
 
-export function BeforeAction<
-  T extends { new (...args: any[]): InstanceType<T> }
->(action: CRUDMethods, options: PartialBeforeActionOptions<T> = {}) {
+function BeforeAction<T extends abstract new (...args: any) => InstanceType<T>>(
+  action: CRUDMethods,
+  options: BeforeActionOptions<InstanceType<T>> = {}
+) {
   return function classDecorator(target: T) {
     const token: BeforeActionTokenType = `${fcrud_prefix}before-action-${action}`
     setProtoMeta(target, token, options)
@@ -144,25 +133,25 @@ export function BeforeAction<
 }
 
 export function Create<T extends ClassType<T>>(
-  options: PartialBeforeActionOptions<T> = {}
+  options: BeforeActionOptions<InstanceType<T>> = {}
 ) {
   return BeforeAction<T>('create', options)
 }
 
-export function Read<T extends ClassType<T>>(
-  options: PartialBeforeActionOptions<T> = {}
+export function Read<T extends abstract new (...args: any) => InstanceType<T>>(
+  options: BeforeActionOptions<InstanceType<T>> = {}
 ) {
   return BeforeAction<T>('read', options)
 }
 
 export function Update<T extends ClassType<T>>(
-  options: PartialBeforeActionOptions<T> = {}
+  options: BeforeActionOptions<InstanceType<T>> = {}
 ) {
   return BeforeAction<T>('update', options)
 }
 
 export function Delete<T extends ClassType<T>>(
-  options: PartialBeforeActionOptions<T> = {}
+  options: BeforeActionOptions<InstanceType<T>> = {}
 ) {
   return BeforeAction<T>('delete', options)
 }
