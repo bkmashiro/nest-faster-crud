@@ -6,10 +6,9 @@ import {
   Page,
   PageQuery,
   PageRes,
-  PageSort
-} from "../../crud-gen/fast-crud.decl"
+  PageSort,
+} from '../../crud-gen/fast-crud.decl'
 import { isEmptyObject } from 'src/utils/utils'
-import { deconstrcuOrNull } from 'src/utils/objectTools'
 import { CRUDProvider } from '../../fc.service'
 
 export class TypeORMRepoAdapter<T extends ObjectLiteral>
@@ -46,8 +45,11 @@ export class TypeORMRepoAdapter<T extends ObjectLiteral>
     return await this.repo.delete(row)
   }
 
-  parseSort<T>(sort: PageSort<T> | { [key in keyof T]?: 'ASC' | 'DESC' }): { [key in keyof T]?: 'ASC' | 'DESC' } {
-    if (Object.values(sort).every((v) => v === 'ASC' || v === 'DESC')) { //TODO clean up
+  parseSort<T>(sort: PageSort<T> | { [key in keyof T]?: 'ASC' | 'DESC' }): {
+    [key in keyof T]?: 'ASC' | 'DESC'
+  } {
+    if (Object.values(sort).every((v) => v === 'ASC' || v === 'DESC')) {
+      //TODO clean up
       return sort as { [key in keyof T]?: 'ASC' | 'DESC' }
     }
     const { prop, order, asc } = sort as PageSort<T>

@@ -83,7 +83,7 @@ export class FasterCrudService {
     // create all CRUD routes
     const actions: CRUDMethods[] =
       getProtoMeta(target, GEN_CRUD_METHOD_TOKEN) ?? defaultCrudMethod
-      
+
     const docs: any = {}
     for (const action of actions) {
       const method = provider[action].bind(provider) // have to bind to provider, otherwise this will be undefined

@@ -13,7 +13,7 @@ import { CRUDMethods } from './fc.tokens'
 import { FC } from './crud-gen/fast-crud.decorator'
 import { FastCrudFieldOptions } from './crud-gen/fast-crud.decl'
 import { applyDecorators } from '@nestjs/common'
-import { ObjectLiteral } from "./crud-gen/fast-crud.decl"
+import { ObjectLiteral } from './crud-gen/fast-crud.decl'
 import { ClassType } from 'src/utils/utils'
 
 export type FieldOptions = Partial<{
@@ -122,9 +122,10 @@ export type ConfigCtx<T extends ObjectLiteral = any> = {
   action: CRUDMethods
 }
 
-function BeforeAction<
-  T extends abstract new (...args: any) => InstanceType<T>
->(action: CRUDMethods, options: BeforeActionOptions<InstanceType<T>> = {}) {
+function BeforeAction<T extends abstract new (...args: any) => InstanceType<T>>(
+  action: CRUDMethods,
+  options: BeforeActionOptions<InstanceType<T>> = {}
+) {
   return function classDecorator(target: T) {
     const token: BeforeActionTokenType = `${fcrud_prefix}before-action-${action}`
     setProtoMeta(target, token, options)
