@@ -24,7 +24,10 @@ import {
 } from './backend/fragments'
 import { FCrudJwtMiddleware } from './middleware/jwt.middleware'
 import { fixRoute } from 'src/utils/utils'
-import { checker_factories, pre_transformer_factories } from './backend/fragments'
+import {
+  checker_factories,
+  pre_transformer_factories,
+} from './backend/fragments'
 import { exceptionMiddleware } from './middleware/exception.middleware'
 import { ObjectLiteral } from './crud-gen/fast-crud.decl'
 import { log } from 'src/utils/debug'
@@ -37,11 +40,10 @@ import {
   PageRes,
 } from './crud-gen/fast-crud.decl'
 const logger = new Logger('FasterCRUDService')
-
+const POST: HttpMethods = 'post'
 @Injectable()
 export class FasterCrudService {
-  prefix = `dt-api/`
-  default_method: HttpMethods = 'post'
+  prefix = `/dt-api`
 
   constructor(
     private readonly adapterHost: HttpAdapterHost,
@@ -68,45 +70,37 @@ export class FasterCrudService {
   }
 
   generateCRUD<T extends abstract new (...args: any) => InstanceType<T>>(
-    entity: T,
+    target: T,
     provider: CRUDProvider<InstanceType<T>>
   ) {
     const { dict, fcrudName, fields, doGenerateDataDict } =
-      this.getEntityMeta(entity)
+      this.parseEntityMeta(target)
+
     const router = new RouterBuilder()
       .addPreMiddlewares(this.fCrudJwtMiddleware.FcrudJwtMiddleware)
       .addPostMiddlewares(exceptionMiddleware)
 
     // create all CRUD routes
     const actions: CRUDMethods[] =
-      getProtoMeta(entity, GEN_CRUD_METHOD_TOKEN) ?? defaultCrudMethod
-    const docs = { crud: {}, dict: '' }
+      getProtoMeta(target, GEN_CRUD_METHOD_TOKEN) ?? defaultCrudMethod
+      
+    const docs: any = {}
     for (const action of actions) {
       const method = provider[action].bind(provider) // have to bind to provider, otherwise this will be undefined
       const action_token: BeforeActionTokenType = `${fcrud_prefix}before-action-${action}`
-      const decoration_config: BeforeActionOptions<T> = getProtoMeta(
-        entity,
-        action_token
-      )
-      const decoratedMethod = this.configureMethod(
-        {
-          options: decoration_config,
-          target: entity,
-          fields,
-          action,
-        },
-        method
-      )
+      const options = getProtoMeta(target, action_token)
+      const cfg = { options, target, fields, action }
+      const decoratedMethod = this.configureMethod(cfg, method)
 
-      const route = fixRoute(decoration_config?.route ?? `/${action}`)
-      router.setRoute(this.default_method, route, async function (req, res) {
+      const route = fixRoute(options?.route ?? `/${action}`)
+      router.setRoute(POST, route, async function (req, res) {
         await perform_task(req, decoratedMethod, res)
       })
-      docs.crud[action] = `/${fcrudName.toLowerCase()}${route}`
+      docs.crud[action] = `/${fcrudName}${route}`
     }
 
     if (doGenerateDataDict) {
-      docs.dict = `/${fcrudName.toLowerCase()}/dict`
+      docs.dict = `/${fcrudName}/dict`
       router.setRoute('get', `/dict`, async function (req, res) {
         res.status(200).json(dict)
       })
@@ -115,11 +109,13 @@ export class FasterCrudService {
       res.status(200).json(docs)
     })
 
-    this.addRouter(`/${this.prefix}${fcrudName.toLowerCase()}`, router.build())
+    this.addRouter(`${this.prefix}/${fcrudName}`, router.build())
   }
 
-  private getEntityMeta<T extends ObjectLiteral>(entity: T) {
-    const fcrudName = getProtoMeta(entity, ENTITY_NAME_TOKEN) ?? entity.name
+  private parseEntityMeta<T extends ObjectLiteral>(entity: T) {
+    const fcrudName = (
+      getProtoMeta(entity, ENTITY_NAME_TOKEN) ?? entity.name
+    ).toLowerCase()
     const fields = getProtoMeta(entity, FIELDS_TOKEN) ?? {}
     const dict = getProtoMeta(entity, FCRUD_GEN_CFG_TOKEN) ?? {}
     const doGenerateDataDict = getProtoMeta(entity, GEN_DATA_DICT_TOKEN) ?? true
