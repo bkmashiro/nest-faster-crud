@@ -1,3 +1,6 @@
+import { ObjectLiteral } from "typeorm"
+import { CRUDUser } from "../CRUDUser.entity"
+
 export type Page = {
   /**
    * 当前页
@@ -32,7 +35,7 @@ export type PageQuery = {
   sort?: PageSort
 }
 
-export type PageRes = {
+export type PageRes<T extends ObjectLiteral> = {
   /**
    * 当前页
    */
@@ -48,8 +51,23 @@ export type PageRes = {
   /**
    * 列表数据
    */
-  records: Array<object>
+  records: Array<T>
 }
+
+// const pgres: PageRes<number> = {
+//   currentPage: 1,
+//   pageSize: 10,
+//   total: 0,
+//   records: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+// }
+
+// const pgres2: PageRes<CRUDUser> = {
+//   currentPage: 1,
+//   pageSize: 10,
+//   total: 0,
+//   records: [new CRUDUser()],
+// }
+
 export type EditReq = {
   form?: any
   row?: any

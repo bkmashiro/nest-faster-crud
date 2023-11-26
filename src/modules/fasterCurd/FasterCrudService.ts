@@ -31,6 +31,7 @@ import {
 } from './fasterCRUD'
 import { checker_factories, pre_transformer_factories } from './fragments'
 import { exceptionMiddleware } from './middleware/exception.middleware'
+import { ObjectLiteral } from 'typeorm'
 
 export type QueryData = {
   data: any
@@ -75,7 +76,10 @@ export class FasterCrudService {
     this.app.use(route, router)
   }
 
-  generateCRUD<T extends ClassType<T>>(entity: T, provider: CRUDProvider<T>) {
+  generateCRUD<T extends abstract new (...args: any) => any>(
+    entity: T,
+    provider: CRUDProvider<InstanceType<T>>
+  ) {
     const {
       docs: dict,
       fcrudName,
@@ -90,7 +94,7 @@ export class FasterCrudService {
     // create all CRUD routes
     const actions: CRUDMethods[] =
       getProtoMeta(entity, GEN_CRUD_METHOD_TOKEN) ?? defaultCrudMethod
-    const docs = { crud: {}, dict: ''}
+    const docs = { crud: {}, dict: '' }
     for (const action of actions) {
       const method = provider[action].bind(provider) // have to bind to provider, otherwise this will be undefined
       const action_token: BeforeActionTokenType = `${fcrud_prefix}before-action-${action}`
@@ -128,7 +132,7 @@ export class FasterCrudService {
     this.addRouter(`/${this.prefix}${fcrudName.toLowerCase()}`, router.build())
   }
 
-  private getEntityMeta<T extends ClassType<T>>(entity: T) {
+  private getEntityMeta<T extends ObjectLiteral>(entity: T) {
     const fcrudName = getProtoMeta(entity, ENTITY_NAME_TOKEN) ?? entity.name
     const fields = getProtoMeta(entity, FIELDS_TOKEN) ?? {}
     const docs = getProtoMeta(entity, FCRUD_GEN_CFG_TOKEN) ?? {}
@@ -136,7 +140,7 @@ export class FasterCrudService {
     return { docs, fcrudName, fields, doGenerateDataDict }
   }
 
-  configureMethod<T extends ClassType<T>>(
+  configureMethod<T extends ObjectLiteral>(
     cfg: ConfigCtx<T>,
     method: (data: any) => Promise<any>
   ) {

@@ -1,10 +1,6 @@
 import express = require('express')
 import { Router } from 'express'
-import { Repository } from 'typeorm'
-import { AddReq, DelReq, EditReq, PageQuery } from './fastcrud-gen/interface'
-import { Page } from "./fastcrud-gen/interface"
-
-type KeyType = string
+import { AddReq, DelReq, EditReq, PageQuery, PageRes } from './fastcrud-gen/interface'
 
 export function isArrayOfFunctions(
   data: any
@@ -14,40 +10,9 @@ export function isArrayOfFunctions(
 
 export interface CRUDProvider<T> {
   create(data: AddReq): Promise<any>
-  read(query: PageQueryTransformed): Promise<any>
+  read(query: PageQuery): Promise<PageRes<T>>
   update(data: EditReq): Promise<any>
   delete(data: DelReq): Promise<any>
-}
-
-export class TypeORMRepoAdapter<T> implements CRUDProvider<T> {
-  constructor(private readonly repo: Repository<T>) {}
-  async read(query: PageQueryTransformed) {
-    console.log(query)
-    const [ret, count] = await this.repo.findAndCount({
-      where: query.form,
-      skip: (query.page.currentPage - 1) * query.page.pageSize,
-      take: query.page.pageSize,
-      order: query.sort as any,
-    })
-    return {
-      records: ret,
-      currentPage: query.page.currentPage,
-      pageSize: query.page.pageSize,
-      total: count,
-    }
-  }
-
-  async create({ form }: AddReq) {
-    return await this.repo.insert(form)
-  }
-
-  async update({ form, row }: EditReq) {
-    return await this.repo.update(row, form)
-  }
-
-  async delete({ row }: DelReq) {
-    return await this.repo.delete(row)
-  }
 }
 
 export class FasterCrudRouterBuilder {
@@ -105,18 +70,4 @@ export function fixRoute(route: string) {
   } else {
     return `/${route}`
   }
-}export type PageQueryTransformed = {
-  /**
-   * 分页参数
-   */
-  page?: Page
-  /**
-   * 查询表单
-   */
-  form?: any
-  /**
-   * 远程排序配置
-   */
-  sort?: { [key: string]: 'ASC' | 'DESC'} 
 }
-
