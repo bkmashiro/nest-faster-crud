@@ -10,10 +10,10 @@ import {
 } from './fc.tokens'
 import { getProtoMeta, setProtoMeta } from '../../utils/reflect.utils'
 import { CRUDMethods } from './fc.tokens'
-import { FC } from './fastcrud-gen/fastcrud.decorator'
-import { FastCrudFieldOptions } from './fastcrud-gen/fast-crud.decl'
+import { FC } from './crud-gen/fast-crud.decorator'
+import { FastCrudFieldOptions } from './crud-gen/fast-crud.decl'
 import { applyDecorators } from '@nestjs/common'
-import { ObjectLiteral } from "./fastcrud-gen/fast-crud.decl"
+import { ObjectLiteral } from "./crud-gen/fast-crud.decl"
 
 export type FieldOptions = Partial<{
   name: string

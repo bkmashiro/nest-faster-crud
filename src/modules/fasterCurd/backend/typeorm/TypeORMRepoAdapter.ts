@@ -7,7 +7,7 @@ import {
   PageQuery,
   PageRes,
   PageSort
-} from "../../fastcrud-gen/fast-crud.decl"
+} from "../../crud-gen/fast-crud.decl"
 import { isEmptyObject } from 'src/utils/utils'
 import { deconstrcuOrNull } from 'src/utils/objectTools'
 import { CRUDProvider } from '../../fc.service'

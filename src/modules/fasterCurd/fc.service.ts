@@ -26,7 +26,7 @@ import { FCrudJwtMiddleware } from './middleware/jwt.middleware'
 import { fixRoute } from 'src/utils/utils'
 import { checker_factories, pre_transformer_factories } from './backend/fragments'
 import { exceptionMiddleware } from './middleware/exception.middleware'
-import { ObjectLiteral } from './fastcrud-gen/fast-crud.decl'
+import { ObjectLiteral } from './crud-gen/fast-crud.decl'
 import { log } from 'src/utils/debug'
 import { Router } from 'express'
 import {
@@ -35,7 +35,7 @@ import {
   EditReq,
   PageQuery,
   PageRes,
-} from './fastcrud-gen/fast-crud.decl'
+} from './crud-gen/fast-crud.decl'
 const logger = new Logger('FasterCRUDService')
 
 @Injectable()
