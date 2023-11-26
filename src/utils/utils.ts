@@ -105,4 +105,7 @@ export function isArrayOfFunctions(
     return `/${route}`
   }
 }
+export type ClassType<T extends abstract new (...args: any) => any> = {
+  new(...args: any[]): InstanceType<T>
+}
 

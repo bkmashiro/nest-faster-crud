@@ -14,6 +14,7 @@ import { FC } from './crud-gen/fast-crud.decorator'
 import { FastCrudFieldOptions } from './crud-gen/fast-crud.decl'
 import { applyDecorators } from '@nestjs/common'
 import { ObjectLiteral } from "./crud-gen/fast-crud.decl"
+import { ClassType } from 'src/utils/utils'
 
 export type FieldOptions = Partial<{
   name: string
@@ -55,7 +56,7 @@ export function FieldFC(
   return applyDecorators(Field(opt), FC(opt.fc))
 }
 
-export type CURDOptions = {
+type CURDOptions = {
   name: string
   methods: CRUDMethods[]
   exposeDict: boolean
@@ -82,7 +83,7 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
   }
 }
 
-export type FieldSelector<T> = (keyof T)[] | RegExp
+type FieldSelector<T> = (keyof T)[] | RegExp
 
 export type BeforeActionOptions<T> = Partial<{
   /**
@@ -114,10 +115,6 @@ export type BeforeActionOptions<T> = Partial<{
   ctx: object | null
 }>
 
-export type ClassType<T extends abstract new (...args: any) => any> = {
-  new (...args: any[]): InstanceType<T>
-}
-
 export type ConfigCtx<T extends ObjectLiteral = any> = {
   options: BeforeActionOptions<T>
   target: T
@@ -125,7 +122,7 @@ export type ConfigCtx<T extends ObjectLiteral = any> = {
   action: CRUDMethods
 }
 
-export function BeforeAction<
+function BeforeAction<
   T extends abstract new (...args: any) => InstanceType<T>
 >(action: CRUDMethods, options: BeforeActionOptions<InstanceType<T>> = {}) {
   return function classDecorator(target: T) {
