@@ -1,7 +1,8 @@
 import express = require('express')
 import { Router } from 'express'
 import { Repository } from 'typeorm'
-import { AddReq, DelReq, EditReq, PageQuery, PageQueryTransformed } from './fastcrud-gen/interface'
+import { AddReq, DelReq, EditReq, PageQuery } from './fastcrud-gen/interface'
+import { Page } from "./fastcrud-gen/interface"
 
 type KeyType = string
 
@@ -13,7 +14,7 @@ export function isArrayOfFunctions(
 
 export interface CRUDProvider<T> {
   create(data: AddReq): Promise<any>
-  read(query: PageQuery): Promise<any>
+  read(query: PageQueryTransformed): Promise<any>
   update(data: EditReq): Promise<any>
   delete(data: DelReq): Promise<any>
 }
@@ -104,4 +105,18 @@ export function fixRoute(route: string) {
   } else {
     return `/${route}`
   }
+}export type PageQueryTransformed = {
+  /**
+   * 分页参数
+   */
+  page?: Page
+  /**
+   * 查询表单
+   */
+  form?: any
+  /**
+   * 远程排序配置
+   */
+  sort?: { [key: string]: 'ASC' | 'DESC'} 
 }
+

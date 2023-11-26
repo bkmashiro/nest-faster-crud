@@ -18,7 +18,6 @@ import {
 import { CRUDMethods } from './fcrud-tokens'
 import { FC, FastCrudFieldOptions } from './fastcrud-gen/fastcrud.decorator'
 import { applyDecorators } from '@nestjs/common'
-import { InsertResult } from 'typeorm'
 
 export type FieldOptions = Partial<{
   name: string
