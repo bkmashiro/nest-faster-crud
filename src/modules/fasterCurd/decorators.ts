@@ -8,7 +8,7 @@ import {
   IGNORE_FIEIDS_TOKEN,
   fcrud_prefix,
 } from './fcrud-tokens'
-import { getProtoMeta, setProtoMeta } from './reflect.utils'
+import { getProtoMeta, setProtoMeta } from '../../utils/reflect.utils'
 import { CRUDMethods } from './fcrud-tokens'
 import { FC, FastCrudFieldOptions } from './fastcrud-gen/fastcrud.decorator'
 import { applyDecorators } from '@nestjs/common'

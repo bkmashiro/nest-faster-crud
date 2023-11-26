@@ -12,17 +12,17 @@ import { $ } from './fastcrud-gen/fastcrud.decorator'
 @IgnoreField(['id'])
 export class CRUDUser {
   @PrimaryGeneratedColumn()
-  @$.Number('搬砖速度', { column: { width: 50 }, form: { show: false } })
+  @$.Number('ID', { column: { width: 50 }, form: { show: false } })
   id: number
 
   @Column()
-  @$.Text('遥遥领先', {
+  @$.Text('Name', {
     search: { show: true },
     column: { resizable: true, width: 200 },
   })
   name: string
 
   @Column()
-  @$.NumberDictSelect(['随意', '定制'], 'FasterCRUD震撼')
+  @$.NumberDictSelect(['User', 'Admin'], 'Type')
   type: number
 }

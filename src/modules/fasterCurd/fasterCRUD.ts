@@ -1,12 +1,12 @@
 import express = require('express')
 import { Router } from 'express'
-import { AddReq, DelReq, EditReq, PageQuery, PageRes } from './fastcrud-gen/interface'
-
-export function isArrayOfFunctions(
-  data: any
-): data is ((data: any) => boolean)[] {
-  return Array.isArray(data) && data.every((item) => typeof item === 'function')
-}
+import {
+  AddReq,
+  DelReq,
+  EditReq,
+  PageQuery,
+  PageRes,
+} from './fastcrud-gen/interface'
 
 export interface CRUDProvider<T> {
   create(data: AddReq<T>): Promise<any>
@@ -61,13 +61,5 @@ export async function perform_task(
         message: e.message,
       })
       .end()
-  }
-}
-
-export function fixRoute(route: string) {
-  if (route.startsWith('/')) {
-    return route
-  } else {
-    return `/${route}`
   }
 }

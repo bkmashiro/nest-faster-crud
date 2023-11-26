@@ -94,3 +94,15 @@ export function NOT_IMPLEMENTED() {
 export function isEmptyObject(obj: any) {
   return Object.keys(obj).length === 0
 }
+export function isArrayOfFunctions(
+  data: any
+): data is ((data: any) => boolean)[] {
+  return Array.isArray(data) && data.every((item) => typeof item === 'function')
+}export function fixRoute(route: string) {
+  if (route.startsWith('/')) {
+    return route
+  } else {
+    return `/${route}`
+  }
+}
+

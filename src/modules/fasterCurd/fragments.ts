@@ -1,5 +1,5 @@
 import { ConfigCtx } from './decorators'
-import { isArrayOfFunctions } from './fasterCRUD'
+import { isArrayOfFunctions } from 'src/utils/utils'
 import validatorMap from './defaultValidators'
 import { FormReq, PageQuery } from './fastcrud-gen/interface'
 import { CRUDMethods } from './fcrud-tokens'

@@ -13,7 +13,7 @@ import {
   fcrud_prefix,
 } from './fcrud-tokens'
 import { ENTITY_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './fcrud-tokens'
-import { getProtoMeta } from './reflect.utils'
+import { getProtoMeta } from '../../utils/reflect.utils'
 import { defaultCrudMethod } from './fcrud-tokens'
 import {
   CheckerType,
@@ -26,9 +26,9 @@ import { FCrudJwtMiddleware } from './middleware/jwt.middleware'
 import {
   CRUDProvider,
   FasterCrudRouterBuilder as RouterBuilder,
-  fixRoute,
   perform_task,
 } from './fasterCRUD'
+import { fixRoute } from 'src/utils/utils'
 import { checker_factories, pre_transformer_factories } from './fragments'
 import { exceptionMiddleware } from './middleware/exception.middleware'
 import { ObjectLiteral } from './fastcrud-gen/interface'
