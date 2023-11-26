@@ -54,6 +54,9 @@ export class AuthService {
   }
 
   async verifyToken(token: string) {
+    if (!token) {
+      throw new UnauthorizedException();
+    }
     return this.jwtService.verifyAsync(token);
   }
 

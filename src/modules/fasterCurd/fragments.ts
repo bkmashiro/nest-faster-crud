@@ -1,33 +1,42 @@
 import { ConfigCtx } from './decorators'
 import { isArrayOfFunctions } from './fasterCRUD'
 import validatorMap from './defaultValidators'
-import { AnyError } from 'typeorm'
+import { FormReq, PageQuery } from './fastcrud-gen/interface'
+import { CRUDMethods } from './fcrud-tokens'
 
-export function shape_checker({ options }: ConfigCtx) {
+export const IGNORE_ME = Symbol('ignore me')
+export type PendingCheckerType = ((data: any) => void) | typeof IGNORE_ME
+export type CheckerType = (data: any) => void
+export type PendingTransformerType = ((data: any) => any) | typeof IGNORE_ME
+export type TransformerType = (data: any) => any
+
+const form_requests: CRUDMethods[] = ['create', 'update', 'delete']
+const query_requests: CRUDMethods[] = ['read']
+function shape_checker({ options, action }: ConfigCtx) {
   const { rawInput } = options
-  let check_shape = (data: any) => data as any
-  if (!rawInput) {
+  let check_shape: PendingCheckerType = IGNORE_ME
+  if (!rawInput && form_requests.includes(action)) {
     check_shape = (data: any) => {
-      if (!data.hasOwnProperty('data')) {
-        throw new Error(`data not found, wrong input format`)
+      if (!data.hasOwnProperty('form')) {
+        throw new Error(`form not found, wrong input format`)
       }
     }
   }
   return check_shape
 }
 
-export function pagination_checker({ options }: ConfigCtx) {
-  let check_pagination = (_: any) => void 0
+function pagination_checker({ options }: ConfigCtx) {
+  let check_pagination: PendingCheckerType = IGNORE_ME
   const { pagination } = options
   if (pagination) {
-    check_pagination = (data: any) => {
+    check_pagination = ({ page }: PageQuery) => {
       // check if pagination is exist
-      if (!data.hasOwnProperty('pagination')) {
+      if (!page) {
         throw new Error(`pagination not found for paginated query`)
       }
 
       // check if pagination is valid
-      const { currentPage, pageSize } = data['pagination'] // currentPage is not checked here
+      const { currentPage, pageSize } = page // currentPage is not checked here
       if (
         !currentPage ||
         !pageSize ||
@@ -51,22 +60,67 @@ export function pagination_checker({ options }: ConfigCtx) {
   return check_pagination
 }
 
-export function except_checker({ options }: ConfigCtx) {
+const default_order = 'ASC'
+function sort_checker({ options }: ConfigCtx) {
+  const { sort: default_sort } = options
+  let check_sort: PendingCheckerType = IGNORE_ME
+  if (default_sort) {
+    check_sort = (query: PageQuery) => {
+      // query.sort: { prop: string, order: string }
+      // should be transformed to {[prop: string]: 'ASC' | 'DESC'}
+      // if not set, set it to default
+      console.log(query)
+      if (!query.hasOwnProperty('sort')) {
+        query.sort = default_sort
+        return check_sort
+      }
+      // if is empty, set it to default
+      if (Object.keys(query.sort).length === 0) {
+        query.sort = default_sort
+        return check_sort
+      }
+      console.log(query)
+      const { sort } = query //TODO if needs transform, check if this is correct
+      if (sort) {
+        if (typeof sort === 'string') {
+          query.sort = {
+            [sort]: default_order,
+          }
+        } else if (Array.isArray(sort)) {
+          query.sort = sort.reduce((acc, cur) => {
+            acc[cur] = default_order
+            return acc
+          }, {} as any)
+        } else if (typeof sort === 'object') {
+          query.sort = {
+            [sort.prop]: sort.order,
+          }
+        } else {
+          throw new Error(`sort must be string, array or object`)
+        }
+      }
+      
+    }
+  }
+  return check_sort
+}
+
+function except_checker({ options }: ConfigCtx) {//TODO sync this with requrie_checker
   const { expect } = options
-  let check_expect = ({data}: any) => void 0
+  let check_expect: PendingCheckerType = IGNORE_ME
   if (expect) {
     if (isArrayOfFunctions(expect)) {
-      check_expect = (data: any) => {
+      check_expect = ({ form }: FormReq) => {
         for (const func of expect) {
-          if (!func(data)) {
+          if (!func(form)) {
             throw new Error(`Expectation failed`)
           }
         }
       }
     } else if (typeof expect === 'function') {
       //TODO check if this is correct
-      check_expect = ({data}: any) => {
-        if (!expect(data)) {
+      check_expect = ({ form }: FormReq) => {
+        if (!expect(form)) {
           throw new Error(`Expectation failed`)
         }
       }
@@ -77,24 +131,27 @@ export function except_checker({ options }: ConfigCtx) {
   return check_expect
 }
 
-export function requrie_checker({ options }: ConfigCtx) {
+function requrie_checker({ options, fields }: ConfigCtx) {
   const { requires } = options
-  let check_requirements = (data: any) => void 0
+  let check_requirements: PendingCheckerType = IGNORE_ME
   if (requires && Array.isArray(requires) && requires.length > 0) {
-    check_requirements = ({ data }: any) => {
+    check_requirements = ({ form }: any) => {
       for (const field of requires) {
-        if (!data.hasOwnProperty(field)) {
-          throw new Error(
-            `Missing field ${String(field)} data: ${JSON.stringify(data)}`
-          )
+        if (!form.hasOwnProperty(field)) {
+          throw new Error(`Missing field ${String(field)} form`)
         }
       }
     }
   } else if (requires instanceof RegExp) {
-    check_requirements = ({ data }: any) => {
-      for (const field in data) {
-        if (!requires.test(field)) {
-          throw new Error(`Unexpected field ${String(field)}`)
+    check_requirements = ({ form }: any) => {
+      for (const [name, field] of Object.entries(fields)) {
+        console.log(name, field)
+        if (
+          requires.test(name) &&
+          !form.hasOwnProperty(name) &&
+          field.requires_override !== false // note that unset (undefined) is true
+        ) {
+          throw new Error(`Missing field ${String(name)} form`)
         }
       }
     }
@@ -102,20 +159,20 @@ export function requrie_checker({ options }: ConfigCtx) {
   return check_requirements
 }
 
-export function deny_checker({ options }: ConfigCtx) {
+function deny_checker({ options }: ConfigCtx) { //TODO sync this with requrie_checker
   const { denies } = options
-  let check_requirements = ({data}: any) => void 0
+  let check_requirements: PendingCheckerType = IGNORE_ME
   if (denies && Array.isArray(denies) && denies.length > 0) {
-    check_requirements = ({data}: any) => {
+    check_requirements = ({ form }: any) => {
       for (const field of denies) {
-        if (data.hasOwnProperty(field)) {
+        if (form.hasOwnProperty(field)) {
           throw new Error(`Denied field ${String(field)}`)
         }
       }
     }
   } else if (denies instanceof RegExp) {
-    check_requirements = ({data}: any) => {
-      for (const field in data) {
+    check_requirements = ({ form }: any) => {
+      for (const field in form) {
         if (denies.test(field)) {
           throw new Error(`Denied field ${String(field)}`)
         }
@@ -126,17 +183,17 @@ export function deny_checker({ options }: ConfigCtx) {
   return check_requirements
 }
 
-export function exactly_checker({ options }: ConfigCtx) {
+function exactly_checker({ options }: ConfigCtx) {//TODO sync this with requrie_checker
   const { exactly } = options
-  let check_requirements = ({data}: any) => void 0
+  let check_requirements: PendingCheckerType = IGNORE_ME
   if (exactly && Array.isArray(exactly) && exactly.length > 0) {
-    check_requirements = ({data}: any) => {
+    check_requirements = ({ form }: any) => {
       for (const field of exactly) {
-        if (!data.hasOwnProperty(field)) {
+        if (!form.hasOwnProperty(field)) {
           throw new Error(`Missing field ${String(field)}`)
         }
       }
-      for (const field in data) {
+      for (const field in form) {
         if (!exactly.includes(field)) {
           throw new Error(`Unexpected field ${String(field)}`)
         }
@@ -146,13 +203,13 @@ export function exactly_checker({ options }: ConfigCtx) {
   return check_requirements
 }
 
-export function type_checker({ options, fields }: ConfigCtx) {
+function type_checker({ options, fields }: ConfigCtx) {
   const { checkType } = options
-  let check_requirements = (data: any) => void 0
+  let check_requirements: PendingCheckerType = IGNORE_ME
   if (checkType) {
-    check_requirements = ({data}: any) => {
+    check_requirements = ({ form }: any) => {
       for (const [key, f] of Object.entries(fields)) {
-        const val = data[key]
+        const val = form[key]
         const validator: ((x: any) => boolean) | null =
           f.validator || validatorMap[f.type]
         if (!f.noCheck && validator) {
@@ -174,19 +231,19 @@ export function type_checker({ options, fields }: ConfigCtx) {
   return check_requirements
 }
 
-export function transform_return_processor({ options }: ConfigCtx) {
-  const { transformReturn } = options
-  let transform_data = (data: any) => data
-  if (transformReturn) {
+function transform_return_processor({ options }: ConfigCtx) {
+  const { transformQueryReturn } = options
+  let transform_query_return: PendingTransformerType = IGNORE_ME
+  if (transformQueryReturn) {
     //TODO add check for function
-    transform_data = transformReturn
+    transform_query_return = transformQueryReturn
   }
-  return transform_data
+  return transform_query_return
 }
 
-export function pre_transform_processor({ options }: ConfigCtx) {
+function pre_transform_processor({ options }: ConfigCtx) {
   const { transform } = options
-  let transform_data = (data: any) => data
+  let transform_data: PendingTransformerType = IGNORE_ME
   if (transform) {
     //TODO add check for function
     transform_data = transform
@@ -194,51 +251,65 @@ export function pre_transform_processor({ options }: ConfigCtx) {
   return transform_data
 }
 
-export function pagination_transformer({ options }: ConfigCtx) {
-  const { pagination, rawInput } = options
-  if (rawInput) {
-    return (data: any) => data
+// this is a special one
+function transform_after_processor({ options, action }: ConfigCtx) {
+  const { transformAfter } = options
+  if (transformAfter) {
+    // user's override, use it
+    return transformAfter
   }
+  let transform_after = (data: any, queryRet: any) => data
 
-  let transform_pagination = (data: {
-    data: any
-    pagination?: {
-      currentPage: number
-      pageSize: number
-    }
-  }) => {
-    return {
-      data: data.data,
+  if (form_requests.includes(action)) {
+    // if Create, Update, Delete, then return form
+    transform_after =  (data: any, queryRet: any) => {
+      return data.form
     }
   }
-  if (pagination) {
-    // add skip and limit to data
-    transform_pagination = (data: {
-      data: any
-      pagination?: {
-        currentPage: number
-        pageSize: number
-      }
-    }) => {
-      if (!data.hasOwnProperty('pagination')) {
-        throw new Error(`pagination not found for paginated query`)
-      }
-
-      const { currentPage, pageSize } = data['pagination'] // all start from 0
-      const skip = currentPage * pageSize
-      const take = pageSize
-      return {
-        data: data.data,
-        skip,
-        take,
-      }
+  if (query_requests.includes(action)) {
+    // if Read, then return records
+    transform_after =  (data: any, transformedQueryRet: any) => {
+      return transformedQueryRet
     }
   }
-  return transform_pagination
+  
+  return transform_after
 }
+
+// export function pagination_transformer({ options }: ConfigCtx) {
+//   const { pagination, rawInput } = options
+//   if (rawInput) {
+//     return (data: any) => data
+//   }
+
+//   let transform_pagination = (data: PageQuery) => {
+//     return {
+//       form: data.form,
+//     } as PageQuery
+//   }
+//   if (pagination) {
+//     // add skip and limit to data
+//     transform_pagination = (data: PageQuery) => {
+//       if (!data.hasOwnProperty('page')) {
+//         throw new Error(`pagination not found for paginated query`)
+//       }
+
+//       const { currentPage, pageSize } = data['page'] // all start from 0
+
+//       return {
+//         form: data.form,
+//         page: {
+//           currentPage,
+//           pageSize,
+//         }
+//     }
+//   }
+//   return transform_pagination
+// }
 
 export const checker_factories = [
   shape_checker,
+  sort_checker,
   requrie_checker,
   deny_checker,
   except_checker,
@@ -249,8 +320,9 @@ export const checker_factories = [
 
 export const pre_transformer_factories = [
   pre_transform_processor,
-  pagination_transformer,
-  transform_return_processor,
+  // pagination_transformer,
 ]
 
 export const post_transformer_factories = [transform_return_processor]
+
+export { transform_after_processor }

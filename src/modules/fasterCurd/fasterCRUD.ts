@@ -1,16 +1,8 @@
 import express = require('express')
-import {
-  BeforeActionOptions,
-  FieldOptions,
-  FieldOptionsObject,
-} from './decorators'
-import { deconstrcuOrNull } from 'src/utils/objectTools'
-import { Logger } from '@nestjs/common'
 import { Router } from 'express'
 import { Repository } from 'typeorm'
-import { Validator } from './defaultValidators'
-import { QueryData } from './FasterCrudService'
-export const logger = new Logger('FasterCRUDService')
+import { AddReq, DelReq, EditReq, PageQuery } from './fastcrud-gen/interface'
+import { Page } from "./fastcrud-gen/interface"
 
 type KeyType = string
 
@@ -21,56 +13,47 @@ export function isArrayOfFunctions(
 }
 
 export interface CRUDProvider<T> {
-  create(data: any): Promise<any>
-  read({
-    data,
-    skip,
-    take,
-  }: {
-    data: any
-    skip?: number
-    take?: number
-  }): Promise<any>
-  update(data: any): Promise<any>
-  delete(data: any): Promise<any>
+  create(data: AddReq): Promise<any>
+  read(query: PageQueryTransformed): Promise<any>
+  update(data: EditReq): Promise<any>
+  delete(data: DelReq): Promise<any>
 }
 
-export class TypeORMRepoAdapter<T>
-  implements CRUDProvider<T>
-{
+export class TypeORMRepoAdapter<T> implements CRUDProvider<T> {
   constructor(private readonly repo: Repository<T>) {}
-
-  async create({ data }: any) {
-    return await this.repo.insert(data)
-  }
-
-  async update(data: { find: any; update: any }) {
-    return await this.repo.update(data.find, data.update)
-  }
-
-  async delete(data: any) {
-    return await this.repo.delete(data)
-  }
-
-  async read({
-    data,
-    skip,
-    take,
-  }: {
-    data: any
-    skip?: number
-    take?: number
-  }) {
-    return await this.repo.find({
-      where: data,
-      skip,
-      take,
+  async read(query: PageQueryTransformed) {
+    console.log(query)
+    const [ret, count] = await this.repo.findAndCount({
+      where: query.form,
+      skip: (query.page.currentPage - 1) * query.page.pageSize,
+      take: query.page.pageSize,
+      order: query.sort as any,
     })
+    return {
+      records: ret,
+      currentPage: query.page.currentPage,
+      pageSize: query.page.pageSize,
+      total: count,
+    }
+  }
+
+  async create({ form }: AddReq) {
+    return await this.repo.insert(form)
+  }
+
+  async update({ form, row }: EditReq) {
+    return await this.repo.update(row, form)
+  }
+
+  async delete({ row }: DelReq) {
+    return await this.repo.delete(row)
   }
 }
 
 export class FasterCrudRouterBuilder {
   router: Router = express.Router()
+  pre_middlewares: express.RequestHandler[] = []
+  post_middlewares: express.RequestHandler[] = []
 
   constructor() {}
   setRoute(
@@ -78,8 +61,17 @@ export class FasterCrudRouterBuilder {
     path: string,
     handler: express.RequestHandler
   ) {
-    this.router[method](path, handler)
+    this.router[method](path, ...this.pre_middlewares, handler)
+    return this
+  }
 
+  addPreMiddlewares(...middleware: any[]) {
+    this.pre_middlewares.push(...middleware)
+    return this
+  }
+
+  addPostMiddlewares(...middleware: any[]) {
+    this.post_middlewares.push(...middleware)
     return this
   }
 
@@ -113,4 +105,18 @@ export function fixRoute(route: string) {
   } else {
     return `/${route}`
   }
+}export type PageQueryTransformed = {
+  /**
+   * 分页参数
+   */
+  page?: Page
+  /**
+   * 查询表单
+   */
+  form?: any
+  /**
+   * 远程排序配置
+   */
+  sort?: { [key: string]: 'ASC' | 'DESC'} 
 }
+

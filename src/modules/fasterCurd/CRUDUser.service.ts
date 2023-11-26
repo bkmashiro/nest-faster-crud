@@ -10,7 +10,7 @@ export class CRUDUserService {
   constructor(
     fasterCrudService: FasterCrudService,
     @InjectRepository(CRUDUser)
-    userRepo: Repository<CRUDUser>,
+    userRepo: Repository<CRUDUser>
   ) {
     fasterCrudService.generateCRUD(CRUDUser, new TypeORMRepoAdapter(userRepo))
   }

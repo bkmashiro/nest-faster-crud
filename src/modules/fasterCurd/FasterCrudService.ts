@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { HttpAdapterHost } from '@nestjs/core'
 import { Express } from 'express'
 import express = require('express')
@@ -8,31 +8,29 @@ import {
   CRUDMethods,
   FCRUD_GEN_CFG_TOKEN,
   FIELDS_TOKEN,
+  GEN_DATA_DICT_TOKEN,
   HttpMethods,
+  fcrud_prefix,
 } from './fcrud-tokens'
 import { ENTITY_NAME_TOKEN, GEN_CRUD_METHOD_TOKEN } from './fcrud-tokens'
 import { getProtoMeta } from './reflect.utils'
 import { defaultCrudMethod } from './fcrud-tokens'
-import { post_transformer_factories } from './fragments'
 import {
-  logger,
+  CheckerType,
+  IGNORE_ME,
+  TransformerType,
+  post_transformer_factories,
+  transform_after_processor,
+} from './fragments'
+import { FCrudJwtMiddleware } from './middleware/jwt.middleware'
+import {
   CRUDProvider,
   FasterCrudRouterBuilder,
   fixRoute,
   perform_task,
-  isArrayOfFunctions,
 } from './fasterCRUD'
-import {
-  checker_factories,
-  deny_checker,
-  exactly_checker,
-  except_checker,
-  pagination_checker,
-  requrie_checker,
-  shape_checker,
-  pre_transformer_factories,
-  type_checker,
-} from './fragments'
+import { checker_factories, pre_transformer_factories } from './fragments'
+import { exceptionMiddleware } from './middleware/exception.middleware'
 
 export type QueryData = {
   data: any
@@ -46,13 +44,19 @@ export type QueryData = {
   }
 }
 
+const logger = new Logger('FasterCRUDService')
+
 @Injectable()
 export class FasterCrudService {
   prefix = `dt-api/`
   default_method: HttpMethods = 'post'
 
-  constructor(private adapterHost: HttpAdapterHost) {
+  constructor(
+    private readonly adapterHost: HttpAdapterHost,
+    private readonly fCrudJwtMiddleware: FCrudJwtMiddleware
+  ) {
     this.app.use(express.json())
+
     logger.debug(
       `FasterCrudService created, attaching to ${this.adapterHost.httpAdapter.getType()}`
     )
@@ -72,29 +76,24 @@ export class FasterCrudService {
   }
 
   generateCRUD<T extends ClassType<T>>(entity: T, provider: CRUDProvider<T>) {
-    const fcrudName = getProtoMeta(entity, ENTITY_NAME_TOKEN) ?? entity.name
+    const {
+      docs: dict,
+      fcrudName,
+      fields,
+      doGenerateDataDict,
+    } = this.getEntityMeta<T>(entity)
     const router = new FasterCrudRouterBuilder()
-    const fields = getProtoMeta(entity, FIELDS_TOKEN) ?? {}
-    const docs = getProtoMeta(entity, FCRUD_GEN_CFG_TOKEN) ?? {}
-    // console.log(`fields`, fields)
-    // console.log(`docs`, docs)
-    router.setRoute('get', `/dict`, async function (req, res) {
-      res.status(200).json(docs)
-    })
-    logger.debug(`data dict for ${fcrudName} is `, docs)
-    logger.debug(
-      `data dict is avaliable at {/${
-        this.prefix
-      }${fcrudName.toLowerCase()}/dict, GET}`
-    )
+      .addPreMiddlewares(this.fCrudJwtMiddleware.FcrudJwtMiddleware)
+      .addPostMiddlewares(exceptionMiddleware)
+    console.log(fcrudName)
 
     // create all CRUD routes
     const actions: CRUDMethods[] =
       getProtoMeta(entity, GEN_CRUD_METHOD_TOKEN) ?? defaultCrudMethod
-
+    const docs = { crud: {}, dict: ''}
     for (const action of actions) {
       const method = provider[action].bind(provider) // have to bind to provider, otherwise this will be undefined
-      const action_token: BeforeActionTokenType = `before-action-${action}`
+      const action_token: BeforeActionTokenType = `${fcrud_prefix}before-action-${action}`
       const decoration_config = getProtoMeta(
         entity,
         action_token
@@ -104,6 +103,7 @@ export class FasterCrudService {
           options: decoration_config,
           target: entity,
           fields,
+          action,
         },
         method
       )
@@ -112,81 +112,93 @@ export class FasterCrudService {
       router.setRoute(this.default_method, route, async function (req, res) {
         await perform_task(req, decoratedMethod, res)
       })
+      docs.crud[action] = `/${fcrudName.toLowerCase()}${route}`
     }
+
+    if (doGenerateDataDict) {
+      docs.dict = `/${fcrudName.toLowerCase()}/dict`
+      router.setRoute('get', `/dict`, async function (req, res) {
+        res.status(200).json(dict)
+      })
+    }
+    router.setRoute('get', `/docs`, async function (req, res) {
+      res.status(200).json(docs)
+    })
 
     this.addRouter(`/${this.prefix}${fcrudName.toLowerCase()}`, router.build())
   }
 
+  private getEntityMeta<T extends ClassType<T>>(entity: T) {
+    const fcrudName = getProtoMeta(entity, ENTITY_NAME_TOKEN) ?? entity.name
+    const fields = getProtoMeta(entity, FIELDS_TOKEN) ?? {}
+    const docs = getProtoMeta(entity, FCRUD_GEN_CFG_TOKEN) ?? {}
+    const doGenerateDataDict = getProtoMeta(entity, GEN_DATA_DICT_TOKEN) ?? true
+    return { docs, fcrudName, fields, doGenerateDataDict }
+  }
+
   configureMethod<T extends ClassType<T>>(
-    { options, target, fields }: ConfigCtx<T>,
+    cfg: ConfigCtx<T>,
     method: (data: any) => Promise<any>
   ) {
-    if (!options) {
+    if (!cfg) {
       return method
     }
+    if (!cfg.options) {
+      cfg.options = {}
+    }
 
-    // const {
-    //   shape_checker, check_requirements, check_denies, check_exactly, check_type, check_expect, transform_data, transform_return, check_pagination, pagination_transformer,
-    // } = this.parseOptions2({ options, target, fields });
-
-    // const univariate_checkers = [
-    //   check_requirements,
-    //   check_denies,
-    //   check_exactly,
-    //   check_expect,
-    //   check_pagination,
-    //   shape_checker,
-    // ];
-    const { checkers, pre_transformers, post_transformers, hooks } =
-      this.parseOptions({
-        options,
-        target,
-        fields,
-      })
+    const {
+      checkers,
+      pre_transformers,
+      post_transformers,
+      hooks,
+      transform_after,
+    } = this.parseOptions(cfg)
     return async (data: any) => {
       try {
-        // run all checkers
-        for (const checker of checkers) {
-          checker(data)
-        }
-        for (const transformer of pre_transformers) {
-          data = transformer(data)
-        }
+        applyCheckers(checkers, data)
+
+        data = applyTransformers(pre_transformers, data)
 
         console.log(`exec with data:`, data)
 
-        let result = await method(data)
+        let queryResult = await method(data)
 
-        for (const transformer of post_transformers) {
-          result = transformer(result)
-        }
+        console.log(`exec result:`, queryResult)
 
-        return result
+        queryResult = applyTransformers(post_transformers, queryResult)
+
+        console.log(`transformed result:`, queryResult)
+        const after = transform_after(data, queryResult)
+        console.log(data, queryResult)
+        console.log(`transformed after:`, after)
+        return after
       } catch (e) {
+        logger.error(`error when executing method ${method.name}:`, e)
+        // logger.debug(`error data:`, data)
+        // logger.debug(`stack:`, e.stack)
         throw new Error(e.message)
       }
     }
   }
-  //TODO refactor this
-  // divide options into three parts
-  // 1. checkers
-  // 2. transformers
-  // 3. hooks
+
   private parseOptions(ctx: ConfigCtx) {
-    const [checkers, pre_transformers, post_transformers] = [
+    let [checkers, pre_transformers, post_transformers] = [
       checker_factories,
       pre_transformer_factories,
       post_transformer_factories,
     ].map((f) => {
-      return f.map((f) => f(ctx))
+      // get all products, and filter out empty ones
+      return f.map((f) => f(ctx)).filter((item) => item !== IGNORE_ME)
     })
 
-    const hooks = []
+    const hooks = [] //TODO: hooks are not implemented yet
 
     return {
-      checkers,
-      pre_transformers,
-      post_transformers,
+      checkers: checkers as CheckerType[],
+      pre_transformers: pre_transformers as TransformerType[],
+      post_transformers: post_transformers as TransformerType[],
+      transform_after: transform_after_processor(ctx),
       hooks,
     }
   }
@@ -194,4 +206,17 @@ export class FasterCrudService {
   get app(): Express {
     return this.adapterHost.httpAdapter.getInstance()
   }
+}
+
+function applyCheckers(checkers: CheckerType[], data: any) {
+  for (const checker of checkers) {
+    checker(data)
+  }
+}
+
+function applyTransformers(post_transformers: TransformerType[], result: any) {
+  for (const transformer of post_transformers) {
+    result = transformer(result)
+  }
+  return result
 }

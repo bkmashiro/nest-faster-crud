@@ -62,7 +62,7 @@ import { FasterCrudModule } from './modules/fasterCurd/fasterCrud.module';
       },
     }),
     EventEmitterModule.forRoot(),
-    MongooseModule.forRoot('mongodb://localhost:27017/'),
+    // MongooseModule.forRoot('mongodb://localhost:27017/'),
     TrackerModule,
     SioModule,
     DeviceModule,
