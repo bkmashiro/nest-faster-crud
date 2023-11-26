@@ -9,13 +9,15 @@ import {
   PageSort,
 } from './fastcrud-gen/interface'
 import { CRUDProvider } from './fasterCRUD'
+import { isEmptyObject } from 'src/utils/utils'
+import { deconstrcuOrNull } from 'src/utils/objectTools'
 
 export class TypeORMRepoAdapter<T extends ObjectLiteral>
   implements CRUDProvider<T>
 {
   constructor(private readonly repo: Repository<T>) {}
   async read(query: PageQuery<T>): Promise<PageRes<T>> {
-    console.log(query)
+    // console.log(query)
     //TODO add convert
     const [ret, count] = await this.repo.findAndCount({
       where: query.form,
@@ -44,13 +46,16 @@ export class TypeORMRepoAdapter<T extends ObjectLiteral>
     return await this.repo.delete(row)
   }
 
-  parseSort<T>(sort: PageSort<T>): { [key in keyof T]?: 'ASC' | 'DESC' } {
-    let { prop, order, asc } = sort
+  parseSort<T>(sort: PageSort<T> | { [key in keyof T]?: 'ASC' | 'DESC' }): { [key in keyof T]?: 'ASC' | 'DESC' } {
+    if (Object.values(sort).every((v) => v === 'ASC' || v === 'DESC')) { //TODO clean up
+      return sort as { [key in keyof T]?: 'ASC' | 'DESC' }
+    }
+    const { prop, order, asc } = sort as PageSort<T>
     // what if prop is not a key of T?
     // can not do check here, we have to assume it is a key of T
     // if any error, it will be caught by typeorm
-    const _order = fixOrder(order)
     if (prop && order) {
+      const _order = fixOrder(order)
       return {
         [prop]: _order,
       } as any
@@ -58,9 +63,10 @@ export class TypeORMRepoAdapter<T extends ObjectLiteral>
       return {
         [prop]: asc ? 'ASC' : 'DESC',
       } as any
-    } else if (!sort) {
+    } else if (!sort || isEmptyObject(sort)) {
       return {}
     } else {
+      // console.log(`sort`, sort)
       throw new Error(`invalid sort`)
     }
   }
