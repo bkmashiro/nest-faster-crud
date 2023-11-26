@@ -1,5 +1,5 @@
 export function getProtoMeta(
-  target: { prototype: Object },
+  target: any,
   field: any,
   default_value = null
 ) {
@@ -7,7 +7,7 @@ export function getProtoMeta(
 }
 
 export function mergeProtoMeta(
-  target: { prototype: Object },
+  target: any,
   field: any,
   value: any
 ) {

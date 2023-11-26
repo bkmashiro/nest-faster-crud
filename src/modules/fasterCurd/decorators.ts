@@ -18,6 +18,7 @@ import {
 import { CRUDMethods } from './fcrud-tokens'
 import { FC, FastCrudFieldOptions } from './fastcrud-gen/fastcrud.decorator'
 import { applyDecorators } from '@nestjs/common'
+import { ObjectLiteral } from 'typeorm'
 
 export type FieldOptions = Partial<{
   name: string
@@ -88,7 +89,7 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
 
 export type FieldSelector<T> = (keyof T)[] | RegExp
 
-export type BeforeActionOptions<T extends {}> = {
+export type BeforeActionOptions<T extends ObjectLiteral> = {
   /**
    * if enabled, the input data will not be transformed
    * that means, pagination, sort, etc. will not be parsed
@@ -122,11 +123,11 @@ export type ClassType<T extends abstract new (...args: any) => any> = {
   new (...args: any[]): InstanceType<T>
 }
 
-export type PartialBeforeActionOptions<T extends ClassType<T>> = Partial<
-  BeforeActionOptions<InstanceType<T>>
+export type PartialBeforeActionOptions<T extends ObjectLiteral> = Partial<
+  BeforeActionOptions<T>
 >
 
-export type ConfigCtx<T extends ClassType<T> = any> = {
+export type ConfigCtx<T extends ObjectLiteral = any> = {
   options: PartialBeforeActionOptions<T>
   target: T
   fields: FieldOptionsObject
