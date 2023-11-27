@@ -83,6 +83,18 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
 
 type FieldSelector<T> = (keyof T)[] | RegExp
 
+type Only<T, K extends keyof T> = Pick<T, K>
+
+type ShapeOptions<T> = Partial<
+  | ({
+      requires: FieldSelector<T>
+      denies: FieldSelector<T>
+    } & { exactly: never })
+  | ({
+      exactly: (keyof T)[]
+    } & { requires: never; denies: never })
+>
+
 export type BeforeActionOptions<T> = Partial<{
   /**
    * if enabled, the input data will not be transformed
@@ -98,9 +110,9 @@ export type BeforeActionOptions<T> = Partial<{
   }
   allow_sort: FieldSelector<T>
   checkType: boolean
-  requires: FieldSelector<T>
-  denies: FieldSelector<T>
-  exactly: (keyof T)[] // Not support regex
+  // requires: FieldSelector<T>
+  // denies: FieldSelector<T>
+  // exactly: (keyof T)[] // Not support regex
   route: string
   expect: ((data: T) => boolean) | ((data: T) => boolean)[]
   transform: (data: T) => T
@@ -111,7 +123,8 @@ export type BeforeActionOptions<T> = Partial<{
   onTransformFailure: (data: T) => any
   onExecFailure: (data: T) => any
   ctx: object | null
-}>
+}> &
+  ShapeOptions<T>
 
 export type ConfigCtx<T extends ObjectLiteral = any> = {
   options: BeforeActionOptions<T>
