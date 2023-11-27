@@ -83,16 +83,26 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
 
 type FieldSelector<T> = (keyof T)[] | RegExp
 
-type Only<T, K extends keyof T> = Pick<T, K>
+type Only<T, K extends keyof T> = { [P in keyof T]: P extends K ? T[P] : never }
+
+// type ShapeOptions<T> = Partial<
+//   | ({
+//       requires: FieldSelector<T>
+//       denies: FieldSelector<T>
+//     } & { exactly: never })
+//   | ({
+//       exactly: (keyof T)[]
+//     } & { requires: never; denies: never })
+// >
+type FullShapeOptions<T> = {
+  requires: FieldSelector<T>
+  denies: FieldSelector<T>
+  exactly: (keyof T)[]
+}
 
 type ShapeOptions<T> = Partial<
-  | ({
-      requires: FieldSelector<T>
-      denies: FieldSelector<T>
-    } & { exactly: never })
-  | ({
-      exactly: (keyof T)[]
-    } & { requires: never; denies: never })
+  | Only<FullShapeOptions<T>, 'requires' | 'denies'>
+  | Only<FullShapeOptions<T>, 'exactly'>
 >
 
 export type BeforeActionOptions<T> = Partial<{
