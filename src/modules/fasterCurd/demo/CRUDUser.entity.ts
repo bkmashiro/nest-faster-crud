@@ -8,7 +8,7 @@ import { $ } from '../crud-gen/fast-crud.decorator'
   expect: (x) => x.name.length > 3,
 })
 @Read({ sort: { id: 'ASC' } })
-@CRUD({ name: 'user' })
+@CRUD({ name: 'crud-user' })
 @IgnoreField(['id'])
 export class CRUDUser {
   @PrimaryGeneratedColumn()

@@ -4,7 +4,6 @@ import {
   ENTITY_NAME_TOKEN,
   FIELDS_TOKEN,
   GEN_CRUD_METHOD_TOKEN,
-  GEN_DATA_DICT_TOKEN,
   IGNORE_FIEIDS_TOKEN,
   fcrud_prefix,
 } from './backend/fc.tokens'
@@ -72,7 +71,6 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
     // console.log(fields)
     setProtoMeta(target, ENTITY_NAME_TOKEN, options.name)
     setProtoMeta(target, GEN_CRUD_METHOD_TOKEN, options.methods)
-    setProtoMeta(target, GEN_DATA_DICT_TOKEN, options.exposeDict)
     // remove ignored fields
     if (li && Array.isArray(li) && fields) {
       for (const field of li) {
@@ -84,6 +82,19 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
 }
 
 type FieldSelector<T> = (keyof T)[] | RegExp
+
+export type Only<T, K extends keyof T> = { [P in keyof T]: P extends K ? T[P] : never }
+
+type FullShapeOptions<T> = {
+  requires: FieldSelector<T>
+  denies: FieldSelector<T>
+  exactly: (keyof T)[]
+}
+
+type ShapeOptions<T> = Partial<
+  | Only<FullShapeOptions<T>, 'requires' | 'denies'>
+  | Only<FullShapeOptions<T>, 'exactly'>
+>
 
 export type BeforeActionOptions<T> = Partial<{
   /**
@@ -100,9 +111,9 @@ export type BeforeActionOptions<T> = Partial<{
   }
   allow_sort: FieldSelector<T>
   checkType: boolean
-  requires: FieldSelector<T>
-  denies: FieldSelector<T>
-  exactly: (keyof T)[] // Not support regex
+  // requires: FieldSelector<T>
+  // denies: FieldSelector<T>
+  // exactly: (keyof T)[] // Not support regex
   route: string
   expect: ((data: T) => boolean) | ((data: T) => boolean)[]
   transform: (data: T) => T
@@ -113,7 +124,8 @@ export type BeforeActionOptions<T> = Partial<{
   onTransformFailure: (data: T) => any
   onExecFailure: (data: T) => any
   ctx: object | null
-}>
+}> &
+  ShapeOptions<T>
 
 export type ConfigCtx<T extends ObjectLiteral = any> = {
   options: BeforeActionOptions<T>
