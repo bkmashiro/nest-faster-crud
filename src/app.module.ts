@@ -11,7 +11,7 @@ import { UsermetaModule } from './modules/usermeta/usermeta.module';
 import { BullModule } from '@nestjs/bull';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
-import { FasterCrudModule } from './modules/fasterCurd/fc.module';
+import { FasterCrudModule } from './modules/faster-curd/fc.module';
 
 @Module({
   imports: [

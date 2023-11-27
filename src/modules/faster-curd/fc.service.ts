@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { HttpAdapterHost } from '@nestjs/core'
 import { Express } from 'express'
 import express = require('express')
-import { BeforeActionOptions, ConfigCtx } from './fc.decorators'
+import { ConfigCtx } from './fc.decorators'
 import {
   BeforeActionTokenType,
   CRUDMethods,
@@ -38,11 +38,12 @@ import {
   PageQuery,
   PageRes,
 } from './crud-gen/fast-crud.decl'
+import { FC_PREFIX } from './config'
 const logger = new Logger('FasterCRUDService')
 const POST: HttpMethods = 'post'
 @Injectable()
 export class FasterCrudService {
-  prefix = `/dt-api`
+  prefix = FC_PREFIX
 
   constructor(
     private readonly adapterHost: HttpAdapterHost,
