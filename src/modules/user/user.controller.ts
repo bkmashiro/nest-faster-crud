@@ -72,7 +72,6 @@ export class UserController {
   @Roles(ROLES.USER)
   @Get(':id')
   findOne(@Param('id') id: string) {
-    console.log('findOne', id);
     return this.userService.findOne(+id);
   }
 

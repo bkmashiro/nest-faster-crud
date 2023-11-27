@@ -72,8 +72,7 @@ export class FasterCrudService {
     target: T,
     provider: CRUDProvider<InstanceType<T>>
   ) {
-    const { dict, fcrudName, fields } =
-      this.parseEntityMeta(target)
+    const { dict, fcrudName, fields } = this.parseEntityMeta(target)
 
     const router = new RouterBuilder()
       .addPreMiddlewares(this.fCrudJwtMiddleware.FcrudJwtMiddleware)
