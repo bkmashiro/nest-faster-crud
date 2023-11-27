@@ -1,3 +1,4 @@
+# Nest Faster CRUD template
 
 ## Installation
 
@@ -18,6 +19,3 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
-# TODO
-
-- 实现生命周期钩子
