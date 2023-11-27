@@ -4,7 +4,6 @@ import {
   ENTITY_NAME_TOKEN,
   FIELDS_TOKEN,
   GEN_CRUD_METHOD_TOKEN,
-  GEN_DATA_DICT_TOKEN,
   IGNORE_FIEIDS_TOKEN,
   fcrud_prefix,
 } from './backend/fc.tokens'
@@ -72,7 +71,6 @@ export function CRUD<T extends { new (...args: any[]): InstanceType<T> }>(
     // console.log(fields)
     setProtoMeta(target, ENTITY_NAME_TOKEN, options.name)
     setProtoMeta(target, GEN_CRUD_METHOD_TOKEN, options.methods)
-    setProtoMeta(target, GEN_DATA_DICT_TOKEN, options.exposeDict)
     // remove ignored fields
     if (li && Array.isArray(li) && fields) {
       for (const field of li) {

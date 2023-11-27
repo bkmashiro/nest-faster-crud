@@ -8,7 +8,6 @@ import {
   CRUDMethods,
   FCRUD_GEN_CFG_TOKEN,
   FIELDS_TOKEN,
-  GEN_DATA_DICT_TOKEN,
   HttpMethods,
   fcrud_prefix,
 } from './backend/fc.tokens'
@@ -73,7 +72,7 @@ export class FasterCrudService {
     target: T,
     provider: CRUDProvider<InstanceType<T>>
   ) {
-    const { dict, fcrudName, fields, doGenerateDataDict } =
+    const { dict, fcrudName, fields } =
       this.parseEntityMeta(target)
 
     const router = new RouterBuilder()
@@ -84,7 +83,7 @@ export class FasterCrudService {
     const actions: CRUDMethods[] =
       getProtoMeta(target, GEN_CRUD_METHOD_TOKEN) ?? defaultCrudMethod
 
-    const docs: any = { crud: {} }
+    const docs: any = { crud: {}, dict }
     for (const action of actions) {
       const method = provider[action].bind(provider) // have to bind to provider, otherwise this will be undefined
       const action_token: BeforeActionTokenType = `${fcrud_prefix}before-action-${action}`
@@ -99,12 +98,6 @@ export class FasterCrudService {
       docs.crud[action] = `/${fcrudName}${route}`
     }
 
-    if (doGenerateDataDict) {
-      docs.dict = `/${fcrudName}/dict`
-      router.setRoute('get', `/dict`, async function (req, res) {
-        res.status(200).json(dict)
-      })
-    }
     router.setRoute('get', `/docs`, async function (req, res) {
       res.status(200).json(docs)
     })
@@ -118,8 +111,8 @@ export class FasterCrudService {
     ).toLowerCase()
     const fields = getProtoMeta(entity, FIELDS_TOKEN) ?? {}
     const dict = getProtoMeta(entity, FCRUD_GEN_CFG_TOKEN) ?? {}
-    const doGenerateDataDict = getProtoMeta(entity, GEN_DATA_DICT_TOKEN) ?? true
-    return { dict, fcrudName, fields, doGenerateDataDict }
+
+    return { dict, fcrudName, fields }
   }
 
   configureMethod<T extends ObjectLiteral>(
