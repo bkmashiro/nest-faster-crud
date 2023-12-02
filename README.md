@@ -10,7 +10,7 @@ We created a simple CRUDUser class, and generated CRUD end points for it.
 see [demo](https://github.com/bkmashiro/nest-faster-crud/blob/main/src/modules/faster-curd/demo/CRUDUser.entity.ts)
 ```ts
 @Create({
-  // required fiedls, array and regex are supported
+  // required fields, array and regex are supported
   requires: /.*/,
   // will check name.length > 3
   expect: (x) => x.name.length > 3, 
