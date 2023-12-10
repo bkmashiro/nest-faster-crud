@@ -5,6 +5,10 @@ Generate CRUD end points automatically with an entity.
 
 This is an experimental & WIP project.
 
+**Note:** this is a branch of a private project. The crud part will be transfered from original repos from time to time.
+
+So this updates in this repo will be delayed.
+
 ## Examples
 We created a simple CRUDUser class, and generated CRUD end points for it.
 see [demo](https://github.com/bkmashiro/nest-faster-crud/blob/main/src/modules/faster-curd/demo/CRUDUser.entity.ts)
