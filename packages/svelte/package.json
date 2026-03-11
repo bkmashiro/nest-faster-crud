@@ -15,11 +15,11 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
-    "@faster-crud/core": "^0.2.0"
+    "@faster-crud/core": "workspace:*"
   },
   "peerDependencies": {
     "svelte": "^5.0.0",
-    "@faster-crud/core": "^0.2.0"
+    "@faster-crud/core": "workspace:*"
   },
   "devDependencies": {
     "svelte": "^5.0.0",

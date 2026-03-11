@@ -10,14 +10,14 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
-    "@faster-crud/nest": "^0.2.0"
+    "@faster-crud/nest": "workspace:*"
   },
   "peerDependencies": {
-    "@faster-crud/core": "^0.2.0",
+    "@faster-crud/core": "workspace:*",
     "@prisma/client": "^5.0.0"
   },
   "devDependencies": {
-    "@faster-crud/core": "^0.2.0",
+    "@faster-crud/core": "workspace:*",
     "@nestjs/common": "^11.0.0",
     "@types/jest": "^29.5.0",
     "jest": "^29.7.0",

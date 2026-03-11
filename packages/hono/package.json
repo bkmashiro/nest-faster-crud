@@ -11,11 +11,11 @@
   },
   "peerDependencies": {
     "hono": "^4.0.0",
-    "@faster-crud/core": "^0.2.0"
+    "@faster-crud/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.4.0",
     "hono": "^4.0.0",
-    "@faster-crud/core": "^0.2.0"
+    "@faster-crud/core": "workspace:*"
   }
 }

@@ -18,7 +18,7 @@
     "dev": "tsc -w"
   },
   "peerDependencies": {
-    "@faster-crud/core": "^0.2.0",
+    "@faster-crud/core": "workspace:*",
     "@nestjs/common": "^10",
     "@nestjs/jwt": "^10",
     "reflect-metadata": "^0.2.0"

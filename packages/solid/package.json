@@ -10,11 +10,11 @@
     "dev": "tsc -w"
   },
   "dependencies": {
-    "@faster-crud/core": "^0.2.0"
+    "@faster-crud/core": "workspace:*"
   },
   "peerDependencies": {
     "solid-js": "^1.8.0",
-    "@faster-crud/core": "^0.2.0"
+    "@faster-crud/core": "workspace:*"
   },
   "devDependencies": {
     "solid-js": "^1.8.0",

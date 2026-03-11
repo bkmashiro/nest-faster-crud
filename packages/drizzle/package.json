@@ -10,11 +10,11 @@
     "test": "jest --passWithNoTests"
   },
   "peerDependencies": {
-    "@faster-crud/core": "^0.2.0",
+    "@faster-crud/core": "workspace:*",
     "drizzle-orm": "^0.29.0"
   },
   "devDependencies": {
-    "@faster-crud/core": "^0.2.0",
+    "@faster-crud/core": "workspace:*",
     "drizzle-orm": "^0.29.5",
     "typescript": "^5.4.0"
   }
