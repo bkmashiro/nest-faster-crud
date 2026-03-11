@@ -2,6 +2,8 @@ import 'reflect-metadata';
 import { getFieldsMeta, FieldMeta } from '@faster-crud/core';
 import { applySwaggerToField, isSwaggerAvailable, resolveFieldType } from './swagger';
 
+declare const require: (id: string) => unknown;
+
 type DtoOperation = 'create' | 'update';
 
 type ValidatorModule = {

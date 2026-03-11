@@ -1,5 +1,7 @@
 import { CrudOperation, FieldMeta } from '@faster-crud/core';
 
+declare const require: (id: string) => unknown;
+
 type SwaggerModule = {
   ApiOperation: (options: { summary: string }) => MethodDecorator;
   ApiProperty: (options?: Record<string, unknown>) => PropertyDecorator;
