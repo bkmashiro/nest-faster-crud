@@ -2,8 +2,17 @@
   "name": "@faster-crud/gen",
   "version": "0.1.0",
   "description": "Code generation stub for @faster-crud (Phase 2)",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "bin": {
+    "fcrud": "dist/index.js"
+  },
   "scripts": {
-    "build": "echo 'gen: nothing to build yet'"
+    "build": "tsc"
+  },
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "typescript": "^5.4.0"
   }
 }
