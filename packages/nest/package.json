@@ -1,16 +1,18 @@
 {
   "name": "@faster-crud/nest",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "NestJS integration for @faster-crud",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w"
   },
   "dependencies": {
-    "@faster-crud/core": "workspace:*"
+    "@faster-crud/core": "^0.1.0"
   },
   "peerDependencies": {
     "@nestjs/common": "^10.0.0",
