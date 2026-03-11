@@ -1,0 +1,32 @@
+{
+  "name": "@faster-crud/auth",
+  "version": "0.2.0",
+  "description": "JWT auth integration for @faster-crud with NestJS guards and decorators",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w"
+  },
+  "peerDependencies": {
+    "@faster-crud/core": "^0.2.0",
+    "@nestjs/common": "^10",
+    "@nestjs/jwt": "^10",
+    "reflect-metadata": "^0.2.0"
+  },
+  "devDependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/jwt": "^10.0.0",
+    "reflect-metadata": "^0.2.0",
+    "typescript": "^5.4.0"
+  }
+}
