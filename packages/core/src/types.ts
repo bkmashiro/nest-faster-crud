@@ -46,9 +46,20 @@ export interface ResourceMeta {
 
 export type CreateDto<T> = Omit<T, '_meta'>;
 
+export type FilterOperator = 'eq' | 'ne' | 'lt' | 'lte' | 'gt' | 'gte' | 'like' | 'in' | 'between';
+
+export interface FilterValue {
+  op: FilterOperator;
+  value: any;
+}
+
+export type PageFilters<T> = Partial<{
+  [K in keyof T]: T[K] | FilterValue;
+}>;
+
 export interface PageQuery<T = any> {
   page?: { current: number; size: number };
-  filters?: Partial<T>;
+  filters?: PageFilters<T>;
   sort?: { field: keyof T; order: 'asc' | 'desc' };
 }
 

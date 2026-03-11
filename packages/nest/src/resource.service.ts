@@ -10,6 +10,12 @@ export interface IResourceService<T> {
 }
 
 export interface IBaseResourceService<T> extends IResourceService<T> {
+  onBeforeCreate(dto: Partial<T>): Promise<Partial<T>>;
+  onAfterCreate(entity: T): Promise<void>;
+  onBeforeUpdate(id: number, dto: Partial<T>): Promise<Partial<T>>;
+  onAfterUpdate(entity: T): Promise<void>;
+  onBeforeRemove(id: number): Promise<void>;
+  onAfterRemove(id: number): Promise<void>;
   validateCreate(dto: any): void;
   filterForView(record: any, view: 'list' | 'get'): any;
 }
@@ -24,6 +30,22 @@ export function ResourceService<T>(entity: new(...args: any[]) => T): Type<IBase
     abstract get(id: number): Promise<T | null>;
     abstract update(id: number, dto: Partial<T>): Promise<T>;
     abstract remove(id: number): Promise<void>;
+
+    async onBeforeCreate(dto: Partial<T>): Promise<Partial<T>> {
+      return dto;
+    }
+
+    async onAfterCreate(_entity: T): Promise<void> {}
+
+    async onBeforeUpdate(_id: number, dto: Partial<T>): Promise<Partial<T>> {
+      return dto;
+    }
+
+    async onAfterUpdate(_entity: T): Promise<void> {}
+
+    async onBeforeRemove(_id: number): Promise<void> {}
+
+    async onAfterRemove(_id: number): Promise<void> {}
 
     protected validateCreate(dto: any): void {
       for (const [key, field] of Object.entries(this.fieldsMeta)) {

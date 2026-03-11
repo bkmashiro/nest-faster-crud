@@ -1,8 +1,11 @@
+import 'reflect-metadata';
 import {
   Controller, Get, Post, Patch, Delete, Body, Param, Query,
   Injectable, Inject, Type,
 } from '@nestjs/common';
 import { getResourceMeta } from '@faster-crud/core';
+import { buildDto, shouldUseDtoMetatype } from './dto.factory';
+import { applySwaggerToController } from './swagger';
 
 export class CrudControllerFactory {
   static create(entity: Function, ServiceClass: Type<any>): Type<any> {
@@ -10,6 +13,8 @@ export class CrudControllerFactory {
     if (!meta) throw new Error(`@Resource decorator not found on ${entity.name}`);
 
     const { name, operations } = meta;
+    const createDto = operations.includes('create') ? buildDto(entity, 'create') : null;
+    const updateDto = operations.includes('update') ? buildDto(entity, 'update') : null;
 
     @Controller(name)
     class CrudController {
@@ -27,6 +32,9 @@ export class CrudControllerFactory {
       Post()(CrudController.prototype, 'create', descriptor);
       Body()(CrudController.prototype, 'create', 0);
       Object.defineProperty(CrudController.prototype, 'create', descriptor);
+      if (createDto && shouldUseDtoMetatype()) {
+        Reflect.defineMetadata('design:paramtypes', [createDto], CrudController.prototype, 'create');
+      }
     }
 
     if (operations.includes('list')) {
@@ -67,6 +75,9 @@ export class CrudControllerFactory {
       Param('id')(CrudController.prototype, 'update', 0);
       Body()(CrudController.prototype, 'update', 1);
       Object.defineProperty(CrudController.prototype, 'update', descriptor);
+      if (updateDto && shouldUseDtoMetatype()) {
+        Reflect.defineMetadata('design:paramtypes', [String, updateDto], CrudController.prototype, 'update');
+      }
     }
 
     if (operations.includes('remove')) {
@@ -83,6 +94,7 @@ export class CrudControllerFactory {
     }
 
     Injectable()(CrudController);
+    applySwaggerToController(CrudController, name, operations);
 
     return CrudController;
   }
