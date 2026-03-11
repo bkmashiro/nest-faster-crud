@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Col, Resource } from '@faster-crud/core';
+import { Col, Resource, getFieldsMeta } from '@faster-crud/core';
 import { CrudResolver, GraphQLCrudModule, ICrudService } from '../index';
 
 // ---------------------------------------------------------------------------
@@ -128,6 +128,29 @@ describe('CrudResolver', () => {
 
     expect(service.remove).toHaveBeenCalledWith(1);
     expect(result).toBe(true);
+  });
+});
+
+describe('Entity @Col metadata alignment', () => {
+  it('entity fields registered via @Col are available in metadata', () => {
+    const fields = getFieldsMeta(Item);
+    expect(fields).toHaveProperty('name');
+    expect(fields).toHaveProperty('price');
+    expect(fields.name.label).toBe('Name');
+    expect(fields.price.label).toBe('Price');
+  });
+
+  it('resolver operations match resource operations', () => {
+    const service = new MockItemService();
+    const ResolverClass = CrudResolver(Item, MockItemService as any);
+    const resolver = new ResolverClass(service);
+
+    // All 5 operations should produce methods
+    expect(resolver.itemsList).toBeDefined();
+    expect(resolver.items).toBeDefined();
+    expect(resolver.createItems).toBeDefined();
+    expect(resolver.updateItems).toBeDefined();
+    expect(resolver.removeItems).toBeDefined();
   });
 });
 
