@@ -8,10 +8,28 @@ export class UserService extends ResourceService(User) {
   private store: (User & { id: number })[] = [];
   private seq = 1;
 
+  // ── Lifecycle Hooks ──────────────────────────────────
+  async onBeforeCreate(dto: Partial<User>): Promise<Partial<User>> {
+    dto.createdAt = new Date();
+    console.log('[hook] onBeforeCreate — stamped createdAt');
+    return dto;
+  }
+
+  async onAfterCreate(entity: User): Promise<void> {
+    console.log(`[hook] onAfterCreate — user #${entity.id} created`);
+  }
+
+  async onBeforeRemove(id: number): Promise<void> {
+    console.log(`[hook] onBeforeRemove — about to delete user #${id}`);
+  }
+
+  // ── CRUD Implementation ──────────────────────────────
   async create(dto: Partial<User>): Promise<User> {
-    this.validateCreate(dto);
-    const u = { ...dto, id: this.seq++, createdAt: new Date(), role: 'user' } as User & { id: number };
+    const nextDto = await this.onBeforeCreate(dto);
+    this.validateCreate(nextDto);
+    const u = { ...nextDto, id: this.seq++, role: 'user' } as User & { id: number };
     this.store.push(u);
+    await this.onAfterCreate(u);
     return u;
   }
 
@@ -39,6 +57,7 @@ export class UserService extends ResourceService(User) {
   }
 
   async remove(id: number): Promise<void> {
+    await this.onBeforeRemove(id);
     this.store = this.store.filter(x => x.id !== id);
   }
 }
