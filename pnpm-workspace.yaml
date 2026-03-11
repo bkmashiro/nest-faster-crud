@@ -1,5 +1,6 @@
 packages:
   - 'packages/*'
+  - 'packages/validation'
   - 'packages/drizzle'
   - 'packages/prisma'
   - 'packages/express'

@@ -1,0 +1,37 @@
+{
+  "name": "@faster-crud/validation",
+  "version": "0.1.0",
+  "description": "Standalone validation utilities for @faster-crud",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./nest-pipe": {
+      "types": "./dist/nest-pipe.d.ts",
+      "default": "./dist/nest-pipe.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w"
+  },
+  "peerDependencies": {
+    "@faster-crud/core": "^0.1.0",
+    "@nestjs/common": "^10.0.0 || ^11.0.0",
+    "reflect-metadata": "^0.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@nestjs/common": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
