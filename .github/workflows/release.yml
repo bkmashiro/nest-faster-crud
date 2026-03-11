@@ -1,0 +1,98 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to apply to all publishable packages
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump package versions
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          packages=(
+            core
+            nest
+            typeorm
+            hono
+            express
+            fastify
+            prisma
+            drizzle
+            mongoose
+            mikro-orm
+            react
+            svelte
+            gen
+          )
+
+          for pkg in "${packages[@]}"; do
+            pkg_dir="packages/$pkg"
+            if [[ ! -f "$pkg_dir/package.json" ]]; then
+              echo "Skipping $pkg_dir/package.json because it does not exist."
+              continue
+            fi
+
+            node -e '
+              const fs = require("fs");
+              const path = process.argv[1];
+              const version = process.env.RELEASE_VERSION;
+              const data = JSON.parse(fs.readFileSync(path, "utf8"));
+              data.version = version;
+              fs.writeFileSync(path, JSON.stringify(data, null, 2) + "\n");
+            ' "$pkg_dir/package.json"
+          done
+
+      - name: Commit release
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          git add packages/*/package.json
+          git commit -m "release: v${RELEASE_VERSION}"
+
+      - name: Tag release
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: git tag "v${RELEASE_VERSION}"
+
+      - name: Push release commit and tag
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          git push origin HEAD:main
+          git push origin "v${RELEASE_VERSION}"
