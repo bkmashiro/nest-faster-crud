@@ -209,6 +209,14 @@ describe('createCrudStore', () => {
     expect(store.sort).toEqual({ field: 'id', order: 'asc' });
   });
 
+  it('loading is false after fetchList completes', async () => {
+    mockFetch({ 'api/users?': LIST_FIXTURE });
+    const store = createCrudStore<any>(BASE);
+
+    await store.fetchList();
+    expect(store.loading).toBe(false);
+  });
+
   it('skips empty/null filter values in query params', async () => {
     mockFetch({ 'api/users?': LIST_FIXTURE });
     const store = createCrudStore<any>(BASE);
