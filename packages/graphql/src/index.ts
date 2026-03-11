@@ -196,7 +196,7 @@ export function CrudResolver<T>(Entity: Function, Service: Type<ICrudService<T>>
 
   @Resolver(() => GqlType)
   class GqlResolver {
-    constructor(private readonly service: ICrudService<T>) {}
+    public service: ICrudService<T>; constructor(svc: ICrudService<T>) { this.service = svc; }
   }
 
   // Inject the service
@@ -204,14 +204,14 @@ export function CrudResolver<T>(Entity: Function, Service: Type<ICrudService<T>>
 
   /* -- list -------------------------------------------------------- */
   if (ops.includes('list')) {
-    GqlResolver.prototype[listName] = async function (query: any) {
+    (GqlResolver.prototype as any)[listName] = async function (query: any) {
       const pageQuery: PageQuery<T> = {
         page: { current: query?.page ?? 1, size: query?.size ?? 20 },
       };
       if (query?.sortField) {
         pageQuery.sort = { field: query.sortField as keyof T, order: (query.sortOrder as any) ?? 'asc' };
       }
-      return this.service.list(pageQuery);
+      return (this as any).service.list(pageQuery);
     };
     Query(() => PageResult, { name: listName })(GqlResolver.prototype, listName, Object.getOwnPropertyDescriptor(GqlResolver.prototype, listName)!);
     Args('query', { type: () => PageQueryInputType, nullable: true })(GqlResolver.prototype, listName, 0);
@@ -219,8 +219,8 @@ export function CrudResolver<T>(Entity: Function, Service: Type<ICrudService<T>>
 
   /* -- get --------------------------------------------------------- */
   if (ops.includes('get')) {
-    GqlResolver.prototype[getName] = async function (id: number) {
-      return this.service.get(id);
+    (GqlResolver.prototype as any)[getName] = async function (id: number) {
+      return (this as any).service.get(id);
     };
     Query(() => GqlType, { name: getName, nullable: true })(GqlResolver.prototype, getName, Object.getOwnPropertyDescriptor(GqlResolver.prototype, getName)!);
     Args('id', { type: () => Int })(GqlResolver.prototype, getName, 0);
@@ -228,8 +228,8 @@ export function CrudResolver<T>(Entity: Function, Service: Type<ICrudService<T>>
 
   /* -- create ------------------------------------------------------ */
   if (ops.includes('create')) {
-    GqlResolver.prototype[createName] = async function (dto: any) {
-      return this.service.create(dto);
+    (GqlResolver.prototype as any)[createName] = async function (dto: any) {
+      return (this as any).service.create(dto);
     };
     Mutation(() => GqlType, { name: createName })(GqlResolver.prototype, createName, Object.getOwnPropertyDescriptor(GqlResolver.prototype, createName)!);
     Args('dto', { type: () => CreateDto })(GqlResolver.prototype, createName, 0);
@@ -237,8 +237,8 @@ export function CrudResolver<T>(Entity: Function, Service: Type<ICrudService<T>>
 
   /* -- update ------------------------------------------------------ */
   if (ops.includes('update')) {
-    GqlResolver.prototype[updateName] = async function (id: number, dto: any) {
-      return this.service.update(id, dto);
+    (GqlResolver.prototype as any)[updateName] = async function (id: number, dto: any) {
+      return (this as any).service.update(id, dto);
     };
     Mutation(() => GqlType, { name: updateName })(GqlResolver.prototype, updateName, Object.getOwnPropertyDescriptor(GqlResolver.prototype, updateName)!);
     Args('id', { type: () => Int })(GqlResolver.prototype, updateName, 0);
@@ -247,8 +247,8 @@ export function CrudResolver<T>(Entity: Function, Service: Type<ICrudService<T>>
 
   /* -- remove ------------------------------------------------------ */
   if (ops.includes('remove')) {
-    GqlResolver.prototype[removeName] = async function (id: number) {
-      await this.service.remove(id);
+    (GqlResolver.prototype as any)[removeName] = async function (id: number) {
+      await (this as any).service.remove(id);
       return true;
     };
     Mutation(() => Boolean, { name: removeName })(GqlResolver.prototype, removeName, Object.getOwnPropertyDescriptor(GqlResolver.prototype, removeName)!);

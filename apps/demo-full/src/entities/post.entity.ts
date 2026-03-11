@@ -30,7 +30,7 @@ export class Post {
   content!: string;
 
   @Column({ type: 'int' })
-  @Col({ label: 'Author ID', ui: { widget: 'number' } })
+  @Col({ label: 'Author ID', ui: { widget: 'text' } })
   @Rule.required()
   @Searchable()
   authorId!: number;

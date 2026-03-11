@@ -39,7 +39,7 @@ export class User {
   email!: string;
 
   @Column({ type: 'int', nullable: true })
-  @Col({ label: 'Age', ui: { widget: 'number' } })
+  @Col({ label: 'Age', ui: { widget: 'text' } })
   @Rule.range(0, 150)
   @Searchable()
   age!: number;

@@ -85,7 +85,7 @@ export function MongooseResourceService<T extends { id?: unknown }>(
         : undefined;
 
       const [data, total] = await Promise.all([
-        mongooseModel.find(whereClause).skip(offset).limit(size).sort(sortObj ?? {}).exec(),
+        mongooseModel.find(whereClause).skip(offset).limit(size).sort(sortObj as any).exec(),
         mongooseModel.countDocuments(whereClause).exec(),
       ]);
 

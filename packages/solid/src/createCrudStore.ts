@@ -25,13 +25,10 @@ export function createCrudStore<T>(baseUrl: string): CrudStoreReturn<T> {
   const [listVersion, setListVersion] = createSignal(0);
 
   // Fetch metadata
-  const [meta] = createResource<ResourceMeta>(
-    () => baseUrl,
-    async (url) => {
-      const res = await fetch(`${url}/__crud/meta`);
-      return res.json();
-    },
-  );
+  const [meta] = createResource<ResourceMeta>(async () => {
+    const res = await fetch(`${baseUrl}/__crud/meta`);
+    return res.json();
+  });
 
   // Build query params reactively
   function buildParams(): string {
