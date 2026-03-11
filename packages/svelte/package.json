@@ -1,0 +1,29 @@
+{
+  "name": "@faster-crud/svelte",
+  "version": "0.1.0",
+  "description": "Svelte 5 stores and components for @faster-crud",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "svelte": "src/index.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w",
+    "test": "jest --passWithNoTests"
+  },
+  "dependencies": {
+    "@faster-crud/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0",
+    "@faster-crud/core": "^0.1.0"
+  },
+  "devDependencies": {
+    "svelte": "^5.0.0",
+    "typescript": "^5.4.0"
+  },
+  "license": "MIT"
+}

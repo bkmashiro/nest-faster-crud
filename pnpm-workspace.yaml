@@ -1,5 +1,6 @@
 packages:
   - 'packages/*'
+  - 'packages/drizzle'
   - 'packages/prisma'
   - 'packages/express'
   - 'apps/*'
