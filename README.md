@@ -1,105 +1,122 @@
 # @faster-crud
 
-> End-to-end type-safe CRUD for NestJS — define your entity once, get full REST API automatically.
+> End-to-end type-safe CRUD for any framework
 
-## What it is
+Define your entity once with decorators — get a full REST API, validation, filtering, pagination, and auto-generated frontend UI across any backend and frontend framework.
 
-`@faster-crud` is a decorator-driven CRUD framework for NestJS. Annotate your entity class with `@Resource` and field decorators, then plug it into `NestCrudModule` — you get complete REST endpoints with validation, field filtering, and pagination out of the box.
+## Packages
 
-## Quick Start
+| Package | Version | Description |
+|---------|---------|-------------|
+| `@faster-crud/core` | 0.1.1 | Framework-agnostic decorators & types |
+| `@faster-crud/nest` | 0.1.2 | NestJS integration |
+| `@faster-crud/typeorm` | 0.1.1 | TypeORM adapter |
+| `@faster-crud/prisma` | 0.1.0 | Prisma adapter |
+| `@faster-crud/drizzle` | 0.1.0 | Drizzle adapter |
+| `@faster-crud/mongoose` | 0.1.0 | Mongoose/MongoDB adapter |
+| `@faster-crud/mikro-orm` | 0.1.0 | MikroORM adapter |
+| `@faster-crud/hono` | 0.1.0 | Hono framework adapter |
+| `@faster-crud/express` | 0.1.0 | Express adapter |
+| `@faster-crud/fastify` | 0.1.0 | Fastify adapter |
+| `@faster-crud/vue` | 0.1.1 | Vue 3 components |
+| `@faster-crud/react` | 0.1.0 | React hooks & components |
+| `@faster-crud/svelte` | 0.1.0 | Svelte 5 stores & components |
+| `@faster-crud/gen` | 0.1.1 | CLI code generator |
+
+## Quick Start (NestJS + TypeORM)
 
 ```bash
-# Install core packages
-pnpm add @faster-crud/core @faster-crud/nest reflect-metadata
-
-# Optional: TypeORM adapter (recommended)
-pnpm add @faster-crud/typeorm typeorm @nestjs/typeorm
-
-# Optional: Swagger auto-integration
-pnpm add @nestjs/swagger
-
-# Optional: class-validator auto-integration
-pnpm add class-validator class-transformer
+npm install @faster-crud/core @faster-crud/nest @faster-crud/typeorm typeorm @nestjs/typeorm reflect-metadata
 ```
 
-```typescript
-// 1. Define your entity
-import { Resource, Col, Deny, Readonly, Rule } from '@faster-crud/core';
+### 1. Define your entity
 
+```typescript
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Resource, Col, Rule } from '@faster-crud/core';
+
+@Entity()
 @Resource('users', { pagination: { max: 50 } })
 export class User {
+  @PrimaryGeneratedColumn()
   id: number;
 
+  @Column()
   @Col({ label: 'Username' })
   @Rule.required()
   @Rule.length(3, 20)
   username: string;
 
+  @Column()
   @Col({ label: 'Email' })
   @Rule.email()
   email: string;
 
+  @Column()
   @Col({ label: 'Role' })
   @Deny('create')
   role: string;
 }
+```
 
-// 2. Implement your service
+### 2. Create a service
+
+```typescript
 import { Injectable } from '@nestjs/common';
-import { ResourceService } from '@faster-crud/nest';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { TypeOrmResourceService } from '@faster-crud/typeorm';
+import { User } from './user.entity';
 
 @Injectable()
-export class UserService extends ResourceService(User) {
-  private store: User[] = [];
-  private seq = 1;
-
-  async create(dto: Partial<User>) { /* ... */ }
-  async list(query)                { /* ... */ }
-  async get(id: number)            { /* ... */ }
-  async update(id, dto)            { /* ... */ }
-  async remove(id: number)         { /* ... */ }
+export class UserService extends TypeOrmResourceService(User) {
+  constructor(@InjectRepository(User) repo: Repository<User>) {
+    super(repo);
+  }
 }
+```
 
-// 3. Register in your module
+### 3. Wire the module
+
+```typescript
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { NestCrudModule } from '@faster-crud/nest';
+import { User } from './user.entity';
+import { UserService } from './user.service';
 
 @Module({
-  imports: [NestCrudModule.forFeature([{ resource: User, service: UserService }])]
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    NestCrudModule.forFeature([{ resource: User, service: UserService }]),
+  ],
 })
-export class AppModule {}
+export class UsersModule {}
 ```
 
 This gives you:
-- `POST   /users`        — create
-- `GET    /users`        — list (with pagination)
-- `GET    /users/:id`    — get by id
-- `PATCH  /users/:id`    — update
-- `DELETE /users/:id`    — remove
 
-## Packages
-
-| Package | Description |
-|---------|-------------|
-| `@faster-crud/core` | Core decorators, types, and metadata utilities. Zero NestJS dependency. |
-| `@faster-crud/nest` | NestJS integration — `NestCrudModule`, `ResourceService` mixin, controller factory. |
-| `@faster-crud/typeorm` | TypeORM adapter — repository-backed `ResourceService` with soft delete & advanced filters. |
-| `@faster-crud/gen` | CLI code generator — scaffold entities, services, and modules from the command line. |
-| `@faster-crud/hono` | Hono adapter — use @faster-crud outside NestJS on any JS runtime. |
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/users` | Create |
+| `GET` | `/users` | List (with pagination & filters) |
+| `GET` | `/users/:id` | Get by ID |
+| `PATCH` | `/users/:id` | Update |
+| `DELETE` | `/users/:id` | Remove |
 
 ---
 
-## Code Generator (`@faster-crud/gen`)
+## Feature Highlights
+
+### CLI Code Generator (`@faster-crud/gen`)
 
 Scaffold a fully-wired CRUD resource in one command:
 
 ```bash
-pnpm add -D @faster-crud/gen
-
-# Generate entity + service + module
-npx fcrud add User --fields "username:string,email:string,age:number" --outdir src/resources
+npx @faster-crud/gen add User --fields "name:string,email:string" --outdir src/resources
 ```
 
-This creates:
+This generates:
 
 ```
 src/resources/User/
@@ -110,52 +127,7 @@ src/resources/User/
 
 Supported field types: `string`, `number`, `boolean`, `Date`.
 
----
-
-## Swagger Auto-Integration
-
-If `@nestjs/swagger` is installed, `@ApiProperty()` and `@ApiOperation()` decorators are applied **automatically** based on your `@Col` and `@Rule` metadata — zero manual Swagger config needed.
-
-```bash
-pnpm add @nestjs/swagger
-```
-
-```typescript
-// main.ts — just set up SwaggerModule as usual
-const config = new DocumentBuilder().setTitle('My API').build();
-const doc = SwaggerModule.createDocument(app, config);
-SwaggerModule.setup('api', app, doc);
-// All @Col labels, @Rule constraints, and field types appear in the Swagger UI
-```
-
-What gets auto-generated:
-- `@ApiProperty({ description, required, type })` on every DTO field
-- `@ApiTags()` from `@Resource` name
-- `@ApiOperation()` on each CRUD endpoint
-
----
-
-## Class-Validator Auto-Integration
-
-If `class-validator` is installed, validation decorators are applied automatically from your `@Rule` metadata:
-
-```bash
-pnpm add class-validator class-transformer
-```
-
-| `@Rule` decorator | Auto-applied validator |
-|-------------------|----------------------|
-| `@Rule.required()` | `@IsNotEmpty()` |
-| `@Rule.email()` | `@IsEmail()` |
-| `@Rule.length(min, max)` | `@MinLength(min)` + `@MaxLength(max)` |
-| `@Rule.pattern(regex)` | `@Matches(regex)` |
-| _(optional field)_ | `@IsOptional()` |
-
-No changes to your entity needed — just install the package and validation pipes work automatically.
-
----
-
-## Lifecycle Hooks
+### Lifecycle Hooks
 
 Override hooks in your service to run logic before/after CRUD operations:
 
@@ -188,15 +160,11 @@ export class UserService extends TypeOrmResourceService(User) {
 
 All hooks have default no-op implementations — override only what you need.
 
----
-
-## Soft Delete
+### Soft Delete
 
 Soft delete is auto-detected from TypeORM's `@DeleteDateColumn()`. No configuration needed:
 
 ```typescript
-import { Entity, PrimaryGeneratedColumn, Column, DeleteDateColumn } from 'typeorm';
-
 @Entity()
 @Resource('posts')
 export class Post {
@@ -208,19 +176,15 @@ export class Post {
   title: string;
 
   @DeleteDateColumn()
-  deletedAt?: Date;  // ← this enables soft delete automatically
+  deletedAt?: Date;  // ← enables soft delete automatically
 }
 ```
 
 When `deletedAt` exists:
 - `DELETE /posts/:id` sets `deletedAt` instead of removing the row
-- List/get queries automatically exclude soft-deleted records (via TypeORM)
+- List/get queries automatically exclude soft-deleted records
 
----
-
-## Advanced Filter Operators
-
-Filters support operators beyond simple equality:
+### Filter Operators
 
 ```
 GET /users?filters[age][op]=gt&filters[age][value]=18
@@ -252,14 +216,49 @@ const query: PageQuery<User> = {
 };
 ```
 
----
+### Swagger Auto-Integration
 
-## Hono Adapter (`@faster-crud/hono`)
-
-Use @faster-crud outside of NestJS with [Hono](https://hono.dev) — works on Bun, Deno, Cloudflare Workers, and Node.js:
+If `@nestjs/swagger` is installed, `@ApiProperty()` and `@ApiOperation()` decorators are applied **automatically** based on your `@Col` and `@Rule` metadata — zero manual Swagger config needed.
 
 ```bash
-pnpm add @faster-crud/hono hono
+npm install @nestjs/swagger
+```
+
+What gets auto-generated:
+- `@ApiProperty({ description, required, type })` on every DTO field
+- `@ApiTags()` from `@Resource` name
+- `@ApiOperation()` on each CRUD endpoint
+
+### class-validator Auto-Integration
+
+If `class-validator` is installed, validation decorators are applied automatically from your `@Rule` metadata:
+
+```bash
+npm install class-validator class-transformer
+```
+
+| `@Rule` decorator | Auto-applied validator |
+|-------------------|----------------------|
+| `@Rule.required()` | `@IsNotEmpty()` |
+| `@Rule.email()` | `@IsEmail()` |
+| `@Rule.length(min, max)` | `@MinLength(min)` + `@MaxLength(max)` |
+| `@Rule.pattern(regex)` | `@Matches(regex)` |
+| _(optional field)_ | `@IsOptional()` |
+
+### ResourceMeta Endpoint
+
+Every CRUD resource exposes `GET /__crud/meta` for frontend introspection. This returns the full `ResourceMeta` including resource name, available operations, field definitions (labels, types, UI hints, validation rules), and pagination config — enabling frontends to auto-generate forms and tables.
+
+---
+
+## Framework Adapters
+
+### Hono
+
+Works on Bun, Deno, Cloudflare Workers, and Node.js.
+
+```bash
+npm install @faster-crud/hono hono
 ```
 
 ```typescript
@@ -268,22 +267,114 @@ import { HonoCrudRouter } from '@faster-crud/hono';
 import { User } from './user.entity';
 
 const app = new Hono();
-
-// Any service implementing create/list/get/update/remove works
 app.route('/users', HonoCrudRouter(User, userService));
 
 export default app;
 ```
 
-Generated routes:
+### Express
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/` | List (with query params) |
-| `GET` | `/:id` | Get by ID (404 if not found) |
-| `POST` | `/` | Create (201) |
-| `PATCH` | `/:id` | Update |
-| `DELETE` | `/:id` | Delete |
+```bash
+npm install @faster-crud/express express
+```
+
+```typescript
+import express from 'express';
+import { expressCrudRouter } from '@faster-crud/express';
+import { User } from './user.entity';
+
+const app = express();
+app.use(express.json());
+app.use('/api/users', expressCrudRouter(User, userService));
+
+app.listen(3000);
+```
+
+### Fastify
+
+```bash
+npm install @faster-crud/fastify fastify
+```
+
+```typescript
+import Fastify from 'fastify';
+import { FastifyCrudPlugin } from '@faster-crud/fastify';
+import { User } from './user.entity';
+
+const fastify = Fastify();
+await fastify.register(FastifyCrudPlugin(User, userService), { prefix: '/users' });
+
+fastify.listen({ port: 3000 });
+```
+
+All adapters generate the same REST endpoints and accept any service object implementing `create`, `list`, `get`, `update`, and `remove`.
+
+---
+
+## Frontend Libraries
+
+All frontend packages fetch `ResourceMeta` from the backend to auto-generate tables and forms.
+
+### Vue 3 (`@faster-crud/vue`)
+
+```bash
+npm install @faster-crud/vue
+```
+
+```vue
+<script setup lang="ts">
+import { useCrud, CrudTable, CrudForm } from '@faster-crud/vue';
+
+const crud = useCrud<User>('/api/users');
+</script>
+
+<template>
+  <CrudTable :crud="crud" @edit="onEdit" />
+  <CrudForm :crud="crud" mode="create" />
+</template>
+```
+
+### React (`@faster-crud/react`)
+
+```bash
+npm install @faster-crud/react
+```
+
+```tsx
+import { useCrud, CrudTable, CrudForm } from '@faster-crud/react';
+
+function UsersPage() {
+  const crud = useCrud<User>('/api/users');
+
+  return (
+    <>
+      <CrudTable crud={crud} onEdit={setEditing} />
+      <CrudForm crud={crud} mode="create" onDone={() => crud.fetchList()} />
+    </>
+  );
+}
+```
+
+The `useCrud` hook returns reactive state for `data`, `total`, `loading`, `page`, `filters`, `sort`, and methods for `fetchList`, `create`, `update`, `remove`.
+
+### Svelte 5 (`@faster-crud/svelte`)
+
+```bash
+npm install @faster-crud/svelte
+```
+
+```svelte
+<script>
+  import { createCrudStore } from '@faster-crud/svelte';
+  import CrudTable from '@faster-crud/svelte/src/CrudTable.svelte';
+  import CrudForm from '@faster-crud/svelte/src/CrudForm.svelte';
+
+  const store = createCrudStore('/api/users');
+</script>
+
+<CrudTable {store} onEdit={handleEdit} />
+<CrudForm {store} mode="create" />
+```
 
 ---
 
@@ -293,19 +384,19 @@ Generated routes:
 
 | Decorator | Description |
 |-----------|-------------|
-| `@Resource(name, options)` | Marks a class as a CRUD resource. `name` becomes the route path (e.g. `'users'`). |
+| `@Resource(name, options?)` | Marks a class as a CRUD resource. `name` becomes the route path. Options: `operations`, `pagination`, `guardTokens`. |
 
 ### Property Decorators
 
 | Decorator | Description |
 |-----------|-------------|
-| `@Col(options)` | Marks a field as a CRUD column. Accepts `label`, `ui`, and `list` options. |
+| `@Col(options?)` | Marks a field as a CRUD column. Accepts `label`, `ui`, and `list` options. |
 | `@Deny(...ops)` | Deny a field on specific operations (`'create'`, `'update'`, etc.). |
 | `@Readonly()` | Shorthand for `@Deny('create', 'update')`. |
 | `@Hidden(...views)` | Omit field from responses on specified views (`'list'`, `'get'`). |
-| `@Searchable()` | Mark field as searchable (used by codegen / query filtering). |
+| `@Searchable()` | Mark field as searchable for query filtering. |
 | `@Ignore()` | Completely exclude field from all CRUD operations. |
-| `@AdminOnly(...ops)` | Mark field as admin-only for specified operations (guard metadata). |
+| `@AdminOnly(...ops)` | Mark field as admin-only for specified operations. |
 
 ### Validation Rules
 
@@ -316,10 +407,6 @@ Generated routes:
 | `@Rule.range(min, max, msg?)` | Numeric range constraint. |
 | `@Rule.email(msg?)` | Must be valid email format. |
 | `@Rule.pattern(regex, msg?)` | Must match regex pattern. |
-
-## Full Docs
-
-> Documentation site coming soon (TBD).
 
 ## License
 
