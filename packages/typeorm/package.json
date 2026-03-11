@@ -1,14 +1,14 @@
 {
   "name": "@faster-crud/typeorm",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TypeORM adapter for @faster-crud",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": ["dist"],
-  "scripts": { "build": "tsc" },
+  "scripts": { "build": "tsc", "test": "jest --passWithNoTests" },
   "dependencies": {
-    "@faster-crud/core": "^0.1.0",
-    "@faster-crud/nest": "^0.1.1"
+    "@faster-crud/core": "workspace:*",
+    "@faster-crud/nest": "workspace:*"
   },
   "peerDependencies": {
     "typeorm": "^0.3.0",

@@ -2,8 +2,8 @@
 
 declare const console: { error: (...args: any[]) => void };
 declare const module: any;
-declare const process: any;
-declare function require(name: string): any;
+declare const process: { argv: string[]; exit: (code?: number) => never };
+declare const require: { (name: string): any; main?: any };
 
 const fs = require('node:fs');
 const path = require('node:path');

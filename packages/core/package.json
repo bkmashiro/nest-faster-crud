@@ -1,13 +1,14 @@
 {
   "name": "@faster-crud/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Core decorators and types for @faster-crud — end-to-end type-safe CRUD for NestJS",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": ["dist"],
   "scripts": {
     "build": "tsc",
-    "dev": "tsc -w"
+    "dev": "tsc -w",
+    "test": "jest --passWithNoTests"
   },
   "peerDependencies": {
     "reflect-metadata": "^0.2.0"

@@ -1,6 +1,6 @@
 {
   "name": "@faster-crud/nest",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "NestJS integration for @faster-crud",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,15 +9,16 @@
   ],
   "scripts": {
     "build": "tsc",
-    "dev": "tsc -w"
+    "dev": "tsc -w",
+    "test": "jest --passWithNoTests"
   },
   "dependencies": {
-    "@faster-crud/core": "^0.1.0"
+    "@faster-crud/core": "workspace:*"
   },
   "peerDependencies": {
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
-    "@nestjs/swagger": "^10.0.0",
+    "@nestjs/swagger": "^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0",
     "class-validator": "^0.14.0",
     "reflect-metadata": "^0.2.0"
   },

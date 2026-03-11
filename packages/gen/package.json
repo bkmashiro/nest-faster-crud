@@ -1,6 +1,6 @@
 {
   "name": "@faster-crud/gen",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Code generation stub for @faster-crud (Phase 2)",
   "main": "dist/index.js",
   "bin": {
