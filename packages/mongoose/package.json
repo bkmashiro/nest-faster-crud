@@ -1,6 +1,6 @@
 {
   "name": "@faster-crud/mongoose",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Mongoose adapter for @faster-crud",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,14 +10,14 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
-    "@faster-crud/nest": "workspace:*"
+    "@faster-crud/nest": "^0.2.0"
   },
   "peerDependencies": {
-    "@faster-crud/core": "^0.1.0",
+    "@faster-crud/core": "^0.2.0",
     "mongoose": "^8.0.0"
   },
   "devDependencies": {
-    "@faster-crud/core": "workspace:*",
+    "@faster-crud/core": "^0.2.0",
     "@nestjs/common": "^11.0.0",
     "reflect-metadata": "^0.2.0",
     "typescript": "^5.4.0"

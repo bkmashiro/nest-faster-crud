@@ -1,6 +1,6 @@
 {
   "name": "@faster-crud/fastify",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Fastify adapter for @faster-crud",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,11 +14,11 @@
   },
   "peerDependencies": {
     "fastify": "^4.0.0",
-    "@faster-crud/core": "^0.1.0"
+    "@faster-crud/core": "^0.2.0"
   },
   "devDependencies": {
     "typescript": "^5.4.0",
     "fastify": "^4.0.0",
-    "@faster-crud/core": "^0.1.0"
+    "@faster-crud/core": "^0.2.0"
   }
 }

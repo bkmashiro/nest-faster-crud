@@ -1,6 +1,6 @@
 {
   "name": "@faster-crud/express",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Express adapter for @faster-crud",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,12 +12,12 @@
   "peerDependencies": {
     "express": "^4",
     "@types/express": "^4",
-    "@faster-crud/core": "^0.1.0"
+    "@faster-crud/core": "^0.2.0"
   },
   "devDependencies": {
     "typescript": "^5.4.0",
     "express": "^4.21.2",
     "@types/express": "^4.17.23",
-    "@faster-crud/core": "^0.1.0"
+    "@faster-crud/core": "^0.2.0"
   }
 }
