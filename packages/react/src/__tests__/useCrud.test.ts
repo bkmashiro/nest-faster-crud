@@ -209,4 +209,21 @@ describe('useCrud', () => {
     expect(() => hook.setFilters({ name: 'x' })).not.toThrow();
     expect(() => hook.setSort({ field: 'name', order: 'asc' })).not.toThrow();
   });
+
+  it('fetchList includes sort param when sort is set', async () => {
+    mockFetch({ 'api/users?': LIST_FIXTURE });
+
+    // Set sort state before calling hook
+    callHook();
+    // Manually set sort via the state slot (index 6 = sort)
+    stateSlots[6].setter({ field: 'name', order: 'desc' });
+
+    // Re-render hook to pick up new sort value
+    const hook2 = callHook();
+    await hook2.fetchList();
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('sort=-name'),
+    );
+  });
 });
