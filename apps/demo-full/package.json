@@ -1,0 +1,31 @@
+{
+  "name": "@faster-crud/demo-full",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Comprehensive demo app showcasing all @faster-crud features with TypeORM",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "dev": "ts-node -r tsconfig-paths/register src/main.ts"
+  },
+  "dependencies": {
+    "@faster-crud/core": "workspace:*",
+    "@faster-crud/nest": "workspace:*",
+    "@faster-crud/typeorm": "workspace:*",
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/swagger": "^7.0.0",
+    "@nestjs/typeorm": "^10.0.0",
+    "better-sqlite3": "^11.0.0",
+    "class-validator": "^0.14.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0",
+    "typeorm": "^0.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "ts-node": "^10.9.0",
+    "tsconfig-paths": "^4.2.0"
+  }
+}
