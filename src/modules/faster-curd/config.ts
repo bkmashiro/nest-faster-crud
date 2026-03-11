@@ -1,1 +1,0 @@
-export const FC_PREFIX = '/api'

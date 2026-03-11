@@ -1,0 +1,9 @@
+{
+  "name": "@faster-crud/gen",
+  "version": "0.1.0",
+  "description": "Code generation stub for @faster-crud (Phase 2)",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'gen: nothing to build yet'"
+  }
+}
