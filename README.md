@@ -73,6 +73,7 @@ This gives you:
 |---------|-------------|
 | `@faster-crud/core` | Core decorators, types, and metadata utilities. Zero NestJS dependency. |
 | `@faster-crud/nest` | NestJS integration — `NestCrudModule`, `ResourceService` mixin, controller factory. |
+| `@faster-crud/typeorm` | _(Phase 2)_ TypeORM adapter — repository-backed `ResourceService` implementation. |
 | `@faster-crud/gen`  | _(Phase 2)_ Code generation for typed DTOs, OpenAPI schemas, and frontend form configs. |
 
 ## Decorator Reference

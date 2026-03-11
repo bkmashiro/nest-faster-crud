@@ -1,0 +1,24 @@
+{
+  "name": "@faster-crud/typeorm",
+  "version": "0.1.0",
+  "description": "TypeORM adapter for @faster-crud",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": { "build": "tsc" },
+  "dependencies": {
+    "@faster-crud/core": "^0.1.0",
+    "@faster-crud/nest": "^0.1.1"
+  },
+  "peerDependencies": {
+    "typeorm": "^0.3.0",
+    "@nestjs/common": "^10.0.0 || ^11.0.0"
+  },
+  "devDependencies": {
+    "typeorm": "^0.3.20",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/typeorm": "^11.0.0",
+    "typescript": "^5.4.0",
+    "reflect-metadata": "^0.2.0"
+  }
+}
