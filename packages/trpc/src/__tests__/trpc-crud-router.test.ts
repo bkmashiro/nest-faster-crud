@@ -99,6 +99,13 @@ describe('createCrudRouter', () => {
       expect(mockService.remove).toHaveBeenCalledWith(1);
     });
   });
+
+  it('throws when @Resource decorator is missing', () => {
+    class NoDecorator {
+      id!: number;
+    }
+    expect(() => createCrudRouter(NoDecorator, mockService as any)).toThrow(/@Resource not found/);
+  });
 });
 
 // Helper: create a tRPC caller from a router for direct testing
