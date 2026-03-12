@@ -14,8 +14,12 @@ jest.mock('solid-js', () => {
       };
       return [getter, setter];
     },
-    createResource: (source: any, fetcher: any) => {
-      // If called with 2 args: source is the source fn, fetcher is the fetcher fn
+    createResource: (sourceOrFetcher: any, maybeFetcher?: any) => {
+      // Single-arg form: createResource(fetcher)
+      // Two-arg form: createResource(source, fetcher)
+      const source = maybeFetcher ? sourceOrFetcher : undefined;
+      const fetcher = maybeFetcher ?? sourceOrFetcher;
+
       let data: any = undefined;
       let loading = false;
 
@@ -25,7 +29,7 @@ jest.mock('solid-js', () => {
       const load = async () => {
         loading = true;
         resource.loading = true;
-        const key = typeof source === 'function' ? source() : source;
+        const key = source ? (typeof source === 'function' ? source() : source) : undefined;
         data = await fetcher(key);
         loading = false;
         resource.loading = false;
