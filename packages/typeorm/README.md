@@ -1,25 +1,30 @@
-# @faster-crud/validation
+# @faster-crud/typeorm
 
-[![npm](https://img.shields.io/npm/v/@faster-crud/validation?style=flat-square)](https://www.npmjs.com/package/@faster-crud/validation)
+[![npm](https://img.shields.io/npm/v/@faster-crud/typeorm?style=flat-square)](https://www.npmjs.com/package/@faster-crud/typeorm)
 
-Validation middleware for @faster-crud — derives class-validator rules from @Rule decorator metadata.
+TypeORM adapter for @faster-crud.
 
 ## Install
 
 ```bash
-npm install @faster-crud/core @faster-crud/validation class-validator
+npm install @faster-crud/core @faster-crud/typeorm typeorm
 ```
 
 ## Usage
 
 ```ts
-import { applyValidationRules } from '@faster-crud/validation';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { TypeOrmResourceService } from '@faster-crud/typeorm';
 import { Post } from './post.entity';
 
-// Derive a class-validator DTO from @Resource/@Col/@Rule decorators
-const PostCreateDto = applyValidationRules(Post);
-
-// Use with NestJS ValidationPipe — validation is automatic
+@Injectable()
+export class PostsService extends TypeOrmResourceService(Post) {
+  constructor(@InjectRepository(Post) repo: Repository<Post>) {
+    super(repo);
+  }
+}
 ```
 
 ## Documentation

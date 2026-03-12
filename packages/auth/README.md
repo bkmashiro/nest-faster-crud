@@ -1,102 +1,42 @@
 # @faster-crud/auth
 
-JWT auth integration for `@faster-crud` on NestJS. It provides a JWT guard, role guard, current-user decorator, and shorthand decorators for common access rules.
+[![npm](https://img.shields.io/npm/v/@faster-crud/auth?style=flat-square)](https://www.npmjs.com/package/@faster-crud/auth)
+
+JWT auth helpers for @faster-crud — guards and decorators for protecting CRUD operations.
 
 ## Install
 
 ```bash
-pnpm add @faster-crud/auth @nestjs/jwt @nestjs/common @faster-crud/core reflect-metadata
+npm install @faster-crud/core @faster-crud/auth @nestjs/jwt
 ```
 
-## API
+## Usage
 
 ```ts
-import {
-  AdminOnly,
-  AuthCrudModule,
-  CurrentUser,
-  JwtAuthGuard,
-  Protected,
-  Roles,
-  RolesGuard,
-} from '@faster-crud/auth';
-```
+import { CrudAuthGuard, CurrentUser } from '@faster-crud/auth';
+import { UseGuards } from '@nestjs/common';
 
-- `@Roles(...roles)` stores required roles metadata.
-- `RolesGuard` checks `req.user.roles`.
-- `JwtAuthGuard` verifies a bearer token and assigns the decoded payload to `req.user`.
-- `@CurrentUser()` injects `req.user`.
-- `@Protected()` applies `UseGuards(JwtAuthGuard)`.
-- `@AdminOnly()` applies `@Roles('admin')` and `UseGuards(JwtAuthGuard, RolesGuard)`.
+// Protect all endpoints in a controller
+@UseGuards(CrudAuthGuard)
+@Controller('posts')
+export class PostsController extends CrudControllerFactory(Post, PostsService) {}
 
-## Register The Module
-
-```ts
-import { Module } from '@nestjs/common';
-import { AuthCrudModule } from '@faster-crud/auth';
-
-@Module({
-  imports: [
-    AuthCrudModule.register({
-      secret: process.env.JWT_SECRET!,
-      roles: ['admin', 'editor', 'viewer'],
-    }),
-  ],
-})
-export class AppModule {}
-```
-
-## Protect CRUD Endpoints
-
-If you build a custom controller around your resource service, use the auth decorators directly on CRUD handlers:
-
-```ts
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
-import { CurrentUser, JwtAuthGuard, Roles, RolesGuard } from '@faster-crud/auth';
-import { UsersService } from './users.service';
-
-@Controller('users')
-export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
-
-  @Get()
-  @Protected()
-  list(@CurrentUser() user: { sub: string }) {
-    return this.usersService.listForUser(user.sub);
-  }
-
-  @Patch(':id')
-  @Roles('admin', 'editor')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  update(
-    @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
-    @CurrentUser() user: { sub: string; roles: string[] },
-  ) {
-    return this.usersService.updateForUser(+id, body, user);
-  }
+// Access current user in custom endpoints
+@Get('my-posts')
+async myPosts(@CurrentUser() user: JwtPayload) {
+  return this.service.findAll({ filters: { authorId: { op: 'eq', value: user.sub } } });
 }
 ```
 
-For admin-only CRUD endpoints, use the shorthand:
+## Documentation
 
-```ts
-import { Delete, Param } from '@nestjs/common';
-import { AdminOnly } from '@faster-crud/auth';
+Full docs at [github.com/bkmashiro/nest-faster-crud](https://github.com/bkmashiro/nest-faster-crud)
 
-@Delete(':id')
-@AdminOnly()
-remove(@Param('id') id: string) {
-  return this.usersService.remove(+id);
-}
-```
+## Ecosystem
 
-## Token Shape
-
-`JwtAuthGuard` expects:
-
-```http
-Authorization: Bearer <token>
-```
-
-The decoded payload is attached to `req.user`. To use role checks, include a `roles: string[]` claim in the token payload.
+| Package | Description |
+|---------|-------------|
+| [`@faster-crud/core`](https://www.npmjs.com/package/@faster-crud/core) | Decorators and types |
+| [`@faster-crud/nest`](https://www.npmjs.com/package/@faster-crud/nest) | NestJS controller factory |
+| [`@faster-crud/typeorm`](https://www.npmjs.com/package/@faster-crud/typeorm) | TypeORM adapter |
+| [`@faster-crud/prisma`](https://www.npmjs.com/package/@faster-crud/prisma) | Prisma adapter |

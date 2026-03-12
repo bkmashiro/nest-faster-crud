@@ -1,98 +1,39 @@
 # @faster-crud/graphql
 
-GraphQL resolver factory for [@faster-crud](https://github.com/nicepkg/nest-faster-crud). Automatically generates a NestJS `@Resolver()` class with full CRUD operations from your `@Resource` / `@Col` decorated entities.
+[![npm](https://img.shields.io/npm/v/@faster-crud/graphql?style=flat-square)](https://www.npmjs.com/package/@faster-crud/graphql)
 
-## Installation
+GraphQL resolver factory for @faster-crud — auto-generates Query/Mutation resolvers.
 
-```bash
-pnpm add @faster-crud/graphql @faster-crud/core
-```
-
-Peer dependencies:
+## Install
 
 ```bash
-pnpm add @nestjs/graphql graphql @nestjs/common reflect-metadata
+npm install @faster-crud/core @faster-crud/graphql @nestjs/graphql
 ```
 
-## Quick Start
+## Usage
 
-```typescript
-import { Resource, Col } from '@faster-crud/core';
-import { GraphQLCrudModule } from '@faster-crud/graphql';
+```ts
+import { GqlResolver } from '@faster-crud/graphql';
+import { Post } from './post.entity';
+import { PostsService } from './posts.service';
 
-@Resource('user')
-class User {
-  @Col() name!: string;
-  @Col() email!: string;
-  @Col() age!: number;
-  @Col() active!: boolean;
-}
-
-// In your NestJS module:
-@Module({
-  imports: [
-    GraphQLModule.forRoot<ApolloDriverConfig>({ /* ... */ }),
-    GraphQLCrudModule.register(User, UserService),
-  ],
-})
-export class AppModule {}
-```
-
-This generates the following GraphQL schema:
-
-```graphql
-type User {
-  id: Int
-  name: String
-  email: String
-  age: Int
-  active: Boolean
-}
-
-type UserPageResult {
-  data: [User!]!
-  total: Int!
-  page: Int!
-  size: Int!
-}
-
-type Query {
-  userList(query: UserPageQueryInput): UserPageResult!
-  user(id: Int!): User
-}
-
-type Mutation {
-  createUser(dto: CreateUserInput!): User!
-  updateUser(id: Int!, dto: UpdateUserInput!): User!
-  removeUser(id: Int!): Boolean!
+@Resolver(() => Post)
+export class PostsResolver extends GqlResolver(Post, PostsService) {
+  constructor(service: PostsService) {
+    super(service);
+  }
 }
 ```
 
-## Advanced: CrudResolver Factory
+## Documentation
 
-For more control, use `CrudResolver` directly:
+Full docs at [github.com/bkmashiro/nest-faster-crud](https://github.com/bkmashiro/nest-faster-crud)
 
-```typescript
-import { CrudResolver } from '@faster-crud/graphql';
+## Ecosystem
 
-const UserResolver = CrudResolver(User, UserService);
-
-@Module({
-  providers: [UserService, UserResolver],
-})
-export class UserModule {}
-```
-
-## Type Mapping
-
-| `@Col` type | GraphQL type |
-| ----------- | ------------ |
-| `String`    | `String`     |
-| `Number`    | `Int`        |
-| `Boolean`   | `Boolean`    |
-
-Fields decorated with `@Ignore()` are excluded. Fields with `@Readonly()` or `@Deny('create')` / `@Deny('update')` are excluded from the corresponding input types.
-
-## License
-
-MIT
+| Package | Description |
+|---------|-------------|
+| [`@faster-crud/core`](https://www.npmjs.com/package/@faster-crud/core) | Decorators and types |
+| [`@faster-crud/nest`](https://www.npmjs.com/package/@faster-crud/nest) | NestJS controller factory |
+| [`@faster-crud/typeorm`](https://www.npmjs.com/package/@faster-crud/typeorm) | TypeORM adapter |
+| [`@faster-crud/prisma`](https://www.npmjs.com/package/@faster-crud/prisma) | Prisma adapter |

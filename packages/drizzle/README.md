@@ -1,39 +1,38 @@
 # @faster-crud/drizzle
 
-Drizzle adapter for `@faster-crud`.
+[![npm](https://img.shields.io/npm/v/@faster-crud/drizzle?style=flat-square)](https://www.npmjs.com/package/@faster-crud/drizzle)
+
+Drizzle ORM adapter for @faster-crud.
 
 ## Install
 
 ```bash
-pnpm add @faster-crud/drizzle drizzle-orm
+npm install @faster-crud/core @faster-crud/drizzle drizzle-orm
 ```
 
 ## Usage
 
 ```ts
-import { drizzleCrudService } from "@faster-crud/drizzle";
+import { DrizzleResourceService } from '@faster-crud/drizzle';
+import { Post } from './post.entity';
+import { posts } from './schema';
 
-const userService = drizzleCrudService(User, db, schema.users);
-
-// use directly or wrap in a class
+export class PostsService extends DrizzleResourceService(Post) {
+  constructor(db: DrizzleDB) {
+    super(db, posts);
+  }
+}
 ```
 
-## Supported operations
+## Documentation
 
-- `create(dto)` inserts a row and returns the inserted record
-- `list(query)` applies filters, sort, and pagination with the Drizzle query builder
-- `get(id)` returns one row by `id`
-- `update(id, dto)` updates a row by `id` and returns the updated record
-- `remove(id)` deletes a row by `id`
+Full docs at [github.com/bkmashiro/nest-faster-crud](https://github.com/bkmashiro/nest-faster-crud)
 
-## Filter mapping
+## Ecosystem
 
-- `eq` -> `eq(column, value)`
-- `ne` -> `ne(column, value)`
-- `lt` -> `lt(column, value)`
-- `lte` -> `lte(column, value)`
-- `gt` -> `gt(column, value)`
-- `gte` -> `gte(column, value)`
-- `like` -> `like(column, %value%)`
-- `in` -> `inArray(column, values)`
-- `between` -> `between(column, min, max)`
+| Package | Description |
+|---------|-------------|
+| [`@faster-crud/core`](https://www.npmjs.com/package/@faster-crud/core) | Decorators and types |
+| [`@faster-crud/nest`](https://www.npmjs.com/package/@faster-crud/nest) | NestJS controller factory |
+| [`@faster-crud/typeorm`](https://www.npmjs.com/package/@faster-crud/typeorm) | TypeORM adapter |
+| [`@faster-crud/prisma`](https://www.npmjs.com/package/@faster-crud/prisma) | Prisma adapter |

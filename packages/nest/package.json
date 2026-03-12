@@ -1,6 +1,6 @@
 {
   "name": "@faster-crud/nest",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "NestJS integration for @faster-crud",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

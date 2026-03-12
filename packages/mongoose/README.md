@@ -1,39 +1,40 @@
 # @faster-crud/mongoose
 
-Mongoose adapter for `@faster-crud`.
+[![npm](https://img.shields.io/npm/v/@faster-crud/mongoose?style=flat-square)](https://www.npmjs.com/package/@faster-crud/mongoose)
+
+Mongoose adapter for @faster-crud.
 
 ## Install
 
 ```bash
-pnpm add @faster-crud/mongoose mongoose
+npm install @faster-crud/core @faster-crud/mongoose mongoose
 ```
 
 ## Usage
 
 ```ts
 import { MongooseResourceService } from '@faster-crud/mongoose';
+import { Post } from './post.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-class UserService extends MongooseResourceService(User, UserModel) {}
+@Injectable()
+export class PostsService extends MongooseResourceService(Post) {
+  constructor(@InjectModel(Post.name) model: Model<Post>) {
+    super(model);
+  }
+}
 ```
 
-`Model` is the Mongoose model for the resource.
+## Documentation
 
-## Supported operations
+Full docs at [github.com/bkmashiro/nest-faster-crud](https://github.com/bkmashiro/nest-faster-crud)
 
-- `create(dto)` delegates to `new Model(dto).save()`
-- `list(query)` delegates to `Model.find(where).skip(offset).limit(size).sort(sort)` and `Model.countDocuments(where)`
-- `get(id)` delegates to `Model.findById(id)`
-- `update(id, dto)` delegates to `Model.findByIdAndUpdate(id, dto, { new: true })`
-- `remove(id)` delegates to `Model.findByIdAndDelete(id)`
+## Ecosystem
 
-## Filter mapping
-
-- `eq` -> scalar equality
-- `ne` -> `{ $ne: value }`
-- `lt` -> `{ $lt: value }`
-- `lte` -> `{ $lte: value }`
-- `gt` -> `{ $gt: value }`
-- `gte` -> `{ $gte: value }`
-- `like` -> `{ $regex: value, $options: 'i' }`
-- `in` -> `{ $in: values }`
-- `between` -> `{ $gte: min, $lte: max }`
+| Package | Description |
+|---------|-------------|
+| [`@faster-crud/core`](https://www.npmjs.com/package/@faster-crud/core) | Decorators and types |
+| [`@faster-crud/nest`](https://www.npmjs.com/package/@faster-crud/nest) | NestJS controller factory |
+| [`@faster-crud/typeorm`](https://www.npmjs.com/package/@faster-crud/typeorm) | TypeORM adapter |
+| [`@faster-crud/prisma`](https://www.npmjs.com/package/@faster-crud/prisma) | Prisma adapter |

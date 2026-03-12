@@ -1,70 +1,43 @@
 # @faster-crud/react
 
-React hooks and components for `@faster-crud`.
+[![npm](https://img.shields.io/npm/v/@faster-crud/react?style=flat-square)](https://www.npmjs.com/package/@faster-crud/react)
+
+React hooks for @faster-crud — useResource composable for data fetching.
 
 ## Install
 
 ```bash
-npm i @faster-crud/react @faster-crud/core react
+npm install @faster-crud/core @faster-crud/react react
 ```
 
 ## Usage
 
-### useCrud hook
+```ts
+import { useResource } from '@faster-crud/react';
+import { Post } from './post.entity';
 
-```tsx
-import { useCrud } from '@faster-crud/react';
+function PostList() {
+  const { data, loading, total, page, setPage, refresh } = useResource(Post, {
+    baseUrl: '/api/posts',
+  });
 
-function UserPage() {
-  const crud = useCrud<User>('/api/users');
-  const { data, loading, create, update, remove } = crud;
-  // ...
-}
-```
-
-### CrudTable
-
-Headless HTML table driven by metadata:
-
-```tsx
-import { useCrud, CrudTable } from '@faster-crud/react';
-
-function UserList() {
-  const crud = useCrud<User>('/api/users');
-  return <CrudTable crud={crud} onEdit={(u) => console.log('edit', u)} />;
-}
-```
-
-### CrudForm
-
-Dynamic form from metadata, filtered by operation:
-
-```tsx
-import { useCrud, CrudForm } from '@faster-crud/react';
-
-function CreateUser() {
-  const crud = useCrud<User>('/api/users');
-  return <CrudForm crud={crud} mode="create" onDone={() => alert('Created!')} />;
-}
-```
-
-### CrudProvider
-
-Provides a shared `useCrud` instance via React context:
-
-```tsx
-import { CrudProvider, useCrudContext, CrudTable } from '@faster-crud/react';
-
-function App() {
   return (
-    <CrudProvider baseUrl="/api/users">
-      <UserTable />
-    </CrudProvider>
+    <div>
+      {data.map(post => <div key={post.id}>{post.title}</div>)}
+    </div>
   );
 }
-
-function UserTable() {
-  const crud = useCrudContext<User>();
-  return <CrudTable crud={crud} />;
-}
 ```
+
+## Documentation
+
+Full docs at [github.com/bkmashiro/nest-faster-crud](https://github.com/bkmashiro/nest-faster-crud)
+
+## Ecosystem
+
+| Package | Description |
+|---------|-------------|
+| [`@faster-crud/core`](https://www.npmjs.com/package/@faster-crud/core) | Decorators and types |
+| [`@faster-crud/nest`](https://www.npmjs.com/package/@faster-crud/nest) | NestJS controller factory |
+| [`@faster-crud/typeorm`](https://www.npmjs.com/package/@faster-crud/typeorm) | TypeORM adapter |
+| [`@faster-crud/prisma`](https://www.npmjs.com/package/@faster-crud/prisma) | Prisma adapter |

@@ -1,39 +1,40 @@
 # @faster-crud/prisma
 
-Prisma adapter for `@faster-crud`.
+[![npm](https://img.shields.io/npm/v/@faster-crud/prisma?style=flat-square)](https://www.npmjs.com/package/@faster-crud/prisma)
+
+Prisma adapter for @faster-crud.
 
 ## Install
 
 ```bash
-pnpm add @faster-crud/prisma @prisma/client
+npm install @faster-crud/core @faster-crud/prisma @prisma/client
 ```
 
 ## Usage
 
 ```ts
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from './prisma.service';
 import { PrismaResourceService } from '@faster-crud/prisma';
+import { Post } from './post.entity';
 
-class UserService extends PrismaResourceService(User, prisma.user) {}
+@Injectable()
+export class PostsService extends PrismaResourceService(Post) {
+  constructor(prisma: PrismaService) {
+    super(prisma, 'post');
+  }
+}
 ```
 
-`prismaModel` is the Prisma delegate for the resource, for example `prisma.user`.
+## Documentation
 
-## Supported operations
+Full docs at [github.com/bkmashiro/nest-faster-crud](https://github.com/bkmashiro/nest-faster-crud)
 
-- `create(dto)` delegates to `prismaModel.create({ data })`
-- `list(query)` delegates to `prismaModel.findMany({ where, orderBy, skip, take })` and `prismaModel.count({ where })`
-- `get(id)` delegates to `prismaModel.findUnique({ where: { id } })`
-- `update(id, dto)` delegates to `prismaModel.update({ where: { id }, data })`
-- `remove(id)` delegates to `prismaModel.delete({ where: { id } })`
+## Ecosystem
 
-## Filter mapping
-
-- `eq` -> scalar equality
-- `ne` -> `{ not: value }`
-- `lt` -> `{ lt: value }`
-- `lte` -> `{ lte: value }`
-- `gt` -> `{ gt: value }`
-- `gte` -> `{ gte: value }`
-- `like` -> `{ contains: value }`
-- `in` -> `{ in: values }`
-- `between` -> `{ gte: min, lte: max }`
+| Package | Description |
+|---------|-------------|
+| [`@faster-crud/core`](https://www.npmjs.com/package/@faster-crud/core) | Decorators and types |
+| [`@faster-crud/nest`](https://www.npmjs.com/package/@faster-crud/nest) | NestJS controller factory |
+| [`@faster-crud/typeorm`](https://www.npmjs.com/package/@faster-crud/typeorm) | TypeORM adapter |
+| [`@faster-crud/prisma`](https://www.npmjs.com/package/@faster-crud/prisma) | Prisma adapter |

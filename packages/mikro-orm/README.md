@@ -1,39 +1,38 @@
 # @faster-crud/mikro-orm
 
-MikroORM adapter for `@faster-crud`.
+[![npm](https://img.shields.io/npm/v/@faster-crud/mikro-orm?style=flat-square)](https://www.npmjs.com/package/@faster-crud/mikro-orm)
+
+MikroORM adapter for @faster-crud.
 
 ## Install
 
 ```bash
-pnpm add @faster-crud/mikro-orm @mikro-orm/core
+npm install @faster-crud/core @faster-crud/mikro-orm @mikro-orm/core
 ```
 
 ## Usage
 
 ```ts
 import { MikroOrmResourceService } from '@faster-crud/mikro-orm';
+import { Post } from './post.entity';
+import { EntityManager } from '@mikro-orm/core';
 
-class UserService extends MikroOrmResourceService(User, em) {}
+export class PostsService extends MikroOrmResourceService(Post) {
+  constructor(em: EntityManager) {
+    super(em);
+  }
+}
 ```
 
-`em` is a MikroORM `EntityManager` instance for the current database connection.
+## Documentation
 
-## Supported operations
+Full docs at [github.com/bkmashiro/nest-faster-crud](https://github.com/bkmashiro/nest-faster-crud)
 
-- `create(dto)` uses `em.create()` and `em.persistAndFlush()`
-- `list(query)` uses `em.findAndCount()` with `where`, `orderBy`, `limit`, and `offset`
-- `get(id)` uses `em.findOne()`
-- `update(id, dto)` uses `em.assign()` and `em.flush()`
-- `remove(id)` uses `em.removeAndFlush()`
+## Ecosystem
 
-## Filter mapping
-
-- `eq` -> scalar equality
-- `ne` -> `{ $ne: value }`
-- `lt` -> `{ $lt: value }`
-- `lte` -> `{ $lte: value }`
-- `gt` -> `{ $gt: value }`
-- `gte` -> `{ $gte: value }`
-- `like` -> `{ $like: %value% }`
-- `in` -> `{ $in: values }`
-- `between` -> `{ $gte: min, $lte: max }`
+| Package | Description |
+|---------|-------------|
+| [`@faster-crud/core`](https://www.npmjs.com/package/@faster-crud/core) | Decorators and types |
+| [`@faster-crud/nest`](https://www.npmjs.com/package/@faster-crud/nest) | NestJS controller factory |
+| [`@faster-crud/typeorm`](https://www.npmjs.com/package/@faster-crud/typeorm) | TypeORM adapter |
+| [`@faster-crud/prisma`](https://www.npmjs.com/package/@faster-crud/prisma) | Prisma adapter |
