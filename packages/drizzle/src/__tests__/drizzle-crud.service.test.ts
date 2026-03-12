@@ -188,4 +188,26 @@ describe('drizzleCrudService', () => {
       expect(chain.where).toHaveBeenCalled();
     });
   });
+
+  describe('create error handling', () => {
+    it('throws when insert returns empty result', async () => {
+      const chain: any = {
+        values: jest.fn().mockReturnThis(),
+        returning: jest.fn().mockReturnThis(),
+        then: (resolve: any) => resolve([]),
+      };
+      db.insert.mockReturnValue(chain);
+
+      await expect(service.create({ name: 'Fail' } as any)).rejects.toThrow(/Create failed/);
+    });
+  });
+
+  describe('table validation', () => {
+    it('throws when table has no id column', () => {
+      const { getTableColumns } = require('drizzle-orm');
+      getTableColumns.mockReturnValueOnce({ name: { name: 'name' } });
+
+      expect(() => drizzleCrudService(Item, db, mockTable)).toThrow(/must expose an "id" column/);
+    });
+  });
 });
