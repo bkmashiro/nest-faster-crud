@@ -7,6 +7,6 @@ import { Post } from '../entities/post.entity';
 @Injectable()
 export class PostsService extends TypeOrmResourceService(Post) {
   constructor(@InjectRepository(Post) repo: Repository<Post>) {
-    super(repo);
+    super(repo as any);
   }
 }

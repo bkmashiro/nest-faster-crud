@@ -9,7 +9,7 @@ const VALID_ROLES = ['admin', 'user'];
 @Injectable()
 export class UsersService extends TypeOrmResourceService(User) {
   constructor(@InjectRepository(User) repo: Repository<User>) {
-    super(repo);
+    super(repo as any);
   }
 
   async onBeforeCreate(dto: Partial<User>): Promise<Partial<User>> {
