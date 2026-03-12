@@ -1,10 +1,12 @@
 {
   "name": "@faster-crud/core",
-  "version": "0.2.0",
-  "description": "Core decorators and types for @faster-crud — end-to-end type-safe CRUD for NestJS",
+  "version": "0.2.1",
+  "description": "Core decorators and types for @faster-crud \u2014 end-to-end type-safe CRUD for NestJS",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w",
