@@ -210,3 +210,20 @@ describe('renderModule', () => {
     expect(output).toContain("import { UserService } from './User.service'");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Edge cases
+// ---------------------------------------------------------------------------
+
+describe('edge cases', () => {
+  it('parseFields handles all four supported types together', () => {
+    const result = parseFields('a:string,b:number,c:boolean,d:Date');
+    expect(result).toHaveLength(4);
+    expect(result.map((f: any) => f.type)).toEqual(['string', 'number', 'boolean', 'Date']);
+  });
+
+  it('renderEntity capitalizes field labels', () => {
+    const output = renderEntity('Foo', [{ name: 'firstName', type: 'string' }]);
+    expect(output).toContain("@Col({ label: 'FirstName' })");
+  });
+});
