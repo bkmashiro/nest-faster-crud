@@ -217,8 +217,8 @@ importers:
   packages/graphql:
     dependencies:
       '@faster-crud/core':
-        specifier: ^0.2.0
-        version: 0.2.0(reflect-metadata@0.2.2)
+        specifier: workspace:*
+        version: link:../core
       '@nestjs/common':
         specifier: ^10.0.0
         version: 10.4.22(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -251,8 +251,8 @@ importers:
   packages/mikro-orm:
     dependencies:
       '@faster-crud/nest':
-        specifier: ^0.2.0
-        version: 0.2.0(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(@nestjs/swagger@11.2.6(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(class-validator@0.14.4)(reflect-metadata@0.2.2))(class-validator@0.14.4)(reflect-metadata@0.2.2)
+        specifier: workspace:*
+        version: link:../nest
       '@mikro-orm/core':
         specifier: ^6.0.0
         version: 6.6.9
@@ -282,8 +282,8 @@ importers:
   packages/mongoose:
     dependencies:
       '@faster-crud/nest':
-        specifier: ^0.2.0
-        version: 0.2.0(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(@nestjs/swagger@11.2.6(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(class-validator@0.14.4)(reflect-metadata@0.2.2))(class-validator@0.14.4)(reflect-metadata@0.2.2)
+        specifier: workspace:*
+        version: link:../nest
       mongoose:
         specifier: ^8.0.0
         version: 8.23.0
@@ -313,8 +313,8 @@ importers:
   packages/nest:
     dependencies:
       '@faster-crud/core':
-        specifier: ^0.2.0
-        version: 0.2.0(reflect-metadata@0.2.2)
+        specifier: workspace:*
+        version: link:../core
       '@nestjs/swagger':
         specifier: ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0
         version: 11.2.6(@nestjs/common@10.4.22(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(class-validator@0.14.4)(reflect-metadata@0.2.2)
@@ -338,8 +338,8 @@ importers:
   packages/prisma:
     dependencies:
       '@faster-crud/nest':
-        specifier: ^0.2.0
-        version: 0.2.0(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(@nestjs/swagger@11.2.6(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(class-validator@0.14.4)(reflect-metadata@0.2.2))(class-validator@0.14.4)(reflect-metadata@0.2.2)
+        specifier: workspace:*
+        version: link:../nest
       '@prisma/client':
         specifier: ^5.0.0
         version: 5.22.0
@@ -369,8 +369,8 @@ importers:
   packages/react:
     dependencies:
       '@faster-crud/core':
-        specifier: ^0.2.0
-        version: 0.2.0(reflect-metadata@0.2.2)
+        specifier: workspace:*
+        version: link:../core
       react:
         specifier: ^18.0.0
         version: 18.3.1
@@ -382,8 +382,8 @@ importers:
   packages/solid:
     dependencies:
       '@faster-crud/core':
-        specifier: ^0.2.0
-        version: 0.2.0(reflect-metadata@0.2.2)
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       solid-js:
         specifier: ^1.8.0
@@ -395,8 +395,8 @@ importers:
   packages/svelte:
     dependencies:
       '@faster-crud/core':
-        specifier: ^0.2.0
-        version: 0.2.0(reflect-metadata@0.2.2)
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       svelte:
         specifier: ^5.0.0
@@ -435,11 +435,11 @@ importers:
   packages/typeorm:
     dependencies:
       '@faster-crud/core':
-        specifier: ^0.2.0
-        version: 0.2.0(reflect-metadata@0.2.2)
+        specifier: workspace:*
+        version: link:../core
       '@faster-crud/nest':
-        specifier: ^0.2.0
-        version: 0.2.0(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(@nestjs/swagger@11.2.6(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(class-validator@0.14.4)(reflect-metadata@0.2.2))(class-validator@0.14.4)(reflect-metadata@0.2.2)
+        specifier: workspace:*
+        version: link:../nest
     devDependencies:
       '@nestjs/common':
         specifier: ^11.0.0
@@ -888,20 +888,6 @@ packages:
     resolution: {integrity: sha512-jkenu4+yWCp4LrH0nBInVC/xouVZQmynN7MRdJeJKkKzc9/znD1w+LPFUlUYKLpkZRxbzQn+YyzRRSv/K3SDXg==}
     peerDependencies:
       reflect-metadata: ^0.2.0
-
-  '@faster-crud/nest@0.2.0':
-    resolution: {integrity: sha512-UyF3MQ35tITheHLyUlWhmZqW3hKceXYi91TI6D3E7mtTEcOr6yIehMcIpzDuzmR9G7fkwFtajOYm8TD27yDWGw==}
-    peerDependencies:
-      '@nestjs/common': ^10.0.0
-      '@nestjs/core': ^10.0.0
-      '@nestjs/swagger': ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0
-      class-validator: ^0.14.0
-      reflect-metadata: ^0.2.0
-    peerDependenciesMeta:
-      '@nestjs/swagger':
-        optional: true
-      class-validator:
-        optional: true
 
   '@fastify/ajv-compiler@3.6.0':
     resolution: {integrity: sha512-LwdXQJjmMD+GwLOkP7TVC68qa+pSSogeWWmznRJ/coyTcfe9qA05AHFSe1eZFwK6q+xVRpChnvFUkf1iYaSZsQ==}
@@ -4563,16 +4549,6 @@ snapshots:
     dependencies:
       reflect-metadata: 0.2.2
 
-  '@faster-crud/nest@0.2.0(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(@nestjs/swagger@11.2.6(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(class-validator@0.14.4)(reflect-metadata@0.2.2))(class-validator@0.14.4)(reflect-metadata@0.2.2)':
-    dependencies:
-      '@faster-crud/core': link:packages/core
-      '@nestjs/common': 11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/core': 10.4.22(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@10.4.22)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      reflect-metadata: 0.2.2
-    optionalDependencies:
-      '@nestjs/swagger': 11.2.6(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(class-validator@0.14.4)(reflect-metadata@0.2.2)
-      class-validator: 0.14.4
-
   '@fastify/ajv-compiler@3.6.0':
     dependencies:
       ajv: 8.18.0
@@ -4993,14 +4969,6 @@ snapshots:
     optionalDependencies:
       class-validator: 0.14.4
 
-  '@nestjs/mapped-types@2.1.0(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(class-validator@0.14.4)(reflect-metadata@0.2.2)':
-    dependencies:
-      '@nestjs/common': 11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      reflect-metadata: 0.2.2
-    optionalDependencies:
-      class-validator: 0.14.4
-    optional: true
-
   '@nestjs/platform-express@10.4.22(@nestjs/common@10.4.22(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)':
     dependencies:
       '@nestjs/common': 10.4.22(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -5039,21 +5007,6 @@ snapshots:
       swagger-ui-dist: 5.31.0
     optionalDependencies:
       class-validator: 0.14.4
-
-  '@nestjs/swagger@11.2.6(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(class-validator@0.14.4)(reflect-metadata@0.2.2)':
-    dependencies:
-      '@microsoft/tsdoc': 0.16.0
-      '@nestjs/common': 11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/core': 10.4.22(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@10.4.22)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/mapped-types': 2.1.0(@nestjs/common@11.1.16(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(class-validator@0.14.4)(reflect-metadata@0.2.2)
-      js-yaml: 4.1.1
-      lodash: 4.17.23
-      path-to-regexp: 8.3.0
-      reflect-metadata: 0.2.2
-      swagger-ui-dist: 5.31.0
-    optionalDependencies:
-      class-validator: 0.14.4
-    optional: true
 
   '@nestjs/swagger@7.4.2(@nestjs/common@10.4.22(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(class-validator@0.14.4)(reflect-metadata@0.2.2)':
     dependencies:

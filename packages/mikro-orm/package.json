@@ -12,7 +12,7 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
-    "@faster-crud/nest": "^0.2.0"
+    "@faster-crud/nest": "workspace:*"
   },
   "peerDependencies": {
     "@faster-crud/core": "^0.2.0",

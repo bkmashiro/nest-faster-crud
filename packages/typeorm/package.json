@@ -12,8 +12,8 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
-    "@faster-crud/core": "^0.2.0",
-    "@faster-crud/nest": "^0.2.0"
+    "@faster-crud/core": "workspace:*",
+    "@faster-crud/nest": "workspace:*"
   },
   "peerDependencies": {
     "typeorm": "^0.3.0",
