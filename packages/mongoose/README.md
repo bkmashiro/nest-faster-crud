@@ -1,6 +1,9 @@
 # @faster-crud/mongoose
 
 [![npm](https://img.shields.io/npm/v/@faster-crud/mongoose?style=flat-square)](https://www.npmjs.com/package/@faster-crud/mongoose)
+[![npm downloads](https://img.shields.io/npm/dm/@faster-crud/mongoose?style=flat-square)](https://www.npmjs.com/package/@faster-crud/mongoose)
+[![license](https://img.shields.io/npm/l/@faster-crud/mongoose?style=flat-square)](https://github.com/bkmashiro/nest-faster-crud/blob/main/LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 Mongoose adapter for @faster-crud.
 

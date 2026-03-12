@@ -1,6 +1,9 @@
 # @faster-crud/solid
 
 [![npm](https://img.shields.io/npm/v/@faster-crud/solid?style=flat-square)](https://www.npmjs.com/package/@faster-crud/solid)
+[![npm downloads](https://img.shields.io/npm/dm/@faster-crud/solid?style=flat-square)](https://www.npmjs.com/package/@faster-crud/solid)
+[![license](https://img.shields.io/npm/l/@faster-crud/solid?style=flat-square)](https://github.com/bkmashiro/nest-faster-crud/blob/main/LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 SolidJS resource for @faster-crud — reactive CRUD signal.
 

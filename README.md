@@ -2,26 +2,38 @@
 
 > End-to-end type-safe CRUD for any framework
 
+[![npm](https://img.shields.io/npm/v/@faster-crud/core?style=flat-square&label=npm%20%40core)](https://www.npmjs.com/package/@faster-crud/core)
+[![npm downloads](https://img.shields.io/npm/dm/@faster-crud/core?style=flat-square&label=downloads)](https://www.npmjs.com/package/@faster-crud/core)
+[![CI](https://img.shields.io/github/actions/workflow/status/bkmashiro/nest-faster-crud/ci.yml?style=flat-square&label=CI)](https://github.com/bkmashiro/nest-faster-crud/actions)
+[![License](https://img.shields.io/npm/l/@faster-crud/core?style=flat-square)](https://github.com/bkmashiro/nest-faster-crud/blob/main/LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
+
 Define your entity once with decorators — get a full REST API, validation, filtering, pagination, and auto-generated frontend UI across any backend and frontend framework.
 
 ## Packages
 
 | Package | Version | Description |
 |---------|---------|-------------|
-| `@faster-crud/core` | 0.1.1 | Framework-agnostic decorators & types |
-| `@faster-crud/nest` | 0.1.2 | NestJS integration |
-| `@faster-crud/typeorm` | 0.1.1 | TypeORM adapter |
-| `@faster-crud/prisma` | 0.1.0 | Prisma adapter |
-| `@faster-crud/drizzle` | 0.1.0 | Drizzle adapter |
-| `@faster-crud/mongoose` | 0.1.0 | Mongoose/MongoDB adapter |
-| `@faster-crud/mikro-orm` | 0.1.0 | MikroORM adapter |
-| `@faster-crud/hono` | 0.1.0 | Hono framework adapter |
-| `@faster-crud/express` | 0.1.0 | Express adapter |
-| `@faster-crud/fastify` | 0.1.0 | Fastify adapter |
-| `@faster-crud/vue` | 0.1.1 | Vue 3 components |
-| `@faster-crud/react` | 0.1.0 | React hooks & components |
-| `@faster-crud/svelte` | 0.1.0 | Svelte 5 stores & components |
-| `@faster-crud/gen` | 0.1.1 | CLI code generator |
+| [`@faster-crud/core`](https://www.npmjs.com/package/@faster-crud/core) | [![npm](https://img.shields.io/npm/v/@faster-crud/core?style=flat-square)](https://www.npmjs.com/package/@faster-crud/core) | Framework-agnostic decorators & types |
+| [`@faster-crud/nest`](https://www.npmjs.com/package/@faster-crud/nest) | [![npm](https://img.shields.io/npm/v/@faster-crud/nest?style=flat-square)](https://www.npmjs.com/package/@faster-crud/nest) | NestJS integration |
+| [`@faster-crud/typeorm`](https://www.npmjs.com/package/@faster-crud/typeorm) | [![npm](https://img.shields.io/npm/v/@faster-crud/typeorm?style=flat-square)](https://www.npmjs.com/package/@faster-crud/typeorm) | TypeORM adapter |
+| [`@faster-crud/prisma`](https://www.npmjs.com/package/@faster-crud/prisma) | [![npm](https://img.shields.io/npm/v/@faster-crud/prisma?style=flat-square)](https://www.npmjs.com/package/@faster-crud/prisma) | Prisma adapter |
+| [`@faster-crud/drizzle`](https://www.npmjs.com/package/@faster-crud/drizzle) | [![npm](https://img.shields.io/npm/v/@faster-crud/drizzle?style=flat-square)](https://www.npmjs.com/package/@faster-crud/drizzle) | Drizzle adapter |
+| [`@faster-crud/mongoose`](https://www.npmjs.com/package/@faster-crud/mongoose) | [![npm](https://img.shields.io/npm/v/@faster-crud/mongoose?style=flat-square)](https://www.npmjs.com/package/@faster-crud/mongoose) | Mongoose/MongoDB adapter |
+| [`@faster-crud/mikro-orm`](https://www.npmjs.com/package/@faster-crud/mikro-orm) | [![npm](https://img.shields.io/npm/v/@faster-crud/mikro-orm?style=flat-square)](https://www.npmjs.com/package/@faster-crud/mikro-orm) | MikroORM adapter |
+| [`@faster-crud/hono`](https://www.npmjs.com/package/@faster-crud/hono) | [![npm](https://img.shields.io/npm/v/@faster-crud/hono?style=flat-square)](https://www.npmjs.com/package/@faster-crud/hono) | Hono framework adapter |
+| [`@faster-crud/express`](https://www.npmjs.com/package/@faster-crud/express) | [![npm](https://img.shields.io/npm/v/@faster-crud/express?style=flat-square)](https://www.npmjs.com/package/@faster-crud/express) | Express adapter |
+| [`@faster-crud/fastify`](https://www.npmjs.com/package/@faster-crud/fastify) | [![npm](https://img.shields.io/npm/v/@faster-crud/fastify?style=flat-square)](https://www.npmjs.com/package/@faster-crud/fastify) | Fastify adapter |
+| [`@faster-crud/react`](https://www.npmjs.com/package/@faster-crud/react) | [![npm](https://img.shields.io/npm/v/@faster-crud/react?style=flat-square)](https://www.npmjs.com/package/@faster-crud/react) | React hooks & components |
+| [`@faster-crud/svelte`](https://www.npmjs.com/package/@faster-crud/svelte) | [![npm](https://img.shields.io/npm/v/@faster-crud/svelte?style=flat-square)](https://www.npmjs.com/package/@faster-crud/svelte) | Svelte 5 stores & components |
+| [`@faster-crud/solid`](https://www.npmjs.com/package/@faster-crud/solid) | [![npm](https://img.shields.io/npm/v/@faster-crud/solid?style=flat-square)](https://www.npmjs.com/package/@faster-crud/solid) | SolidJS stores & components |
+| [`@faster-crud/trpc`](https://www.npmjs.com/package/@faster-crud/trpc) | [![npm](https://img.shields.io/npm/v/@faster-crud/trpc?style=flat-square)](https://www.npmjs.com/package/@faster-crud/trpc) | tRPC router builder |
+| [`@faster-crud/graphql`](https://www.npmjs.com/package/@faster-crud/graphql) | [![npm](https://img.shields.io/npm/v/@faster-crud/graphql?style=flat-square)](https://www.npmjs.com/package/@faster-crud/graphql) | GraphQL resolver factory |
+| [`@faster-crud/gen`](https://www.npmjs.com/package/@faster-crud/gen) | [![npm](https://img.shields.io/npm/v/@faster-crud/gen?style=flat-square)](https://www.npmjs.com/package/@faster-crud/gen) | CLI code generator |
+| [`@faster-crud/validation`](https://www.npmjs.com/package/@faster-crud/validation) | [![npm](https://img.shields.io/npm/v/@faster-crud/validation?style=flat-square)](https://www.npmjs.com/package/@faster-crud/validation) | Validation middleware |
+| [`@faster-crud/auth`](https://www.npmjs.com/package/@faster-crud/auth) | [![npm](https://img.shields.io/npm/v/@faster-crud/auth?style=flat-square)](https://www.npmjs.com/package/@faster-crud/auth) | JWT auth helpers |
+
 
 ## Quick Start (NestJS + TypeORM)
 

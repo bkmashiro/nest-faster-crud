@@ -1,6 +1,9 @@
 # @faster-crud/prisma
 
 [![npm](https://img.shields.io/npm/v/@faster-crud/prisma?style=flat-square)](https://www.npmjs.com/package/@faster-crud/prisma)
+[![npm downloads](https://img.shields.io/npm/dm/@faster-crud/prisma?style=flat-square)](https://www.npmjs.com/package/@faster-crud/prisma)
+[![license](https://img.shields.io/npm/l/@faster-crud/prisma?style=flat-square)](https://github.com/bkmashiro/nest-faster-crud/blob/main/LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 Prisma adapter for @faster-crud.
 

@@ -1,6 +1,9 @@
 # @faster-crud/mikro-orm
 
 [![npm](https://img.shields.io/npm/v/@faster-crud/mikro-orm?style=flat-square)](https://www.npmjs.com/package/@faster-crud/mikro-orm)
+[![npm downloads](https://img.shields.io/npm/dm/@faster-crud/mikro-orm?style=flat-square)](https://www.npmjs.com/package/@faster-crud/mikro-orm)
+[![license](https://img.shields.io/npm/l/@faster-crud/mikro-orm?style=flat-square)](https://github.com/bkmashiro/nest-faster-crud/blob/main/LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 MikroORM adapter for @faster-crud.
 

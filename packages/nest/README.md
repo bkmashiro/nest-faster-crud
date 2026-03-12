@@ -1,6 +1,9 @@
 # @faster-crud/nest
 
 [![npm](https://img.shields.io/npm/v/@faster-crud/nest?style=flat-square)](https://www.npmjs.com/package/@faster-crud/nest)
+[![npm downloads](https://img.shields.io/npm/dm/@faster-crud/nest?style=flat-square)](https://www.npmjs.com/package/@faster-crud/nest)
+[![license](https://img.shields.io/npm/l/@faster-crud/nest?style=flat-square)](https://github.com/bkmashiro/nest-faster-crud/blob/main/LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 NestJS CRUD module for `@faster-crud` — auto-generates controllers, DTOs, and Swagger docs from `@Resource`/`@Col` decorators.
 

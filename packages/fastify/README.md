@@ -1,6 +1,9 @@
 # @faster-crud/fastify
 
 [![npm](https://img.shields.io/npm/v/@faster-crud/fastify?style=flat-square)](https://www.npmjs.com/package/@faster-crud/fastify)
+[![npm downloads](https://img.shields.io/npm/dm/@faster-crud/fastify?style=flat-square)](https://www.npmjs.com/package/@faster-crud/fastify)
+[![license](https://img.shields.io/npm/l/@faster-crud/fastify?style=flat-square)](https://github.com/bkmashiro/nest-faster-crud/blob/main/LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 Fastify adapter for @faster-crud — CRUD plugin for Fastify.
 
