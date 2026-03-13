@@ -143,6 +143,12 @@ jobs:
             echo "Publishing packages/$pkg"
             (
               cd "packages/$pkg"
-              npm publish --access public
+              PKG_NAME=$(node -p "require('./package.json').name")
+              PKG_VER=$(node -p "require('./package.json').version")
+              if npm view "${PKG_NAME}@${PKG_VER}" version &>/dev/null; then
+                echo "⏭️  ${PKG_NAME}@${PKG_VER} already published, skipping"
+              else
+                npm publish --access public
+              fi
             )
           done
