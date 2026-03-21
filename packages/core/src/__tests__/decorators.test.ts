@@ -44,6 +44,25 @@ describe('@Resource decorator', () => {
     expect(meta!.fields['title']).toBeDefined();
     expect(meta!.fields['title'].label).toBe('Title');
   });
+
+  it('adds deletedAt field when soft delete is enabled', () => {
+    @Resource('article', { softDelete: true })
+    class Article {}
+
+    const meta = getResourceMeta(Article);
+    expect(meta!.softDelete).toBe(true);
+    expect(meta!.fields['deletedAt']).toEqual(
+      expect.objectContaining({ key: 'deletedAt', type: 'Date' }),
+    );
+  });
+
+  it('stores cache options on the resource metadata', () => {
+    @Resource('article', { cache: { ttl: 5000 } })
+    class Article {}
+
+    const meta = getResourceMeta(Article);
+    expect(meta!.cache).toEqual({ ttl: 5000 });
+  });
 });
 
 describe('@Col decorator', () => {

@@ -14,13 +14,24 @@ const tokens_1 = require("./tokens");
 function Resource(name, options = {}) {
     return (target) => {
         const fields = Reflect.getMetadata(tokens_1.FIELDS_META, target.prototype) ?? {};
+        const nextFields = { ...fields };
+        if (options.softDelete) {
+            nextFields.deletedAt = {
+                key: 'deletedAt',
+                type: 'Date',
+                ...(nextFields.deletedAt ?? {}),
+            };
+        }
         const meta = {
             name,
             operations: options.operations ?? ['create', 'list', 'get', 'update', 'remove'],
             guardTokens: options.guardTokens,
             pagination: options.pagination ?? { max: 100 },
-            fields,
+            softDelete: options.softDelete ?? false,
+            cache: options.cache,
+            fields: nextFields,
         };
+        Reflect.defineMetadata(tokens_1.FIELDS_META, nextFields, target.prototype);
         Reflect.defineMetadata(tokens_1.RESOURCE_META, meta, target);
     };
 }

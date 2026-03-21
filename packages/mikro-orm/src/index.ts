@@ -45,15 +45,16 @@ export function MikroOrmResourceService<T extends { id: number }>(
   Entity: new (...args: any[]) => T,
   em: EntityManager,
 ) {
-  const Base = ResourceService(Entity);
+  const Base = ResourceService(Entity) as any;
 
   @Injectable()
   abstract class MikroOrmService extends Base {
     async create(dto: Partial<T>): Promise<T> {
       const nextDto = await (this as any).onBeforeCreate(dto);
       this.validateCreate(nextDto);
-      const entity = em.create(Entity, nextDto as EntityData<T>);
+      const entity = em.create(Entity, this.withSoftDeleteForCreate(nextDto) as EntityData<T>);
       await em.persistAndFlush(entity);
+      this.invalidateCache();
       await (this as any).onAfterCreate(entity);
       return entity;
     }
@@ -76,27 +77,37 @@ export function MikroOrmResourceService<T extends { id: number }>(
         ? { [sort.field as string]: sort.order }
         : undefined;
 
-      const [data, total] = await em.findAndCount(
-        Entity,
-        where as FilterQuery<T>,
-        {
-          orderBy: orderBy as any,
-          limit: size,
-          offset: (current - 1) * size,
-        },
-      );
+      return this.withCache('list', query ?? {}, async () => {
+        const [data, total] = await em.findAndCount(
+          Entity,
+          {
+            ...this.getActiveRecordFilter(),
+            ...where,
+          } as FilterQuery<T>,
+          {
+            orderBy: orderBy as any,
+            limit: size,
+            offset: (current - 1) * size,
+          },
+        );
 
-      return {
-        data: data.map((record) => this.filterForView(record, 'list')),
-        total,
-        page: current,
-        size,
-      };
+        return {
+          data: data.map((record) => this.filterForView(record, 'list')),
+          total,
+          page: current,
+          size,
+        };
+      });
     }
 
     async get(id: number): Promise<T | null> {
-      const record = await em.findOne(Entity, { id } as FilterQuery<T>);
-      return record ? this.filterForView(record, 'get') : null;
+      return this.withCache('get', { id }, async () => {
+        const record = await em.findOne(Entity, {
+          id,
+          ...this.getActiveRecordFilter(),
+        } as FilterQuery<T>);
+        return record ? this.filterForView(record, 'get') : null;
+      });
     }
 
     async update(id: number, dto: Partial<T>): Promise<T> {
@@ -109,6 +120,7 @@ export function MikroOrmResourceService<T extends { id: number }>(
 
       em.assign(record, nextDto as EntityData<T>);
       await em.flush();
+      this.invalidateCache();
       await (this as any).onAfterUpdate(record);
       return record;
     }
@@ -122,6 +134,7 @@ export function MikroOrmResourceService<T extends { id: number }>(
       }
 
       await em.removeAndFlush(record);
+      this.invalidateCache();
       await (this as any).onAfterRemove(id);
     }
   }

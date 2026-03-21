@@ -54,7 +54,7 @@ function buildFilterValue(value: unknown): unknown {
 export function TypeOrmResourceService<T extends { id: number }>(
   Entity: new (...args: any[]) => T
 ) {
-  const Base = ResourceService(Entity);
+  const Base = ResourceService(Entity) as any;
 
   @Injectable()
   abstract class TypeOrmService extends Base {
@@ -66,14 +66,16 @@ export function TypeOrmResourceService<T extends { id: number }>(
     }
 
     isSoftDelete(): boolean {
-      return !!this.repo.manager.connection.getMetadata(this.repo.target).deleteDateColumn;
+      return this.isSoftDeleteEnabled()
+        || !!this.repo.manager.connection.getMetadata(this.repo.target).deleteDateColumn;
     }
 
     async create(dto: Partial<T>): Promise<T> {
       const nextDto = await (this as any).onBeforeCreate(dto);
       this.validateCreate(nextDto);
-      const entity = this.repo.create(nextDto as any);
+      const entity = this.repo.create(this.withSoftDeleteForCreate(nextDto) as any);
       const saved = await this.repo.save(entity as any) as T;
+      this.invalidateCache();
       await (this as any).onAfterCreate(saved);
       return saved;
     }
@@ -97,24 +99,36 @@ export function TypeOrmResourceService<T extends { id: number }>(
         order[sort.field as string] = sort.order.toUpperCase();
       }
 
-      const [data, total] = await this.repo.findAndCount({
-        where,
-        order,
-        skip: (current - 1) * size,
-        take: size,
-      });
+      return this.withCache('list', query ?? {}, async () => {
+        const [data, total] = await this.repo.findAndCount({
+          where: {
+            ...this.getActiveRecordFilter(),
+            ...where,
+          },
+          order,
+          skip: (current - 1) * size,
+          take: size,
+        });
 
-      return {
-        data: data.map(r => this.filterForView(r, 'list')),
-        total,
-        page: current,
-        size,
-      };
+        return {
+          data: data.map(r => this.filterForView(r, 'list')),
+          total,
+          page: current,
+          size,
+        };
+      });
     }
 
     async get(id: number): Promise<T | null> {
-      const r = await this.repo.findOne({ where: { id } as any });
-      return r ? this.filterForView(r, 'get') : null;
+      return this.withCache('get', { id }, async () => {
+        const r = await this.repo.findOne({
+          where: {
+            id,
+            ...this.getActiveRecordFilter(),
+          } as any,
+        });
+        return r ? this.filterForView(r, 'get') : null;
+      });
     }
 
     async update(id: number, dto: Partial<T>): Promise<T> {
@@ -122,6 +136,7 @@ export function TypeOrmResourceService<T extends { id: number }>(
       await this.repo.update(id, nextDto as any);
       const r = await this.repo.findOne({ where: { id } as any });
       if (!r) throw new Error(`Record ${id} not found`);
+      this.invalidateCache();
       await (this as any).onAfterUpdate(r);
       return r;
     }
@@ -129,11 +144,42 @@ export function TypeOrmResourceService<T extends { id: number }>(
     async remove(id: number): Promise<void> {
       await (this as any).onBeforeRemove(id);
       if (this.isSoftDelete()) {
-        await this.repo.softDelete(id);
+        const deleteDateColumn = this.repo.manager.connection.getMetadata(this.repo.target).deleteDateColumn;
+        if (deleteDateColumn) {
+          await this.repo.softDelete(id);
+        } else {
+          await this.repo.update(id, {
+            [this.getSoftDeleteField()]: new Date(),
+          } as any);
+        }
       } else {
         await this.repo.delete(id);
       }
+      this.invalidateCache();
       await (this as any).onAfterRemove(id);
+    }
+
+    async restore(id: number): Promise<T> {
+      if (!this.isSoftDelete()) {
+        throw new Error('Restore is not enabled for this resource');
+      }
+
+      const deleteDateColumn = this.repo.manager.connection.getMetadata(this.repo.target).deleteDateColumn;
+      if (deleteDateColumn) {
+        await (this.repo as any).restore(id);
+      } else {
+        await this.repo.update(id, {
+          [this.getSoftDeleteField()]: null,
+        } as any);
+      }
+
+      const restored = await this.repo.findOne({ where: { id } as any });
+      if (!restored) {
+        throw new Error(`Record ${id} not found`);
+      }
+
+      this.invalidateCache();
+      return restored;
     }
   }
 

@@ -53,14 +53,15 @@ export function MongooseResourceService<T extends { id?: unknown }>(
   Entity: new (...args: any[]) => T,
   mongooseModel: Model<T>,
 ) {
-  const Base = ResourceService(Entity);
+  const Base = ResourceService(Entity) as any;
 
   @Injectable()
   abstract class MongooseService extends Base {
     async create(dto: Partial<T>): Promise<T> {
       const nextDto = await (this as any).onBeforeCreate(dto);
       this.validateCreate(nextDto);
-      const created = await new mongooseModel(nextDto).save();
+      const created = await new mongooseModel(this.withSoftDeleteForCreate(nextDto)).save();
+      this.invalidateCache();
       await (this as any).onAfterCreate(created);
       return created;
     }
@@ -84,22 +85,36 @@ export function MongooseResourceService<T extends { id?: unknown }>(
         ? { [sort.field as string]: sort.order === 'asc' ? 1 : -1 }
         : undefined;
 
-      const [data, total] = await Promise.all([
-        mongooseModel.find(whereClause).skip(offset).limit(size).sort(sortObj as any).exec(),
-        mongooseModel.countDocuments(whereClause).exec(),
-      ]);
+      return this.withCache('list', query ?? {}, async () => {
+        const nextWhereClause = {
+          ...this.getActiveRecordFilter(),
+          ...whereClause,
+        };
 
-      return {
-        data: data.map((record) => this.filterForView(record as HydratedDocument<T>, 'list')),
-        total,
-        page: current,
-        size,
-      };
+        const [data, total] = await Promise.all([
+          mongooseModel.find(nextWhereClause).skip(offset).limit(size).sort(sortObj as any).exec(),
+          mongooseModel.countDocuments(nextWhereClause).exec(),
+        ]);
+
+        return {
+          data: data.map((record) => this.filterForView(record as HydratedDocument<T>, 'list')),
+          total,
+          page: current,
+          size,
+        };
+      });
     }
 
     async get(id: any): Promise<T | null> {
-      const record = await mongooseModel.findById(id).exec();
-      return record ? this.filterForView(record as HydratedDocument<T>, 'get') : null;
+      return this.withCache('get', { id }, async () => {
+        const record = this.isSoftDeleteEnabled()
+          ? await mongooseModel.findOne({
+            _id: id,
+            ...this.getActiveRecordFilter(),
+          }).exec()
+          : await mongooseModel.findById(id).exec();
+        return record ? this.filterForView(record as HydratedDocument<T>, 'get') : null;
+      });
     }
 
     async update(id: any, dto: Partial<T>): Promise<T> {
@@ -110,6 +125,7 @@ export function MongooseResourceService<T extends { id?: unknown }>(
         throw new Error(`Record ${id} not found`);
       }
 
+      this.invalidateCache();
       await (this as any).onAfterUpdate(updated);
       return updated;
     }
@@ -117,6 +133,7 @@ export function MongooseResourceService<T extends { id?: unknown }>(
     async remove(id: any): Promise<void> {
       await (this as any).onBeforeRemove(id);
       await mongooseModel.findByIdAndDelete(id).exec();
+      this.invalidateCache();
       await (this as any).onAfterRemove(id);
     }
   }

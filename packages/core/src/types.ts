@@ -1,5 +1,6 @@
 export type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 export type CrudOperation = 'create' | 'list' | 'get' | 'update' | 'remove';
+export type CacheOperation = 'list' | 'get';
 export type UiWidget =
   | 'text' | 'number-input' | 'password' | 'email'
   | 'select' | 'date-picker' | 'textarea' | 'switch' | 'checkbox';
@@ -41,6 +42,11 @@ export interface ResourceMeta {
   operations: CrudOperation[];
   guardTokens?: any[];
   pagination?: { max: number };
+  softDelete?: boolean;
+  cache?: {
+    ttl: number;
+    key?: (operation: CacheOperation, params: unknown) => string;
+  };
   fields: Record<string, FieldMeta>;
 }
 

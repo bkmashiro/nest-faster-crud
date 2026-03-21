@@ -35,8 +35,19 @@ class Article {
   @Rule.required() @Col() title2!: string;
 }
 
+@Resource('soft-articles', {
+  softDelete: true,
+  cache: { ttl: 50 },
+})
+class SoftArticle {
+  @Col() id!: number;
+  @Searchable() @Col() title!: string;
+  @Col() deletedAt!: Date | null;
+}
+
 // --- Create the service class ---
 const BaseService = TypeOrmResourceService(Article);
+const SoftBaseService = TypeOrmResourceService(SoftArticle);
 
 // --- Build a mock repository ---
 function createMockRepo() {
@@ -48,6 +59,7 @@ function createMockRepo() {
     update: jest.fn(() => Promise.resolve({})),
     delete: jest.fn(() => Promise.resolve({})),
     softDelete: jest.fn(() => Promise.resolve({})),
+    restore: jest.fn(() => Promise.resolve({})),
     target: Article,
     manager: {
       connection: {
@@ -61,11 +73,14 @@ function createMockRepo() {
 
 describe('TypeOrmResourceService', () => {
   let service: InstanceType<typeof BaseService>;
+  let softService: InstanceType<typeof SoftBaseService>;
   let repo: ReturnType<typeof createMockRepo>;
 
   beforeEach(() => {
+    jest.useRealTimers();
     repo = createMockRepo();
     service = new (BaseService as any)(repo);
+    softService = new (SoftBaseService as any)(repo);
   });
 
   describe('create()', () => {
@@ -305,6 +320,74 @@ describe('TypeOrmResourceService', () => {
         deleteDateColumn: { propertyName: 'deletedAt' },
       });
       expect(service.isSoftDelete()).toBe(true);
+    });
+  });
+
+  describe('soft delete resource behavior', () => {
+    it('adds deletedAt null on create', async () => {
+      repo.save.mockResolvedValue({ id: 1, title: 'Hello', deletedAt: null });
+
+      await softService.create({ title: 'Hello' } as any);
+
+      expect(repo.create).toHaveBeenCalledWith({ title: 'Hello', deletedAt: null });
+    });
+
+    it('filters out deleted rows in list and get', async () => {
+      repo.findAndCount.mockResolvedValue([[], 0]);
+      repo.findOne.mockResolvedValue(null);
+
+      await softService.list({
+        filters: { title: 'hello' } as any,
+      });
+      await softService.get(3);
+
+      expect(repo.findAndCount).toHaveBeenCalledWith({
+        where: { deletedAt: null, title: 'hello' },
+        order: {},
+        skip: 0,
+        take: 10,
+      });
+      expect(repo.findOne).toHaveBeenNthCalledWith(1, {
+        where: { id: 3, deletedAt: null },
+      });
+    });
+
+    it('uses update-based soft delete and restore when entity metadata lacks deleteDateColumn', async () => {
+      repo.findOne.mockResolvedValue({ id: 1, title: 'Back', deletedAt: null });
+
+      await softService.remove(1);
+      await softService.restore(1);
+
+      expect(repo.update).toHaveBeenNthCalledWith(1, 1, { deletedAt: expect.any(Date) });
+      expect(repo.update).toHaveBeenNthCalledWith(2, 1, { deletedAt: null });
+      expect(repo.restore).not.toHaveBeenCalled();
+    });
+
+    it('invalidates cache after writes', async () => {
+      repo.findOne.mockResolvedValue({ id: 1, title: 'Cached', deletedAt: null });
+
+      await softService.get(1);
+      await softService.get(1);
+      expect(repo.findOne).toHaveBeenCalledTimes(1);
+
+      await softService.update(1, { title: 'Changed' } as any);
+      repo.findOne.mockResolvedValue({ id: 1, title: 'Changed', deletedAt: null });
+      await softService.get(1);
+      expect(repo.findOne).toHaveBeenCalledTimes(3);
+    });
+
+    it('expires cached reads after ttl', async () => {
+      jest.useFakeTimers();
+      repo.findOne.mockResolvedValue({ id: 1, title: 'Cached', deletedAt: null });
+
+      const pending = softService.get(1);
+      await pending;
+      await softService.get(1);
+      expect(repo.findOne).toHaveBeenCalledTimes(1);
+
+      jest.advanceTimersByTime(60);
+      await softService.get(1);
+      expect(repo.findOne).toHaveBeenCalledTimes(2);
     });
   });
 });

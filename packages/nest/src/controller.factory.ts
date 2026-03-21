@@ -93,6 +93,19 @@ export class CrudControllerFactory {
       Object.defineProperty(CrudController.prototype, 'remove', descriptor);
     }
 
+    if (meta.softDelete) {
+      const descriptor: PropertyDescriptor = {
+        value: async function(this: any, id: string) {
+          return this.service.restore(+id);
+        },
+        writable: true,
+        configurable: true,
+      };
+      Patch(':id/restore')(CrudController.prototype, 'restore', descriptor);
+      Param('id')(CrudController.prototype, 'restore', 0);
+      Object.defineProperty(CrudController.prototype, 'restore', descriptor);
+    }
+
     Injectable()(CrudController);
     applySwaggerToController(CrudController, name, operations);
 

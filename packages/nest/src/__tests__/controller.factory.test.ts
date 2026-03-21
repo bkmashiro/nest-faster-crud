@@ -37,6 +37,15 @@ class ReadonlyItem {
   @Col() title!: string;
 }
 
+@Resource('archived-products', {
+  operations: ['list', 'get', 'remove'],
+  softDelete: true,
+})
+class ArchivedProduct {
+  @Col() id!: number;
+  @Col() title!: string;
+}
+
 // --- Mock service factory ---
 function createMockService() {
   return {
@@ -45,6 +54,7 @@ function createMockService() {
     get: jest.fn(async (id: number) => ({ id, name: 'Test', price: 9.99 })),
     update: jest.fn(async (id: number, dto: any) => ({ id, ...dto })),
     remove: jest.fn(async (id: number) => undefined),
+    restore: jest.fn(async (id: number) => ({ id })),
   };
 }
 
@@ -165,6 +175,17 @@ describe('CrudControllerFactory', () => {
       const ControllerA = CrudControllerFactory.create(Product, ServiceClass as any);
       const ControllerB = CrudControllerFactory.create(Product, ServiceClass as any);
       expect(ControllerA).not.toBe(ControllerB);
+    });
+
+    it('adds restore only for soft delete resources', async () => {
+      const ServiceClass = class {};
+      const Controller = CrudControllerFactory.create(ArchivedProduct, ServiceClass as any);
+      const mockService = createMockService();
+      const controller = new (Controller as any)(mockService);
+
+      expect(controller.restore).toBeDefined();
+      await controller.restore('9');
+      expect(mockService.restore).toHaveBeenCalledWith(9);
     });
   });
 });

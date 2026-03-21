@@ -9,13 +9,26 @@ export function Resource(
 ): ClassDecorator {
   return (target) => {
     const fields = Reflect.getMetadata(FIELDS_META, target.prototype) ?? {};
+    const nextFields = { ...fields };
+
+    if (options.softDelete) {
+      nextFields.deletedAt = {
+        key: 'deletedAt',
+        type: 'Date',
+        ...(nextFields.deletedAt ?? {}),
+      };
+    }
+
     const meta: ResourceMeta = {
       name,
       operations: options.operations ?? ['create', 'list', 'get', 'update', 'remove'],
       guardTokens: options.guardTokens,
       pagination:  options.pagination ?? { max: 100 },
-      fields,
+      softDelete: options.softDelete ?? false,
+      cache: options.cache,
+      fields: nextFields,
     };
+    Reflect.defineMetadata(FIELDS_META, nextFields, target.prototype);
     Reflect.defineMetadata(RESOURCE_META, meta, target);
   };
 }
