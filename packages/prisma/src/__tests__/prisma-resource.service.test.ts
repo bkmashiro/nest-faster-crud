@@ -149,4 +149,60 @@ describe('PrismaResourceService', () => {
     await service.remove(1);
     expect(prismaModel.delete).toHaveBeenCalledWith({ where: { id: 1 } });
   });
+
+  // --- include (relation query) tests ---
+
+  it('passes include to prismaModel.create', async () => {
+    await service.create({ name: 'Ada', role: 'admin' }, { include: { posts: true } });
+
+    expect(prismaModel.create).toHaveBeenCalledWith({
+      data: { name: 'Ada', role: 'admin' },
+      include: { posts: true },
+    });
+  });
+
+  it('passes include to prismaModel.findMany during list', async () => {
+    await service.list({}, { include: { profile: true } });
+
+    expect(prismaModel.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ include: { profile: true } }),
+    );
+  });
+
+  it('passes include to prismaModel.findUnique during get', async () => {
+    prismaModel.findUnique.mockResolvedValue({
+      id: 1,
+      name: 'Ada',
+      age: 30,
+      email: 'a@b.com',
+      internal: 'x',
+      role: 'admin',
+      posts: [],
+    } as any);
+
+    await service.get(1, { include: { posts: true } });
+
+    expect(prismaModel.findUnique).toHaveBeenCalledWith({
+      where: { id: 1 },
+      include: { posts: true },
+    });
+  });
+
+  it('passes include to prismaModel.update', async () => {
+    prismaModel.update.mockResolvedValue({ id: 1, name: 'Grace', role: 'admin', posts: [] } as any);
+
+    await service.update(1, { name: 'Grace' }, { include: { posts: true } });
+
+    expect(prismaModel.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { name: 'Grace' },
+      include: { posts: true },
+    });
+  });
+
+  it('does not pass include when options are omitted', async () => {
+    await service.get(1);
+
+    expect(prismaModel.findUnique).toHaveBeenCalledWith({ where: { id: 1 } });
+  });
 });
