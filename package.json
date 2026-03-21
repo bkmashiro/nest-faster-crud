@@ -3,12 +3,13 @@
   "private": true,
   "workspaces": ["packages/*", "apps/*"],
   "scripts": {
-    "build": "pnpm -r build",
-    "test": "pnpm -r test",
+    "build": "node scripts/run-tsc.cjs",
+    "test": "pnpm build && node scripts/run-jest.cjs",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs"
   },
   "devDependencies": {
+    "typescript": "^5.4.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.0",
     "@types/jest": "^29.5.0",
