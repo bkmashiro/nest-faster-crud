@@ -16,16 +16,41 @@ npm install @faster-crud/core @faster-crud/graphql @nestjs/graphql
 ## Usage
 
 ```ts
-import { GqlResolver } from '@faster-crud/graphql';
-import { Post } from './post.entity';
-import { PostsService } from './posts.service';
+import { Resolver } from '@nestjs/graphql';
+import { GraphqlCrudFactory, TypeOrmAdapter } from '@faster-crud/graphql';
+import { User } from './user.entity';
+import { CreateUserDto, UpdateUserDto } from './user.dto';
 
-@Resolver(() => Post)
-export class PostsResolver extends GqlResolver(Post, PostsService) {
-  constructor(service: PostsService) {
-    super(service);
-  }
-}
+@Resolver(() => User)
+export class UserResolver extends GraphqlCrudFactory.create({
+  entity: User,
+  adapter: new TypeOrmAdapter(userRepository),
+  dto: {
+    create: CreateUserDto,
+    update: UpdateUserDto,
+  },
+}) {}
+```
+
+Generated operations:
+
+- Query `users(query?)`
+- Query `user(id)`
+- Mutation `createUser(input)`
+- Mutation `updateUser(id, input)`
+- Mutation `deleteUser(id)`
+
+You can also use `PrismaAdapter`:
+
+```ts
+import { Resolver } from '@nestjs/graphql';
+import { GraphqlCrudFactory, PrismaAdapter } from '@faster-crud/graphql';
+
+@Resolver(() => User)
+export class UserResolver extends GraphqlCrudFactory.create({
+  entity: User,
+  adapter: new PrismaAdapter(prisma.user),
+}) {}
 ```
 
 ## Documentation

@@ -118,6 +118,43 @@ This gives you:
 
 ---
 
+## GraphQL Quick Start
+
+```bash
+npm install @faster-crud/graphql @nestjs/graphql graphql
+```
+
+```typescript
+import { Resolver } from '@nestjs/graphql';
+import { GraphqlCrudFactory, TypeOrmAdapter } from '@faster-crud/graphql';
+import { User } from './user.entity';
+import { CreateUserDto, UpdateUserDto } from './user.dto';
+
+@Resolver(() => User)
+export class UserResolver extends GraphqlCrudFactory.create({
+  entity: User,
+  adapter: new TypeOrmAdapter(userRepository),
+  dto: {
+    create: CreateUserDto,
+    update: UpdateUserDto,
+  },
+}) {}
+```
+
+Generated GraphQL operations:
+
+| Type | Name |
+|------|------|
+| `Query` | `users(query?)` |
+| `Query` | `user(id)` |
+| `Mutation` | `createUser(input)` |
+| `Mutation` | `updateUser(id, input)` |
+| `Mutation` | `deleteUser(id)` |
+
+For Prisma, replace `TypeOrmAdapter` with `new PrismaAdapter(prisma.user)`.
+
+---
+
 ## Feature Highlights
 
 ### CLI Code Generator (`@faster-crud/gen`)
