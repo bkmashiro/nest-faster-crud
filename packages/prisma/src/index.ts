@@ -14,17 +14,39 @@ type PrismaFilterValue = {
 };
 
 type PrismaDelegate<T> = {
-  create(args: { data: Partial<T> }): Promise<T>;
+  create(args: { data: Partial<T>; include?: Record<string, unknown> }): Promise<T>;
   findMany(args: {
     where?: Record<string, unknown>;
     orderBy?: Record<string, 'asc' | 'desc'>;
     skip?: number;
     take?: number;
+    include?: Record<string, unknown>;
   }): Promise<T[]>;
   count(args: { where?: Record<string, unknown> }): Promise<number>;
-  findUnique(args: { where: { id: number } }): Promise<T | null>;
-  update(args: { where: { id: number }; data: Partial<T> }): Promise<T>;
+  findUnique(args: {
+    where: { id: number };
+    include?: Record<string, unknown>;
+  }): Promise<T | null>;
+  update(args: {
+    where: { id: number };
+    data: Partial<T>;
+    include?: Record<string, unknown>;
+  }): Promise<T>;
   delete(args: { where: { id: number } }): Promise<T>;
+};
+
+/** Options accepted by PrismaResourceService methods. */
+export type PrismaQueryOptions = {
+  /**
+   * Prisma `include` clause for eager-loading relations.
+   *
+   * @example
+   * ```ts
+   * await service.get(1, { include: { posts: true } });
+   * await service.list(query, { include: { profile: true } });
+   * ```
+   */
+  include?: Record<string, unknown>;
 };
 
 function isFilterValue(value: unknown): value is PrismaFilterValue {
@@ -74,15 +96,18 @@ export function PrismaResourceService<T extends { id: number }>(
 
   @Injectable()
   abstract class PrismaService extends Base {
-    async create(dto: Partial<T>): Promise<T> {
+    async create(dto: Partial<T>, options?: PrismaQueryOptions): Promise<T> {
       const nextDto = await (this as any).onBeforeCreate(dto);
       this.validateCreate(nextDto);
-      const created = await prismaModel.create({ data: nextDto });
+      const created = await prismaModel.create({
+        data: nextDto,
+        ...(options?.include ? { include: options.include } : {}),
+      });
       await (this as any).onAfterCreate(created);
       return created;
     }
 
-    async list(query: PageQuery<T>): Promise<PageResult<T>> {
+    async list(query: PageQuery<T>, options?: PrismaQueryOptions): Promise<PageResult<T>> {
       const { page, filters, sort } = query ?? {};
       const current = page?.current ?? 1;
       const size = page?.size ?? 10;
@@ -106,6 +131,7 @@ export function PrismaResourceService<T extends { id: number }>(
           orderBy,
           skip: (current - 1) * size,
           take: size,
+          ...(options?.include ? { include: options.include } : {}),
         }),
         prismaModel.count({ where }),
       ]);
@@ -118,16 +144,20 @@ export function PrismaResourceService<T extends { id: number }>(
       };
     }
 
-    async get(id: number): Promise<T | null> {
-      const record = await prismaModel.findUnique({ where: { id } });
+    async get(id: number, options?: PrismaQueryOptions): Promise<T | null> {
+      const record = await prismaModel.findUnique({
+        where: { id },
+        ...(options?.include ? { include: options.include } : {}),
+      });
       return record ? this.filterForView(record, 'get') : null;
     }
 
-    async update(id: number, dto: Partial<T>): Promise<T> {
+    async update(id: number, dto: Partial<T>, options?: PrismaQueryOptions): Promise<T> {
       const nextDto = await (this as any).onBeforeUpdate(id, dto);
       const updated = await prismaModel.update({
         where: { id },
         data: nextDto,
+        ...(options?.include ? { include: options.include } : {}),
       });
       await (this as any).onAfterUpdate(updated);
       return updated;
