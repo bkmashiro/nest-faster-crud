@@ -1,9 +1,12 @@
 {
   "name": "@faster-crud/core",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Core decorators and types for @faster-crud \u2014 end-to-end type-safe CRUD for NestJS",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "dist"
   ],

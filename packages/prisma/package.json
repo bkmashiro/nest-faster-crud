@@ -1,9 +1,12 @@
 {
   "name": "@faster-crud/prisma",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Prisma adapter for @faster-crud",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "dist"
   ],
@@ -15,7 +18,7 @@
     "@faster-crud/nest": "workspace:*"
   },
   "peerDependencies": {
-    "@faster-crud/core": "^0.2.0",
+    "@faster-crud/core": "^0.3.0",
     "@prisma/client": "^5.0.0"
   },
   "devDependencies": {

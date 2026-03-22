@@ -45,7 +45,7 @@ npm install @faster-crud/core @faster-crud/nest @faster-crud/typeorm typeorm @ne
 
 ```typescript
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-import { Resource, Col, Rule } from '@faster-crud/core';
+import { Resource, Col, Rule, Deny } from '@faster-crud/core';
 
 @Entity()
 @Resource('users', { pagination: { max: 50 } })
@@ -118,10 +118,69 @@ This gives you:
 
 ---
 
+## Prisma Quick Start
+
+```bash
+npm install @faster-crud/core @faster-crud/nest @faster-crud/prisma @prisma/client reflect-metadata
+```
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+import { Col, Resource, Rule, Searchable } from '@faster-crud/core';
+import { PrismaResourceService } from '@faster-crud/prisma';
+
+const prisma = new PrismaClient();
+
+@Resource('users', {
+  softDelete: true,
+  cache: { ttl: 5_000 },
+})
+export class User {
+  @Col()
+  id: number;
+
+  @Searchable()
+  @Col({ label: 'Name' })
+  @Rule.required()
+  name: string;
+
+  @Searchable()
+  @Col({ label: 'Email' })
+  @Rule.email()
+  email: string;
+
+  @Col()
+  deletedAt?: Date | null;
+}
+
+@Injectable()
+export class UsersService extends PrismaResourceService(User, prisma.user) {}
+```
+
+Include related records by passing Prisma `include` options directly:
+
+```typescript
+await usersService.get(1, { include: { posts: true } });
+
+await usersService.list(
+  {
+    page: { current: 1, size: 20 },
+    sort: { field: 'name', order: 'asc' },
+    filters: {
+      name: { op: 'like', value: 'ada' },
+    },
+  },
+  { include: { profile: true } },
+);
+```
+
+---
+
 ## GraphQL Quick Start
 
 ```bash
-npm install @faster-crud/graphql @nestjs/graphql graphql
+npm install @faster-crud/core @faster-crud/graphql @nestjs/graphql graphql reflect-metadata
 ```
 
 ```typescript
@@ -130,15 +189,17 @@ import { GraphqlCrudFactory, TypeOrmAdapter } from '@faster-crud/graphql';
 import { User } from './user.entity';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
 
-@Resolver(() => User)
-export class UserResolver extends GraphqlCrudFactory.create({
+const UserResolverBase = GraphqlCrudFactory.create({
   entity: User,
   adapter: new TypeOrmAdapter(userRepository),
   dto: {
     create: CreateUserDto,
     update: UpdateUserDto,
   },
-}) {}
+});
+
+@Resolver(() => User)
+export class UserResolver extends UserResolverBase {}
 ```
 
 Generated GraphQL operations:
@@ -152,6 +213,8 @@ Generated GraphQL operations:
 | `Mutation` | `deleteUser(id)` |
 
 For Prisma, replace `TypeOrmAdapter` with `new PrismaAdapter(prisma.user)`.
+
+List queries currently support `page`, `size`, `sortField`, and `sortOrder` arguments.
 
 ---
 
@@ -211,9 +274,11 @@ All hooks have default no-op implementations — override only what you need.
 
 ### Soft Delete
 
-Soft delete is auto-detected from TypeORM's `@DeleteDateColumn()`. No configuration needed:
+For TypeORM, soft delete is auto-detected from `@DeleteDateColumn()`:
 
 ```typescript
+import { Entity, PrimaryGeneratedColumn, Column, DeleteDateColumn } from 'typeorm';
+
 @Entity()
 @Resource('posts')
 export class Post {
@@ -229,9 +294,60 @@ export class Post {
 }
 ```
 
-When `deletedAt` exists:
+For Prisma and other adapters, enable it explicitly on the resource:
+
+```typescript
+import { Col, Resource } from '@faster-crud/core';
+
+@Resource('posts', { softDelete: true })
+export class Post {
+  @Col()
+  id: number;
+
+  @Col()
+  title: string;
+
+  @Col()
+  deletedAt?: Date | null;
+}
+```
+
+When soft delete is enabled:
 - `DELETE /posts/:id` sets `deletedAt` instead of removing the row
 - List/get queries automatically exclude soft-deleted records
+
+### Cache
+
+Enable in-memory caching for `list()` and `get()` with `@Resource(..., { cache })`:
+
+```typescript
+import { Col, Resource, Searchable } from '@faster-crud/core';
+
+@Resource('users', {
+  cache: {
+    ttl: 10_000,
+  },
+})
+export class User {
+  @Col()
+  id: number;
+
+  @Searchable()
+  @Col()
+  name: string;
+}
+```
+
+```typescript
+const first = await usersService.list({ page: { current: 1, size: 20 } });
+const second = await usersService.list({ page: { current: 1, size: 20 } });
+
+// `second` is served from cache until TTL expires.
+await usersService.update(1, { name: 'Ada Lovelace' });
+
+// Writes invalidate cached list/get results automatically.
+const fresh = await usersService.get(1);
+```
 
 ### Filter Operators
 
